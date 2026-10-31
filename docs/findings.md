@@ -183,3 +183,24 @@ the room's real prices it is clearly better (+8%), which is why the board should
 player-specific 2027 prices in August (`build_boards.py ... 2027 market.csv`). The slot-price
 version of the max bid ranks a little worse (0.544) because slot prices carry no
 player-specific information; it is there for price levels, not order.
+
+## Value upgrades 1 and 2 (31 Oct 2026)
+
+Tested out of sample on the 2026 auction (153 matched skill players; replacement depth fitted
+on the 2025 auction only; actual value measured against one fixed replacement level; 8 weeks in):
+
+| Variant | $ error vs price paid | Rank corr with actual value | 30/70 blend with price | Avg Model $ of top 10 |
+| --- | --- | --- | --- | --- |
+| Current (bench-split replacement) | $7.12 | 0.519 | 0.575 | $48 |
+| 1. Replacement fitted to 2025 prices | **$6.33** | 0.480 | 0.552 | $66 |
+| 2. Option value (busts dropped to waivers) | $6.94 | **0.526** | **0.578** | $57 |
+| 1 + 2 | $7.09 | 0.482 | 0.554 | $77 |
+
+- **Option value is adopted** (`value(..., option=True)`, both boards). It prices each player on a
+  normal range of outcomes (SD QB/RB 3.9, WR 3.5, TE 3.2, K 1.5, DEF 1.7 PPG; rookies x1.3) with
+  the downside cut at replacement. Small gains on both price and ranking; stars rise.
+- **Fitted replacement is not adopted.** It matches the room's price levels better (-11% error)
+  but ranks players worse, because fitting to prices drops QB and TE replacement to the 10th
+  player (the room underpays them), which reorders positions. Price levels already come from
+  the 70% room-price share of the max bid, so the model's job is order. Fit on 2025:
+  QB 10, RB 35, WR 55, TE 10 (`scripts/fit_replacement.py`). Recheck in January.

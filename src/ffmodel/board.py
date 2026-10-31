@@ -98,7 +98,7 @@ def burbs_board(target: int, workbook: str, market_csv: str | None = None) -> pl
     market_csv: optional player-specific expected prices for the target season (columns
     Player, Price), e.g. Yahoo average auction values or the workbook's FF & Roto $ in August.
     Players it covers use that price instead of the slot price."""
-    b, repl, depth = value(projections(target, "burbs"), "burbs")
+    b, repl, depth = value(projections(target, "burbs"), "burbs", option=True)
     curve = slot_curve(workbook, years=tuple(y for y in (2025, 2026) if y < target))
     w = load_leagues()["value"]["model_weight"]
     if market_csv:
@@ -119,6 +119,6 @@ def burbs_board(target: int, workbook: str, market_csv: str | None = None) -> pl
 
 
 def cbs_board(target: int) -> pl.DataFrame:
-    b, repl, depth = value(projections(target, "cbs"), "cbs")
+    b, repl, depth = value(projections(target, "cbs"), "cbs", option=True)
     b = b.sort("vorp", descending=True)
     return b.with_columns(pl.Series("tier", _tiers(b["vorp"])))
