@@ -25,7 +25,11 @@ COMPONENTS: dict[str, pl.Expr] = {
     "return_yd": _sum("punt_return_yards", "kickoff_return_yards"),
     "return_td": _sum("special_teams_tds"),
     "two_pt": _sum("passing_2pt_conversions", "rushing_2pt_conversions", "receiving_2pt_conversions"),
-    "fumble_lost": _sum("sack_fumbles_lost", "rushing_fumbles_lost", "receiving_fumbles_lost"),
+    # Yahoo charges every lost fumble, including on kick and punt returns; nflverse's own
+    # fantasy_points leave return fumbles out, so use the all-fumbles total where it exists.
+    "fumble_lost": pl.max_horizontal(
+        _sum("fumbles_lost_total"),
+        _sum("sack_fumbles_lost", "rushing_fumbles_lost", "receiving_fumbles_lost")),
     "off_fumble_ret_td": _sum("fumble_recovery_tds"),
     "fg_0_19": _sum("fg_made_0_19"),
     "fg_20_29": _sum("fg_made_20_29"),
