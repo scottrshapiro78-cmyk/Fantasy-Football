@@ -1,8 +1,10 @@
 """Phase 4: expected games played next season.
 
-Target: share of the team's regular-season games a player appears in next year, for players
-who were fantasy-relevant this year (8+ PPG in The Burbs, 4+ games). A season with zero games
-counts only if the player shows up again later (missed the year, did not retire).
+Target: share of next season's regular-season weeks a player is NOT out injured, for players
+who were fantasy-relevant this year (8+ PPG in The Burbs, 4+ games). "Out injured" = on
+reserve (IR/PUP, weekly roster status RES) or listed Out/Doubtful on the injury report.
+Being benched, cut, traded or rested in week 18 is not an injury and is not counted, which
+matters most for QBs (an earlier version counted lost starting jobs as missed games).
 
 Model: binomial GLM (logit link) on position, age, games-missed history, injury-report
 history (weeks listed Out/Doubtful, soft-tissue and knee listings) and workload.
@@ -36,9 +38,17 @@ def build() -> pl.DataFrame:
                    (pl.col("report_primary_injury").is_in(SOFT)
                     & pl.col("report_status").is_in(["Out", "Doubtful", "Questionable"])).sum().alias("wk_soft"),
                    (pl.col("report_primary_injury") == "Knee").sum().alias("wk_knee")))
+    ros = data.rosters_weekly().with_columns(pl.col("season").cast(pl.Int32))
+    ir = (ros.filter(pl.col("game_type") == "REG", pl.col("status") == "RES")
+             .group_by(pl.col("gsis_id").alias("player_id"), "season")
+             .agg(pl.col("week").n_unique().alias("wk_ir")))
     s = (s.join(rep, on=["player_id", "season"], how="left")
+          .join(ir, on=["player_id", "season"], how="left")
+          .with_columns(pl.col("wk_ir").fill_null(0))
           .with_columns(pl.col(["wk_out", "wk_soft", "wk_knee"]).fill_null(0),
-                        (pl.col("games") / pl.col("season").map_elements(team_games, return_dtype=pl.Int64)).alias("frac"),
+                        (1 - ((pl.col("wk_out").fill_null(0) + pl.col("wk_ir"))
+                              / pl.col("season").map_elements(team_games, return_dtype=pl.Int64)).clip(0, 1)
+                         ).alias("frac"),
                         ((pl.col("c_rec") + pl.col("carries")) / pl.col("games")).alias("touches_pg")))
 
     # lags and target
@@ -46,15 +56,17 @@ def build() -> pl.DataFrame:
                                    *[pl.col(c).alias(f"{c}_l{k}") for c in cols])
     df = (s.join(lag(1, ["frac", "wk_out", "wk_soft"]), on=["player_id", "season"], how="left")
            .join(lag(2, ["frac"]), on=["player_id", "season"], how="left"))
-    last_seen = s.group_by("player_id").agg(pl.col("season").max().alias("last_season"))
     nxt = s.select("player_id", (pl.col("season") - 1).alias("season"), pl.col("frac").alias("next_frac"))
+    # a whole season on reserve has no stats row: take it from the roster IR weeks instead
+    ir_only = ir.with_columns((1 - pl.col("wk_ir") / pl.col("season").map_elements(
+        team_games, return_dtype=pl.Int64)).clip(0, 1).alias("ir_frac")).select(
+        "player_id", (pl.col("season") - 1).alias("season"), "ir_frac")
     feats = pl.read_parquet(DATA / "processed" / "features.parquet").select(
         "player_id", "season", "age_next", "nfl_year", "ppg_burbs")
     df = (df.drop("ppg_burbs", strict=False).join(feats, on=["player_id", "season"], how="left")
             .join(nxt, on=["player_id", "season"], how="left")
-            .join(last_seen, on="player_id")
-            .with_columns(pl.when(pl.col("next_frac").is_null() & (pl.col("last_season") > pl.col("season") + 1))
-                            .then(0.0).otherwise(pl.col("next_frac")).alias("next_frac")))
+            .join(ir_only, on=["player_id", "season"], how="left")
+            .with_columns(pl.coalesce("next_frac", "ir_frac").alias("next_frac")).drop("ir_frac"))
     return df
 
 

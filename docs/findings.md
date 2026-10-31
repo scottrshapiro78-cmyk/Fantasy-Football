@@ -80,13 +80,20 @@ Full tables: `docs/predictor_study.md` (regenerate with `scripts/predictor_study
 **What doesn't help:** gradient boosting (too little data per position; overfits), team
 offense points per game once QB quality is known, QB-level TD luck, strength of schedule.
 
-## Phase 4: expected games (31 Oct 2026)
+## Phase 4: expected games (31 Oct 2026, corrected same day)
 
-Binomial GLM on games-played share (`src/ffmodel/availability.py`), fantasy-relevant players
-(8+ PPG). Out of sample 2021-2025, average miss: 3.36 games vs 3.71 for a position-and-age
-average (-9%). Games played in each of the last three seasons carry almost all the signal
-(all p<0.02); injury-report listings (weeks out, soft-tissue, knee) add nothing once games
-played are known. Risk score = chance of missing 4+ of 17 games.
+**Correction.** The first version counted every game a player did not appear in as missed,
+so benchings, lost starting jobs and week-18 rest looked like injuries. That made Josh Allen
+(16 of 17 games in 2024 and 2025) look risky (47) and inflated the claimed accuracy gain
+(-9%); losing a job is easy to predict, injuries are not.
+
+Now "missed" = weeks on reserve (IR/PUP, weekly roster status RES) or listed Out/Doubtful.
+Fantasy-relevant players miss about 2-3 games a season to injury (QB 1.8, WR 2.4, RB/TE 2.7
+of 17). Out of sample 2021-2025 the model misses by 2.82 games vs 2.86 for a position-and-age
+average: injury history barely predicts future injuries. Only position is significant (RBs
+miss most). Risk score = chance of missing 4+ games, beta-binomial with concentration 4,
+calibrated: predicted 26.8% vs actual 26.9%. Among the top 150, scores run 17 to 61
+(median 28); Josh Allen is 24.
 
 ## 2026 look-back, preliminary (31 Oct 2026, 8 weeks played)
 

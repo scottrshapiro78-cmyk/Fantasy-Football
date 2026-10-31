@@ -60,3 +60,8 @@ def opportunity(ss: list[int] | None = None, refresh_current: bool = False) -> p
     """ffverse expected-points model: expected vs actual yards, TDs and fantasy points per player-week."""
     return _cached("ff_opportunity", ss or seasons(), lambda s: nfl.load_ff_opportunity(seasons=s),
                    refresh_current)
+
+
+def rosters_weekly(ss: list[int] | None = None, refresh_current: bool = False) -> pl.DataFrame:
+    """Weekly roster status (ACT, RES = injured reserve/PUP, INA, CUT, ...) per player."""
+    return _cached("rosters_weekly", ss or seasons(), nfl.load_rosters_weekly, refresh_current)
