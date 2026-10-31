@@ -18,12 +18,16 @@ from sklearn.preprocessing import StandardScaler
 from .features import FEATURES
 
 MODEL_BY_POS = {"QB": "ridge", "RB": "ridge", "WR": "ridge", "TE": "baseline"}
+# Ridge alone under-projects proven QBs (3-yr PPG 20+: -0.7 PPG on average 2017-2025; Josh Allen
+# by ~3 PPG six years running). Mixing 25% of the 3-yr history back in removes that bias and
+# lowers error out of sample (Burbs 2.65 -> 2.60, CBS 3.06 -> 3.05).
+HISTORY_WEIGHT = {"QB": 0.25}
 ALPHAS = np.logspace(-2, 3, 20)
 
 
 def league_features(league: str) -> list[str]:
     swap = {"ppg_burbs": f"ppg_{league}", "ppg_burbs_lag1": f"ppg_{league}_lag1"}
-    return [swap.get(c, c) for c in FEATURES] + ["first_year_data", "age2"]
+    return [swap.get(c, c) for c in FEATURES] + ["first_year_data", "age2", f"base_{league}"]
 
 
 def prepare(df: pl.DataFrame, league: str, medians: pd.DataFrame | None = None):
@@ -65,7 +69,8 @@ class Projector:
         for pos, m in self.models.items():
             idx = d.position == pos
             if idx.any():
-                pred[idx] = m.predict(d.loc[idx, X])
+                w = HISTORY_WEIGHT.get(pos, 0.0)
+                pred[idx] = (1 - w) * m.predict(d.loc[idx, X]) + w * d.loc[idx, f"base_{self.league}"]
         d["pred"] = pred.clip(lower=0)
         return pl.from_pandas(d[["player_id", "player_display_name", "position", "season", "team", "pred"]]
                               ).rename({"pred": f"pred_ppg_{self.league}"})

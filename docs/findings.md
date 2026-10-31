@@ -112,3 +112,15 @@ Rank correlation with actual value so far (players sold, 3+ games):
 The model alone does not beat the room; blended at 30% it beats both, the same weight the
 2026 workbook post-mortem fitted. QB is the weak spot (calibration slope 0.5 flattens QBs).
 Rerun in January when 2026 is final.
+
+## QB projections were too low (31 Oct 2026)
+
+Ridge regression under-projected proven QBs: for QBs with a 3-yr PPG of 20+, 2017-2025, it
+projected 19.2 on average against 20.0 actual (-0.8), and Josh Allen by about 3 PPG in each of
+six straight seasons. A second step (rescaling QBs by a noisy 0.5 slope) flattened them further,
+which priced Allen at $8 for 2026 against his $21 sale.
+
+Fix: QB projection = 75% ridge + 25% 3-year weighted PPG (tuned out of sample; elite bias
+-0.7 -> -0.1, error 2.65 -> 2.60 Burbs), and no rescaling for QBs. Allen's 2026 look-back
+projection moves 18.4 -> 20.6 PPG and $8 -> $20. Blend vs room after the fix: model 0.504,
+room 0.542, 30/70 blend 0.559 (8 weeks in).

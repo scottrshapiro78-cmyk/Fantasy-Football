@@ -35,7 +35,8 @@ for t in range(TARGET - 5, TARGET):
                       on="player_id").filter(pl.col("next_games") >= 6))
 cal = pl.concat(cal).to_pandas()
 coef = {}
-for pos, n in {"QB": 12, "RB": 30, "WR": 40, "TE": 12}.items():
+# QBs are not recalibrated: their top-12 slope (~0.5) is too noisy and flattened every QB
+for pos, n in {"RB": 30, "WR": 40, "TE": 12}.items():
     q = cal[cal.position == pos].sort_values("pred_ppg_burbs", ascending=False).groupby("season").head(n)
     coef[pos] = np.polyfit(q.pred_ppg_burbs, q.next_ppg_burbs, 1)
 proj = proj.with_columns(pl.struct("position", "pred_ppg_burbs").map_elements(
