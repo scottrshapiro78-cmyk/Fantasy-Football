@@ -90,3 +90,5 @@ value:
   bench_split: {QB: 0.10, RB: 0.40, WR: 0.40, TE: 0.10}
   games_per_regular_season: 13   # 14 weeks minus a bye
   burbs_discretionary_dollars: 2177  # $2,400 room minus $1 minimums and the K/DEF carve (workbook)
+  k_def_cap: 3                       # no K or DEF has sold above $3 in two years
+  model_weight: 0.30                 # max bid = 30% model value + 70% room price for that slot

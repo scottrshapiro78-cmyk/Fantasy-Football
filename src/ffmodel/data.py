@@ -74,3 +74,11 @@ def team_weeks(ss: list[int] | None = None, refresh_current: bool = False) -> pl
 
 def snap_counts(ss: list[int] | None = None, refresh_current: bool = False) -> pl.DataFrame:
     return _cached("snap_counts", ss or seasons(), nfl.load_snap_counts, refresh_current)
+
+
+def draft_picks() -> pl.DataFrame:
+    path = DATA / "raw" / "draft_picks.parquet"
+    if not path.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        nfl.load_draft_picks().write_parquet(path)
+    return pl.read_parquet(path)

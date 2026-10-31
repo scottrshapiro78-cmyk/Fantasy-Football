@@ -13,7 +13,8 @@ import polars as pl
 
 from .config import load_leagues
 
-POS = ["QB", "RB", "WR", "TE"]
+POS = ["QB", "RB", "WR", "TE", "K", "DEF"]
+SKILL = ["QB", "RB", "WR", "TE"]
 
 
 def _depth(league: dict, vcfg: dict, pool: pl.DataFrame, ppg: str) -> dict[str, int]:
@@ -28,7 +29,7 @@ def _depth(league: dict, vcfg: dict, pool: pl.DataFrame, ppg: str) -> dict[str, 
     for p, c in left.group_by("position").len().iter_rows():
         n[p] += c
     bench = teams * roster.get("BN", 0)
-    for p in POS:
+    for p in SKILL:
         n[p] += round(bench * vcfg["bench_split"][p])
     return n
 
@@ -50,8 +51,12 @@ def value(proj: pl.DataFrame, league_key: str) -> pl.DataFrame:
                .with_columns(pl.col("vorp").rank("ordinal", descending=True).alias("overall_rank"),
                              pl.col("vorp").rank("ordinal", descending=True).over("position").alias("pos_rank")))
     if league.get("draft") == "auction":
-        pos_vorp = out.filter(pl.col("vorp") > 0)["vorp"].sum()
+        skill = pl.col("position").is_in(SKILL)
+        pos_vorp = out.filter(skill, pl.col("vorp") > 0)["vorp"].sum()
         per = vcfg["burbs_discretionary_dollars"] / pos_vorp
         out = out.with_columns(pl.when(pl.col("vorp") > 0).then(1 + pl.col("vorp") * per)
-                                 .otherwise(1.0).round(0).alias("auction_value"))
+                                 .otherwise(1.0).alias("auction_value"))
+        out = out.with_columns(pl.when(skill).then(pl.col("auction_value"))
+                                 .otherwise(pl.col("auction_value").clip(upper_bound=vcfg["k_def_cap"]))
+                                 .round(0).alias("auction_value"))
     return out.sort("overall_rank"), repl, depth

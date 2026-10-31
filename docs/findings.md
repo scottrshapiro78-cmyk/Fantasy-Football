@@ -158,3 +158,28 @@ allowed (`src/ffmodel/dst.py`). 2013-2025, 32 teams a year, next-season DST PPG:
 - **Defenses are close to unpredictable.** Out of sample 2016-2025: average error 1.69 PPG for
   the model, 2.07 for last season's PPG, 1.76 for simply projecting every defense at league
   average. Rank correlation 0.35. Supports the $3 cap and streaming defenses.
+
+## Finished boards and the 2026 look-back on the full model (31 Oct 2026)
+
+`scripts/build_boards.py` writes `draft_boards_<season>.xlsx` (Burbs Auction, CBS Snake,
+Notes). The Burbs value format is **Max Bid (Suggested)**:
+- Max bid = 30% model value + 70% the room's price for that player (or, until 2027 market
+  prices are loaded, for that position slot, from the 2025-2026 auctions).
+- Suggested = 90% of max, or the room's usual price if lower.
+- K and DEF capped at $3. Rookies: average rookie season of past picks at the same position
+  and draft range (1-10, 11-32, 33-64, 65-100, 101-160).
+
+2026 look-back with the full model (data through 2025, room curve from the 2025 auction only),
+168 sales matched, 8 weeks in. Rank correlation with value scored so far:
+
+| | All | QB | RB | WR | TE | K | DEF |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Model $ | **0.565** | 0.01 | 0.53 | 0.48 | 0.64 | 0.29 | -0.07 |
+| Room price | 0.558 | 0.15 | 0.61 | 0.53 | 0.49 | -0.25 | -0.23 |
+| 30% model + 70% actual room price | **0.605** | | | | | | |
+
+With rookies, kickers and defenses included, the model alone now edges the room. Mixed with
+the room's real prices it is clearly better (+8%), which is why the board should be rerun with
+player-specific 2027 prices in August (`build_boards.py ... 2027 market.csv`). The slot-price
+version of the max bid ranks a little worse (0.544) because slot prices carry no
+player-specific information; it is there for price levels, not order.

@@ -14,7 +14,7 @@ Leagues (settings in `config/leagues.yaml`):
 
 ## Status
 
-Phase 1 done (data, scoring, backtest harness). Phase 2 done (schedule finding: small effect). Phase 3 v1 done: ridge projections for QB/RB/WR beat the baseline out of sample by 4-23%; see docs/findings.md.
+Status (31 Oct 2026): all phases built. Boards: `scripts/build_boards.py`; 2026 look-back: `scripts/lookback_2026.py`. Rerun both in January on the final 2026 season. Findings: docs/findings.md.
 
 ## Run
 
