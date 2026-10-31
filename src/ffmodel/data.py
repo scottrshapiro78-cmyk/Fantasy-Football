@@ -54,3 +54,9 @@ def player_ids() -> pl.DataFrame:
             df = pl.read_csv(PLAYER_IDS_RAW, infer_schema_length=0)
         df.write_parquet(path)
     return pl.read_parquet(path)
+
+
+def opportunity(ss: list[int] | None = None, refresh_current: bool = False) -> pl.DataFrame:
+    """ffverse expected-points model: expected vs actual yards, TDs and fantasy points per player-week."""
+    return _cached("ff_opportunity", ss or seasons(), lambda s: nfl.load_ff_opportunity(seasons=s),
+                   refresh_current)
