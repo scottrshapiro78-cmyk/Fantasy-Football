@@ -83,3 +83,10 @@ nflverse_ppr_check:
     two_pt: 2
     fumble_lost: -2
     off_fumble_ret_td: 0
+
+# Value settings shared by both leagues (Phase 5). Bench spots across the league are split
+# by position to find replacement level; tuned against real auction prices.
+value:
+  bench_split: {QB: 0.10, RB: 0.40, WR: 0.40, TE: 0.10}
+  games_per_regular_season: 13   # 14 weeks minus a bye
+  burbs_discretionary_dollars: 2177  # $2,400 room minus $1 minimums and the K/DEF carve (workbook)

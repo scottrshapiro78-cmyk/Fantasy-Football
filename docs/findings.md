@@ -79,3 +79,29 @@ Full tables: `docs/predictor_study.md` (regenerate with `scripts/predictor_study
 
 **What doesn't help:** gradient boosting (too little data per position; overfits), team
 offense points per game once QB quality is known, QB-level TD luck, strength of schedule.
+
+## Phase 4: expected games (31 Oct 2026)
+
+Binomial GLM on games-played share (`src/ffmodel/availability.py`), fantasy-relevant players
+(8+ PPG). Out of sample 2021-2025, average miss: 3.36 games vs 3.71 for a position-and-age
+average (-9%). Games played in each of the last three seasons carry almost all the signal
+(all p<0.02); injury-report listings (weeks out, soft-tissue, knee) add nothing once games
+played are known. Risk score = chance of missing 4+ of 17 games.
+
+## 2026 look-back, preliminary (31 Oct 2026, 8 weeks played)
+
+`scripts/lookback_2026.py`: rankings built only from data through 2025, priced for The Burbs,
+compared with the 2026 auction (142 of 180 sales matched; the rest are K/DEF and 2026
+rookies, which the model cannot project yet) and with value scored so far.
+
+Rank correlation with actual value so far (players sold, 3+ games):
+
+| | All | QB | RB | WR | TE |
+| --- | --- | --- | --- | --- | --- |
+| Model $ | 0.517 | -0.02 | 0.589 | 0.417 | 0.555 |
+| Room price | 0.548 | 0.23 | 0.627 | 0.509 | 0.492 |
+| 30% model + 70% room | **0.569** | 0.287 | 0.640 | 0.515 | 0.510 |
+
+The model alone does not beat the room; blended at 30% it beats both, the same weight the
+2026 workbook post-mortem fitted. QB is the weak spot (calibration slope 0.5 flattens QBs).
+Rerun in January when 2026 is final.
