@@ -21,7 +21,14 @@ MODEL_BY_POS = {"QB": "ridge", "RB": "ridge", "WR": "ridge", "TE": "baseline"}
 # Ridge alone under-projects proven QBs (3-yr PPG 20+: -0.7 PPG on average 2017-2025; Josh Allen
 # by ~3 PPG six years running). Mixing 25% of the 3-yr history back in removes that bias and
 # lowers error out of sample (Burbs 2.65 -> 2.60, CBS 3.06 -> 3.05).
-HISTORY_WEIGHT = {"QB": 0.25}
+# Same check for RB and WR (2017-2025, proven = 3-yr PPG 16+): ridge alone under-projected
+# them by 2.1 (RB) and 0.9 (WR) PPG. History weights below cut that to about -0.6 and -0.2.
+HISTORY_WEIGHT = {"QB": 0.25, "RB": 0.40, "WR": 0.30}
+# TE uses the 3-yr baseline, which over-projected proven TEs by 1.3 PPG; pulling it 30% of the
+# way toward the season's TE average removes the bias and cuts error 2.93 -> 2.58.
+TE_SHRINK = 0.30
+# Kickers repeat weakly (year-to-year correlation 0.27): pull 70% toward the average.
+K_SHRINK = 0.70
 ALPHAS = np.logspace(-2, 3, 20)
 
 
@@ -71,6 +78,25 @@ class Projector:
             if idx.any():
                 w = HISTORY_WEIGHT.get(pos, 0.0)
                 pred[idx] = (1 - w) * m.predict(d.loc[idx, X]) + w * d.loc[idx, f"base_{self.league}"]
+        te = d.position == "TE"
+        if te.any():
+            mu = d.loc[te, f"base_{self.league}"].nlargest(40).mean()
+            pred[te] = d.loc[te, f"base_{self.league}"] - TE_SHRINK * (d.loc[te, f"base_{self.league}"] - mu)
         d["pred"] = pred.clip(lower=0)
         return pl.from_pandas(d[["player_id", "player_display_name", "position", "season", "team", "pred"]]
                               ).rename({"pred": f"pred_ppg_{self.league}"})
+
+
+def project_kickers(seasons: pl.DataFrame, target: int, league: str) -> pl.DataFrame:
+    """3-yr weighted PPG for kickers, pulled K_SHRINK of the way to the top-24 average."""
+    k = seasons.filter(pl.col("position") == "K", pl.col("season").is_between(target - 3, target - 1))
+    k = k.with_columns(pl.col("season").replace_strict(
+        {target - 1: 3, target - 2: 2, target - 3: 1}, return_dtype=pl.Float64).alias("w"))
+    b = (k.group_by("player_id").agg(
+            pl.col("player_display_name").last(), pl.col("team").sort_by("season").last(),
+            ((pl.col(f"fpts_{league}") * pl.col("w")).sum() / (pl.col("games") * pl.col("w")).sum()).alias("base"),
+            pl.col("season").max().alias("last")))
+    b = b.filter(pl.col("last") == target - 1)
+    mu = b.sort("base", descending=True).head(24)["base"].mean()
+    return b.select("player_id", "player_display_name", pl.lit("K").alias("position"), "team",
+                    (pl.col("base") - K_SHRINK * (pl.col("base") - mu)).alias(f"pred_ppg_{league}"))

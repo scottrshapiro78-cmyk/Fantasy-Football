@@ -65,3 +65,12 @@ def opportunity(ss: list[int] | None = None, refresh_current: bool = False) -> p
 def rosters_weekly(ss: list[int] | None = None, refresh_current: bool = False) -> pl.DataFrame:
     """Weekly roster status (ACT, RES = injured reserve/PUP, INA, CUT, ...) per player."""
     return _cached("rosters_weekly", ss or seasons(), nfl.load_rosters_weekly, refresh_current)
+
+
+def team_weeks(ss: list[int] | None = None, refresh_current: bool = False) -> pl.DataFrame:
+    return _cached("team_stats_week", ss or seasons(),
+                   lambda s: nfl.load_team_stats(s, summary_level="week"), refresh_current)
+
+
+def snap_counts(ss: list[int] | None = None, refresh_current: bool = False) -> pl.DataFrame:
+    return _cached("snap_counts", ss or seasons(), nfl.load_snap_counts, refresh_current)

@@ -124,3 +124,37 @@ Fix: QB projection = 75% ridge + 25% 3-year weighted PPG (tuned out of sample; e
 -0.7 -> -0.1, error 2.65 -> 2.60 Burbs), and no rescaling for QBs. Allen's 2026 look-back
 projection moves 18.4 -> 20.6 PPG and $8 -> $20. Blend vs room after the fix: model 0.504,
 room 0.542, 30/70 blend 0.559 (8 weeks in).
+
+## Same bias check for RB, WR, TE and kickers (31 Oct 2026)
+
+Proven players (3-yr PPG 16+ for RB/WR; top 10% for TE/K), 2017-2025, Burbs:
+
+| Position | Bias before | Fix | Bias after | Avg error before -> after |
+| --- | --- | --- | --- | --- |
+| RB | -2.1 PPG (too low) | 40% of 3-yr history mixed in | about -0.6 | 3.08 -> 2.98 |
+| WR | -0.9 PPG (too low) | 30% of 3-yr history mixed in | about -0.2 | 2.58 -> 2.62 |
+| TE | +1.3 PPG (too high) | 3-yr baseline pulled 30% toward TE average | -0.2 | 2.53 -> 2.09 |
+| K | +1.3 PPG (too high) | pulled 70% toward kicker average (yr-to-yr corr only 0.27) | about +0.3 | 1.30 -> about 1.0 |
+
+## Defenses (31 Oct 2026)
+
+DST scored for both leagues from nflverse team stats plus opponent final score as points
+allowed (`src/ffmodel/dst.py`). 2013-2025, 32 teams a year, next-season DST PPG:
+
+| Predictor | Burbs coef | p |
+| --- | --- | --- |
+| Last season DST PPG | +0.75 | 0.01 |
+| Returning defensive snap share (0-1) | **+3.29** | **<0.001** |
+| Takeaways per game (beyond PPG) | -1.28 | 0.06 |
+| Def/ST TDs per game (beyond PPG) | -2.99 | 0.20 |
+| Head coach change | -0.47 | 0.12 |
+
+- **Personnel continuity is the strongest signal**: a defense bringing back 80% of its snaps
+  instead of 50% projects about +1.0 PPG. It correlates with next year's DST scoring (0.30) as
+  well as last year's DST scoring does (0.32).
+- **Takeaways and TDs are luck** and reverse, as with skill-player TDs.
+- **Head coach change** points the right way (-0.47) but isn't significant. Defensive
+  coordinator changes aren't in the data and need a hand-entered 2027 list.
+- **Defenses are close to unpredictable.** Out of sample 2016-2025: average error 1.69 PPG for
+  the model, 2.07 for last season's PPG, 1.76 for simply projecting every defense at league
+  average. Rank correlation 0.35. Supports the $3 cap and streaming defenses.
