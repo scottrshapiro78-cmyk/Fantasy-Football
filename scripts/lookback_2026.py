@@ -55,7 +55,7 @@ board = (board.with_columns(
               .with_columns(((pl.col("ppg26") - pl.col("repl_ppg")) * pl.col("g26")).alias("actual_vorp_sofar")))
 
 cols = ["overall_rank", "pos_rank", "player_display_name", "position", "team", "rookie", "pred_ppg_burbs",
-        "exp_games", "risk_score", "vorp", "auction_value", "market_value", "bid", "max_bid", "suggested_bid",
+        "exp_games", "risk_score", "vorp", "auction_value", "market_value", "bid", "max_bid", "suggested_bid", "bargain", "flag",
         "price", "manager", "g26", "ppg26", "actual_vorp_sofar"]
 out = DATA / "output" / "lookback_2026_burbs.csv"
 board.select(cols).write_csv(out)

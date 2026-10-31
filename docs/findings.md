@@ -204,3 +204,10 @@ on the 2025 auction only; actual value measured against one fixed replacement le
   player (the room underpays them), which reorders positions. Price levels already come from
   the 70% room-price share of the max bid, so the model's job is order. Fit on 2025:
   QB 10, RB 35, WR 55, TE 10 (`scripts/fit_replacement.py`). Recheck in January.
+
+## Board format change (31 Oct 2026, Scott's call)
+
+Max bid is now the model's value alone (walk-away price), not mixed with league prices.
+League $ (what The Burbs usually pays for that position slot) sits beside it, with
+Bargain $ = model value - league price and a Bargain / League overpays flag at +/-$5.
+Suggested = league price, capped at 90% of the max bid.

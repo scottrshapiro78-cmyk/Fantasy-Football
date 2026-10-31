@@ -1,10 +1,10 @@
 """Assemble the draft boards for a target season: projections for every position (rookies,
 kickers and defenses included), expected games, value over replacement, then
 
-  The Burbs (auction):  max bid = 30% model value + 70% the room's price for that slot
-                        (the 30/70 mix ranked 2026 better than either alone; never go above it)
-                        suggested bid = 90% of the max bid, or the room's usual slot price if lower
-                        (aim to win with about 10% of value left over)
+  The Burbs (auction):  max bid = the model's value (walk-away price; Scott's call 31 Oct:
+                        the model is not fitted to the league's prices)
+                        suggested bid = the league's usual price, capped at 90% of the max bid
+                        league $ is shown beside it; bargain $ = model value - league price
   Note: until real 2027 market prices (ADP / expert $) are loaded, the room price is a slot
   price by projected position rank, not a player-specific price.
   CBS (snake):          overall rank by value over replacement, with tiers
@@ -100,7 +100,6 @@ def burbs_board(target: int, workbook: str, market_csv: str | None = None) -> pl
     Players it covers use that price instead of the slot price."""
     b, repl, depth = value(projections(target, "burbs"), "burbs", option=True)
     curve = slot_curve(workbook, years=tuple(y for y in (2025, 2026) if y < target))
-    w = load_leagues()["value"]["model_weight"]
     if market_csv:
         mk = pl.read_csv(market_csv).select(
             pl.col("Player").map_elements(_norm, return_dtype=pl.Utf8).alias("k"), pl.col("Price").cast(pl.Float64).alias("mkt"))
@@ -110,9 +109,13 @@ def burbs_board(target: int, workbook: str, market_csv: str | None = None) -> pl
         lambda r: (curve[r["position"]] + [1.0] * 500)[r["pos_rank"] - 1], return_dtype=pl.Float64).alias("market_value"))
     if market_csv:
         b = b.with_columns(pl.coalesce("mkt", "market_value").alias("market_value")).drop("k", "mkt")
-    b = b.with_columns((w * pl.col("auction_value") + (1 - w) * pl.col("market_value")).round(0).clip(lower_bound=1).alias("max_bid"))
+    b = b.with_columns(pl.col("auction_value").clip(lower_bound=1).alias("max_bid"),
+                       (pl.col("auction_value") - pl.col("market_value")).round(0).alias("bargain"))
     b = b.with_columns(pl.min_horizontal(pl.col("market_value"), 0.9 * pl.col("max_bid"))
-                         .round(0).clip(lower_bound=1).alias("suggested_bid"))
+                         .round(0).clip(lower_bound=1).alias("suggested_bid"),
+                       pl.when(pl.col("bargain") >= 5).then(pl.lit("Bargain"))
+                         .when(pl.col("bargain") <= -5).then(pl.lit("League overpays"))
+                         .otherwise(pl.lit("")).alias("flag"))
     b = b.with_columns(
         pl.format("${} (${})", pl.col("max_bid").cast(pl.Int64), pl.col("suggested_bid").cast(pl.Int64)).alias("bid"))
     return b.sort("max_bid", "vorp", descending=True).with_columns(pl.int_range(1, pl.len() + 1).alias("overall_rank"))
