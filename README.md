@@ -14,7 +14,7 @@ Leagues (settings in `config/leagues.yaml`):
 
 ## Status
 
-Phase 1 done: data, scoring for both leagues, backtest harness. Baselines to beat (2023-2025, Burbs, avg error in PPG): QB 2.61, RB 3.17, WR 3.11, TE 2.71 (3-yr weighted PPG).
+Phase 1 done (data, scoring, backtest harness). Phase 2 done (schedule finding: small effect). Phase 3 v1 done: ridge projections for QB/RB/WR beat the baseline out of sample by 4-23%; see docs/findings.md.
 
 ## Run
 

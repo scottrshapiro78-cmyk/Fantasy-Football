@@ -82,16 +82,30 @@ def build() -> pl.DataFrame:
     )
 
     prev = df.select("player_id", (pl.col("season") + 1).alias("season"),
-                     pl.col("ppg_burbs").alias("ppg_burbs_lag1"), pl.col("games").alias("games_lag1"))
+                     pl.col("ppg_burbs").alias("ppg_burbs_lag1"), pl.col("ppg_cbs").alias("ppg_cbs_lag1"),
+                     pl.col("games").alias("games_lag1"))
     nxt = seasons.select("player_id", (pl.col("season") - 1).alias("season"),
                          pl.col("ppg_burbs").alias("next_ppg_burbs"), pl.col("ppg_cbs").alias("next_ppg_cbs"),
                          pl.col("games").alias("next_games"), pl.col("team").alias("next_team"))
     df = (df.join(prev, on=["player_id", "season"], how="left")
             .join(nxt, on=["player_id", "season"], how="left")
             .with_columns((pl.col("next_team") != pl.col("team")).cast(pl.Int8).alias("changed_team")))
-    return df
+
+    # 3-season recency-weighted PPG through season t (3/2/1 by season, weighted by games)
+    s = seasons.select("player_id", "season", "games", *[f"fpts_{l}" for l in LEAGUES])
+    b = df.select("player_id", "season")
+    for lag in (0, 1, 2):
+        b = b.join(s.with_columns(pl.col("season") + lag).rename(
+            {"games": f"g{lag}", **{f"fpts_{l}": f"{l}{lag}" for l in LEAGUES}}),
+            on=["player_id", "season"], how="left")
+    z = lambda c: pl.col(c).fill_null(0)
+    den = 3 * z("g0") + 2 * z("g1") + z("g2")
+    b = b.select("player_id", "season", *[
+        ((3 * z(f"{l}0") + 2 * z(f"{l}1") + z(f"{l}2")) / den).alias(f"base_{l}") for l in LEAGUES])
+    return df.join(b, on=["player_id", "season"], how="left")
 
 
+# ppg / ppg_lag1 are swapped for the league being modelled (see projection.league_features)
 FEATURES = ["ppg_burbs", "ppg_burbs_lag1", "games", "games_lag1", "age_next", "nfl_year",
             "draft_round", "draft_pick", "tgt_pg", "car_pg", "att_pg", "rec_pg", "tgt_share",
             "ay_share", "wopr", "yds_per_tgt", "yds_per_car", "catch_rate", "pass_epa_per_att",
