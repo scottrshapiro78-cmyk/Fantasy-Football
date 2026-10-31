@@ -1,0 +1,85 @@
+# League settings, copied from each league's Yahoo settings page (31 Oct 2026).
+# Every scoring value is points per unit. Yardage is points per yard (1/25 = 0.04).
+
+burbs:
+  name: The Burbs
+  yahoo_league_id: 206407
+  draft: auction
+  budget: 200
+  teams: 12
+  regular_season_weeks: [1, 14]
+  playoff_weeks: [15, 17]
+  roster: {QB: 1, RB: 2, WR: 3, TE: 1, FLEX: 1, K: 1, DEF: 1, BN: 5, IR: 1}
+  flex_eligible: [RB, WR, TE]
+  scoring:
+    pass_yd: 0.04
+    pass_td: 4
+    pass_int: -2
+    rush_yd: 0.1
+    rush_td: 6
+    rec: 1.0
+    rec_yd: 0.1
+    rec_td: 6
+    return_yd: 0.04
+    return_td: 6
+    two_pt: 2
+    fumble_lost: -2
+    off_fumble_ret_td: 6
+    fg_0_19: 3
+    fg_20_29: 3
+    fg_30_39: 3
+    fg_40_49: 4
+    fg_50_plus: 5
+    pat_made: 1
+    pat_missed: -1
+  dst_points_allowed: {0: 15, 6: 10, 13: 6, 20: 2, 27: 0, 34: -2, 999: -6}
+
+cbs:
+  name: CBS 2026-2027 Fantasy
+  yahoo_league_id: 499263
+  draft: snake
+  teams: 12
+  regular_season_weeks: [1, 14]
+  playoff_weeks: [15, 17]
+  roster: {QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, K: 1, DEF: 1, BN: 5, IR: 2}
+  flex_eligible: [RB, WR, TE]
+  scoring:
+    pass_yd: 0.04
+    pass_td: 6
+    pass_int: -1
+    rush_yd: 0.1
+    rush_td: 6
+    rec: 1.0
+    rec_yd: 0.1
+    rec_td: 6
+    return_yd: 0.0
+    return_td: 6
+    two_pt: 2
+    fumble_lost: -2
+    off_fumble_ret_td: 6
+    fg_0_19: 3
+    fg_20_29: 3
+    fg_30_39: 3
+    fg_40_49: 4
+    fg_50_plus: 5
+    pat_made: 1
+    pat_missed: 0
+  dst_points_allowed: {0: 10, 6: 7, 13: 4, 20: 1, 27: 0, 34: -1, 999: -4}
+
+# Not a real league: reproduces nflverse's own fantasy_points_ppr column, used to test the scorer.
+nflverse_ppr_check:
+  name: nflverse PPR reference
+  scoring:
+    pass_yd: 0.04
+    pass_td: 4
+    pass_int: -2
+    rush_yd: 0.1
+    rush_td: 6
+    rec: 1.0
+    rec_yd: 0.1
+    rec_td: 6
+    return_yd: 0.0
+    return_td: 6
+    two_pt: 2
+    fumble_lost: -2
+    off_fumble_ret_td: 0
