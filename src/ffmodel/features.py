@@ -54,6 +54,49 @@ def _team_context(weeks: pl.DataFrame, raw: pl.DataFrame) -> pl.DataFrame:
     return team.join(qb, on=["team", "season"], how="left")
 
 
+def _opening_teams() -> pl.DataFrame:
+    """Team each player is on at the start of each season (first roster week), keyed to the
+    season before, i.e. the team known on draft night for the season being projected."""
+    r = data.rosters_weekly().filter(~pl.col("status").is_in(["CUT", "RET"]), pl.col("gsis_id").is_not_null())
+    first = (r.sort("week").group_by("gsis_id", "season")
+              .agg(pl.col("team").first().alias("opening_team_next")))
+    return first.select(pl.col("gsis_id").alias("player_id"), (pl.col("season") - 1).alias("season"),
+                        "opening_team_next")
+
+
+def _role(seasons: pl.DataFrame, df: pl.DataFrame) -> pl.DataFrame:
+    """Opportunity open to each player on his team for next season.
+
+    Opportunity = carries + targets (RB), targets (WR/TE), pass attempts (QB).
+    open_share = 1 - (last season's opportunity of everyone else at his position who is on his
+    draft-night team) / (that team's total opportunity at the position last season).
+    role_gain  = open_share - his own share last season: work vacated by departures, or a bigger
+    role on a new team (e.g. a lead back leaving).
+    Incoming rookies are not counted as competition (no NFL history yet).
+    """
+    opp = seasons.select("player_id", "season", "team", "position",
+                         pl.when(pl.col("position") == "RB").then(pl.col("carries") + pl.col("targets"))
+                           .when(pl.col("position") == "QB").then(pl.col("attempts"))
+                           .otherwise(pl.col("targets")).fill_null(0).cast(pl.Float64).alias("opp"))
+    tot = opp.group_by("team", "season", "position").agg(pl.col("opp").sum().alias("team_opp"))
+    d = (df.select("player_id", "season", "position", "team", "team_next")
+           .join(opp.select("player_id", "season", "opp"), on=["player_id", "season"], how="left"))
+    incoming = d.group_by("team_next", "season", "position").agg(pl.col("opp").sum().alias("incoming"))
+    d = (d.join(incoming, on=["team_next", "season", "position"], how="left")
+          .join(tot.rename({"team": "team_next", "team_opp": "next_team_opp"}),
+                on=["team_next", "season", "position"], how="left")
+          .join(tot, on=["team", "season", "position"], how="left"))
+    return d.select(
+        "player_id", "season",
+        (1 - (pl.col("incoming") - pl.col("opp")) / pl.col("next_team_opp")).clip(0, 1).alias("open_share"),
+        (pl.col("opp") / pl.col("team_opp")).clip(0, 1).alias("own_share"),
+    ).with_columns((pl.col("open_share") - pl.col("own_share")).alias("role_gain")).join(
+        df.select("player_id", "season", "position"), on=["player_id", "season"]).with_columns(
+        # QBs: one starter per team, so share-of-attempts says little (and hurt the backtest)
+        [pl.when(pl.col("position") == "QB").then(0.0).otherwise(pl.col(c)).alias(c)
+         for c in ("open_share", "own_share", "role_gain")]).drop("position")
+
+
 def build() -> pl.DataFrame:
     raw = data.player_weeks()
     weeks = pl.read_parquet(DATA / "processed" / "player_weeks.parquet")
@@ -89,7 +132,10 @@ def build() -> pl.DataFrame:
                          pl.col("games").alias("next_games"), pl.col("team").alias("next_team"))
     df = (df.join(prev, on=["player_id", "season"], how="left")
             .join(nxt, on=["player_id", "season"], how="left")
-            .with_columns((pl.col("next_team") != pl.col("team")).cast(pl.Int8).alias("changed_team")))
+            .join(_opening_teams(), on=["player_id", "season"], how="left")
+            .with_columns(pl.coalesce("opening_team_next", "next_team", "team").alias("team_next"))
+            .with_columns((pl.col("team_next") != pl.col("team")).cast(pl.Int8).alias("changed_team")))
+    df = df.join(_role(seasons, df), on=["player_id", "season"], how="left")
 
     # 3-season recency-weighted PPG through season t (3/2/1 by season, weighted by games)
     s = seasons.select("player_id", "season", "games", *[f"fpts_{l}" for l in LEAGUES])
@@ -111,4 +157,5 @@ FEATURES = ["ppg_burbs", "ppg_burbs_lag1", "games", "games_lag1", "age_next", "n
             "ay_share", "wopr", "yds_per_tgt", "yds_per_car", "catch_rate", "pass_epa_per_att",
             "cpoe", "rush_yds_pg", "rec_epa_pg", "rush_epa_pg", "ret_yds_pg", "xfp_pg", "fpoe_pg",
             "td_luck_pg", "yds_oe_pg", "air_yds_pg", "ppg_tough", "ppg_easy", "tough_idx",
-            "team_fp_pg", "team_qb_epa", "team_pass_att_pg", "share_team_fp", "changed_team"]
+            "team_fp_pg", "team_qb_epa", "team_pass_att_pg", "share_team_fp", "changed_team",
+            "open_share", "role_gain"]

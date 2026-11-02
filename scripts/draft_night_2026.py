@@ -33,6 +33,8 @@ GOLD = PatternFill("solid", fgColor="7F6000")
 for lg in ("burbs", "cbs"):
     wb = openpyxl.load_workbook(DATA / "output" / f"draft_boards_2026_{lg}.xlsx")
     for ws in wb.worksheets:
+        if ws.title == "Column Guide":
+            continue
         if ws.title == "Notes":
             notes = [
                 "DRAFT NIGHT 2026: these are the boards the model would have produced before the 2026 season,",

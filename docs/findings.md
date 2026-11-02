@@ -211,3 +211,11 @@ Max bid is now the model's value alone (walk-away price), not mixed with league 
 League $ (what The Burbs usually pays for that position slot) sits beside it, with
 Bargain $ = model value - league price and a Bargain / League overpays flag at +/-$5.
 Suggested = league price, capped at 90% of the max bid.
+
+## Role changes (Nov 2026, prompted by Walker and Tuten)
+- Draft night 2026 had Kenneth Walker at RB24 ($22; room paid $40, he is RB2 through week 8) and Bhayshul Tuten at RB56 ($1; paid $20, RB15).
+- Both were role changes the stats could not see: Walker signed in KC as the lead back, Tuten took over when Etienne left JAX.
+- Added `open_share` and `role_gain` (share of the draft-night team's position opportunity not held by returning or arriving players). RB/WR/TE only; it hurt QBs.
+- Backtest 2021-25: small gains (CBS RB rank corr 0.663 -> 0.673; others flat). Tuten moved RB56 -> RB49. Walker unchanged: KC still had backs with 2025 touches.
+- Lowering the history weight for big role changes helped WR, hurt RB: not adopted.
+- 2026 through week 8 (top players, 3+ games): Rotoballer preseason projections beat the model on rank at QB (0.46 vs 0.09), RB (0.53 vs 0.40), WR (0.59 vs 0.54); the model wins at TE (0.88 vs 0.61). A 70% Rotoballer / 30% model blend is about as good as Rotoballer alone at RB and best at WR. One partial season only.
