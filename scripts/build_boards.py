@@ -54,7 +54,11 @@ def pos_tiers(df: pl.DataFrame) -> pl.DataFrame:
     return pl.concat(parts)
 
 
-note_col = pl.when(pl.col("rookie")).then(pl.lit("Rookie")).otherwise(pl.lit("")).alias("Note")
+note_col = pl.concat_str([
+    pl.when(pl.col("rookie")).then(pl.lit("Rookie")).otherwise(pl.lit("")),
+    pl.when(pl.col("susp_games").fill_null(0) > 0)
+      .then(pl.format("Suspended {} gms", pl.col("susp_games"))).otherwise(pl.lit("")),
+], separator=" ").str.strip_chars().alias("Note")
 
 # ---- The Burbs (auction) ----
 b = pos_tiers(burbs_board(target, wb_path, market_csv).with_columns(name_expr().alias("player_display_name")))

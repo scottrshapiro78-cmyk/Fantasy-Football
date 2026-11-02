@@ -38,6 +38,38 @@ def _calibration(f: pl.DataFrame, target: int, league: str) -> dict:
     return out
 
 
+def suspensions(target: int) -> pl.DataFrame:
+    """Games a player is known to miss at the start of the season (suspension / exempt list),
+    within the fantasy regular season (weeks 1-14).
+
+    From the roster: consecutive weeks from week 1 on Reserve/Suspended (code R40) or the exempt list;
+    suspension lengths are announced before the season, so this is draft-night information.
+    For a season not yet played, list announced suspensions in data/input/suspensions_<target>.csv
+    (columns: player_id or Player, Games); that file also overrides the roster count.
+    """
+    out = pl.DataFrame(schema={"player_id": pl.Utf8, "susp_games": pl.Int64})
+    path = DATA / "raw" / "rosters_weekly" / f"{target}.parquet"
+    if path.exists():
+        r = (pl.read_parquet(path).filter(pl.col("week") <= 14, pl.col("gsis_id").is_not_null())
+               .select(pl.col("gsis_id").alias("player_id"), "week",
+                       (pl.col("status").is_in(["SUS", "EXE"])
+                        | (pl.col("status_description_abbr") == "R40")).alias("out")))
+        r = r.group_by("player_id", "week").agg(pl.col("out").any()).sort("week")
+        out = (r.group_by("player_id").agg(
+                   pl.col("out").cast(pl.Int8).cum_prod().sum().alias("susp_games"))
+                .filter(pl.col("susp_games") > 0).with_columns(pl.col("susp_games").cast(pl.Int64)))
+    manual = DATA / "input" / f"suspensions_{target}.csv"
+    if manual.exists():
+        m = pl.read_csv(manual)
+        if "player_id" not in m.columns:
+            ids = pl.read_parquet(DATA / "processed" / "player_seasons.parquet").select(
+                "player_id", pl.col("player_display_name").alias("Player")).unique("Player", keep="last")
+            m = m.join(ids, on="Player", how="left")
+        m = m.select("player_id", pl.col("Games").cast(pl.Int64).alias("susp_games"))
+        out = pl.concat([out.filter(~pl.col("player_id").is_in(m["player_id"].to_list())), m])
+    return out
+
+
 def projections(target: int, league: str) -> pl.DataFrame:
     f = pl.read_parquet(DATA / "processed" / "features.parquet")
     rows = f.filter(pl.col("season") == target - 1)
@@ -69,8 +101,12 @@ def projections(target: int, league: str) -> pl.DataFrame:
     parts.append(d.select(pl.col("team").alias("player_id"), (pl.col("team") + " DEF").alias("player_display_name"),
                           pl.lit("DEF").alias("position"), "team", col, pl.lit(1.0).alias("exp_frac"),
                           pl.lit(None, dtype=pl.Float64).alias("risk_score"), pl.lit(False).alias("rookie")))
-    return pl.concat([p.with_columns(pl.col(col).cast(pl.Float64), pl.col("exp_frac").cast(pl.Float64))
+    allp = pl.concat([p.with_columns(pl.col(col).cast(pl.Float64), pl.col("exp_frac").cast(pl.Float64))
                       for p in parts], how="vertical_relaxed")
+    # known suspensions: those weeks are lost on top of normal injury risk (of 14 regular-season weeks)
+    return (allp.join(suspensions(target), on="player_id", how="left")
+                .with_columns(pl.col("susp_games").fill_null(0))
+                .with_columns((pl.col("exp_frac") * (1 - pl.col("susp_games") / 14).clip(0, 1)).alias("exp_frac")))
 
 
 def _tiers(vorp: pl.Series, top: int = 156, breaks: int = 11) -> list[int]:

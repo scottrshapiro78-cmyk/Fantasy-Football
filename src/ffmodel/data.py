@@ -82,3 +82,24 @@ def draft_picks() -> pl.DataFrame:
         path.parent.mkdir(parents=True, exist_ok=True)
         nfl.load_draft_picks().write_parquet(path)
     return pl.read_parquet(path)
+
+
+def depth_charts(ss: list[int] | None = None, refresh_current: bool = False) -> pl.DataFrame:
+    """Depth charts. Through 2024: weekly (week 1 = draft-night proxy). 2025+: timestamped daily
+    ESPN snapshots (column `dt`), so the chart as of draft night can be picked exactly."""
+    out = []
+    for s in ss or seasons():
+        out.append(_cached("depth_charts", [s], nfl.load_depth_charts, refresh_current).with_columns(
+            pl.lit(s).cast(pl.Int32).alias("season")))
+    return out
+
+
+def contracts(refresh: bool = False) -> pl.DataFrame:
+    """OverTheCap contract history (one row per contract): year_signed, apy, apy_cap_pct, gsis_id."""
+    path = DATA / "raw" / "contracts.parquet"
+    if path.exists() and not refresh:
+        return pl.read_parquet(path)
+    df = nfl.load_contracts().drop("season_history", "contract_history", strict=False)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    df.write_parquet(path)
+    return df

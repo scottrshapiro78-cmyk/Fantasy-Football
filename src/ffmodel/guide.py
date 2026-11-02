@@ -28,7 +28,7 @@ GUIDE = {
     "Repl PPG": "Points per game of a replacement-level player at the position: the kind of player left for $1 or on waivers.",
     "VORP": "Value over replacement: how many more regular-season points he gives you than a replacement player, plus a little credit for big-upside players. The engine behind every ranking and dollar value.",
     "Injury Risk (0-100)": "Chance (in %) he misses 4 or more games. Already built into Exp Games; shown for reference.",
-    "Note": "'Rookie' = projected from draft slot only (no NFL history yet).",
+    "Note": "'Rookie' = projected from draft slot only (no NFL history yet). 'Suspended N gms' = known suspension; those games are already taken out of Exp Games.",
     "nflverse ID": "Data ID used to match players. Ignore.",
     # draft-night look-back columns
     "Paid in 2026 $": "What he actually sold for in The Burbs 2026 auction.",

@@ -97,6 +97,48 @@ def _role(seasons: pl.DataFrame, df: pl.DataFrame) -> pl.DataFrame:
          for c in ("open_share", "own_share", "role_gain")]).drop("position")
 
 
+DRAFT_NIGHT = "-08-31"  # depth chart snapshot used for 2025+ (latest on or before this date)
+
+
+def _depth() -> pl.DataFrame:
+    """Draft-night depth chart rank at the player's position for the NEXT season.
+    1 = starter (any WR slot counts), 2 = backup, ...; keyed to season t to project t+1."""
+    rows = []
+    for d in data.depth_charts():
+        s = int(d["season"][0])
+        if "dt" in d.columns:
+            d = d.filter(pl.col("pos_abb").is_in(["QB", "RB", "WR", "TE"]), pl.col("gsis_id").is_not_null())
+            before = d.filter(pl.col("dt") <= f"{s}{DRAFT_NIGHT}T23:59:59Z")
+            d = before if before.height else d.filter(pl.col("dt") == d["dt"].min())
+            snap = d.group_by("team").agg(pl.col("dt").max().alias("snap"))
+            d = (d.join(snap, on="team").filter(pl.col("dt") == pl.col("snap"))
+                  .select("gsis_id", pl.col("pos_rank").cast(pl.Int32).alias("rk")))
+        else:
+            d = (d.filter(pl.col("week") == 1, pl.col("game_type") == "REG", pl.col("formation") == "Offense",
+                          pl.col("depth_position").is_in(["QB", "RB", "HB", "WR", "TE"]), pl.col("gsis_id").is_not_null())
+                  .select("gsis_id", pl.col("depth_team").cast(pl.Int32, strict=False).alias("rk")))
+        rows.append(d.group_by("gsis_id").agg(pl.col("rk").min().alias("depth_rank"))
+                     .with_columns(pl.lit(s - 1).cast(pl.Int32).alias("season")))
+    return pl.concat(rows).rename({"gsis_id": "player_id"})
+
+
+def _contracts() -> pl.DataFrame:
+    """Contract in force for the next season: its size (% of cap) and whether it is a new
+    veteran deal signed that offseason (e.g. Walker's $14.35M/yr in KC). Keyed to season t."""
+    c = (data.contracts().filter(pl.col("gsis_id").is_not_null(), pl.col("year_signed").is_not_null())
+         .select(pl.col("gsis_id").alias("player_id"), "year_signed", "apy_cap_pct",
+                 pl.col("draft_year").cast(pl.Int32, strict=False)))
+    out = []
+    for t in range(2011, 2027):
+        cur = (c.filter(pl.col("year_signed") <= t + 1).sort("year_signed")
+                .group_by("player_id").agg(pl.all().last()))
+        out.append(cur.select(
+            "player_id", pl.lit(t).cast(pl.Int32).alias("season"), pl.col("apy_cap_pct").alias("apy_cap"),
+            ((pl.col("year_signed") == t + 1) & (pl.col("draft_year").fill_null(0) != t + 1))
+            .cast(pl.Int8).alias("new_deal")))
+    return pl.concat(out)
+
+
 def build() -> pl.DataFrame:
     raw = data.player_weeks()
     weeks = pl.read_parquet(DATA / "processed" / "player_weeks.parquet")
@@ -135,7 +177,17 @@ def build() -> pl.DataFrame:
             .join(_opening_teams(), on=["player_id", "season"], how="left")
             .with_columns(pl.coalesce("opening_team_next", "next_team", "team").alias("team_next"))
             .with_columns((pl.col("team_next") != pl.col("team")).cast(pl.Int8).alias("changed_team")))
-    df = df.join(_role(seasons, df), on=["player_id", "season"], how="left")
+    df = (df.join(_role(seasons, df), on=["player_id", "season"], how="left")
+            .join(_depth(), on=["player_id", "season"], how="left")
+            .join(_contracts(), on=["player_id", "season"], how="left")
+            .with_columns(
+                # not on the chart = deep reserve, but only for seasons whose next-year chart exists
+                pl.when(pl.col("depth_rank").is_not_null().any().over("season"))
+                  .then(pl.col("depth_rank").fill_null(5)).clip(1, 5).cast(pl.Float64).alias("depth_rank"),
+                pl.col("apy_cap").fill_null(0.0),
+                # paid to join a new team this offseason (e.g. Walker to KC)
+                (pl.col("new_deal").fill_null(0) * pl.col("changed_team").fill_null(0)).cast(pl.Int8).alias("new_deal"))
+            .with_columns((pl.col("depth_rank") == 1).cast(pl.Int8).alias("starter_next")))
 
     # 3-season recency-weighted PPG through season t (3/2/1 by season, weighted by games)
     s = seasons.select("player_id", "season", "games", *[f"fpts_{l}" for l in LEAGUES])
@@ -158,4 +210,4 @@ FEATURES = ["ppg_burbs", "ppg_burbs_lag1", "games", "games_lag1", "age_next", "n
             "cpoe", "rush_yds_pg", "rec_epa_pg", "rush_epa_pg", "ret_yds_pg", "xfp_pg", "fpoe_pg",
             "td_luck_pg", "yds_oe_pg", "air_yds_pg", "ppg_tough", "ppg_easy", "tough_idx",
             "team_fp_pg", "team_qb_epa", "team_pass_att_pg", "share_team_fp", "changed_team",
-            "open_share", "role_gain"]
+            "open_share", "role_gain", "depth_rank", "starter_next", "apy_cap", "new_deal"]

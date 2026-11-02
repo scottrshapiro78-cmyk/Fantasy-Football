@@ -219,3 +219,11 @@ Suggested = league price, capped at 90% of the max bid.
 - Backtest 2021-25: small gains (CBS RB rank corr 0.663 -> 0.673; others flat). Tuten moved RB56 -> RB49. Walker unchanged: KC still had backs with 2025 touches.
 - Lowering the history weight for big role changes helped WR, hurt RB: not adopted.
 - 2026 through week 8 (top players, 3+ games): Rotoballer preseason projections beat the model on rank at QB (0.46 vs 0.09), RB (0.53 vs 0.40), WR (0.59 vs 0.54); the model wins at TE (0.88 vs 0.61). A 70% Rotoballer / 30% model blend is about as good as Rotoballer alone at RB and best at WR. One partial season only.
+
+## Draft-night news as data (Nov 2026: Walker, Tuten, Jacobs)
+- Added draft-night depth chart rank (week-1 chart through 2024; ESPN snapshot on or before Aug 31 from 2025), contract size (% of cap) and "paid to join a new team" from OverTheCap contracts.
+- Added known suspensions: consecutive weeks from week 1 on Reserve/Suspended (R40) or exempt list, removed from expected games. For a future season, list announced suspensions in data/input/suspensions_<year>.csv (Player, Games).
+- Backtest 2021-25 (Burbs MAE / rank corr): QB 2.55 -> 2.44; RB 2.97 -> 2.90, 0.661 -> 0.677; WR and TE flat.
+- 2026 draft night through week 8 (rank corr with actual PPG): QB 0.09 -> 0.13, RB 0.40 -> 0.45, WR 0.54 -> 0.62 (Rotoballer 0.61), TE 0.88. Rotoballer still better at QB (0.46) and RB (0.53).
+- Walker RB24 $22 -> RB17 $27 (room paid $40). Tuten RB56 $1 -> RB45 $7 ($20). Jacobs now carries 6 games out (6.3 of 13 expected games).
+- 2027 boards: depth charts and suspensions fill in once August data exists; until then those features sit at neutral values.
