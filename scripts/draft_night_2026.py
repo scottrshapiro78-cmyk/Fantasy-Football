@@ -42,6 +42,8 @@ for lg in ("burbs", "cbs"):
                 f"Gold columns are added afterwards: what has actually happened through week {weeks} of 2026.",
                 f"Actual Pts / PPG / Games = 2026 results so far; Actual Pos Rk = rank by total points at the position.",
                 "Paid in 2026 = the price the player sold for in The Burbs 2026 auction (QB/RB/WR/TE only).",
+                "Bargain vs Paid $ = model max bid - actual sale price. Paid Flag: 'Bargain' = sold $5+ under the model's max bid,",
+                "'Overpaid' = sold $5+ over it. (Bargain $ / Flag to the left compare to the usual slot price, as on draft night.)",
                 "",
             ]
             ws.insert_rows(1, len(notes))
@@ -51,7 +53,7 @@ for lg in ("burbs", "cbs"):
         head = [c.value for c in ws[1]]
         id_col, name_col = head.index("nflverse ID") + 1, head.index("Player") + 1
         pos_col = head.index("Pos") + 1 if "Pos" in head else None
-        new = (["Paid in 2026 $"] if lg == "burbs" else []) + [
+        new = (["Paid in 2026 $", "Bargain vs Paid $", "Paid Flag"] if lg == "burbs" else []) + [
             f"Actual Pts (wk 1-{weeks})", "Actual PPG", "Actual Games", "Actual Pos Rk", "Pos Rk Diff (+ = beat)"]
         start = ws.max_column + 1
         for j, h in enumerate(new):
@@ -65,7 +67,11 @@ for lg in ("burbs", "cbs"):
             vals = []
             if lg == "burbs":
                 pos = ws.cell(r, pos_col).value if pos_col else ws.title
-                vals.append(paid.get(_norm(str(ws.cell(r, name_col).value))) if pos in ("QB", "RB", "WR", "TE") else None)
+                pd_ = paid.get(_norm(str(ws.cell(r, name_col).value))) if pos in ("QB", "RB", "WR", "TE") else None
+                mx = ws.cell(r, head.index("Max Bid $") + 1).value
+                gap = None if pd_ is None or mx is None else mx - pd_
+                vals += [pd_, gap, None if gap is None else
+                         ("Bargain" if gap >= 5 else "Overpaid" if gap <= -5 else "")]
             if a and a["games"]:
                 vals += [round(a[f"fpts_{lg}"], 1), round(a[f"fpts_{lg}"] / a["games"], 1), a["games"], a[f"rk_{lg}"],
                          ws.cell(r, rk_col).value - a[f"rk_{lg}"]]

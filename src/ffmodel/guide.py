@@ -32,6 +32,8 @@ GUIDE = {
     "nflverse ID": "Data ID used to match players. Ignore.",
     # draft-night look-back columns
     "Paid in 2026 $": "What he actually sold for in The Burbs 2026 auction.",
+    "Bargain vs Paid $": "Model max bid minus what he actually sold for in the 2026 auction. Positive = he went for less than the model's value.",
+    "Paid Flag": "'Bargain' = sold for $5+ under the model's max bid. 'Overpaid' = sold for $5+ over it.",
     "Actual Pts": "Fantasy points he has actually scored this season so far, in this league's scoring.",
     "Actual PPG": "Actual points per game played this season so far.",
     "Actual Games": "Games he has actually played this season so far.",
