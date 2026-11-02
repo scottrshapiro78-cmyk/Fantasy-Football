@@ -73,3 +73,7 @@ for lg in ("burbs", "cbs"):
                 ws.cell(r, start + j, v)
     wb.save(DATA / "output" / f"draft_night_2026_{lg}.xlsx")
 print("weeks", weeks)
+
+from ffmodel.guide import add_guide  # noqa: E402
+for lg in ("burbs", "cbs"):
+    add_guide(DATA / "output" / f"draft_night_2026_{lg}.xlsx")

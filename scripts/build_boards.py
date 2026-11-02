@@ -198,3 +198,7 @@ for p in POS:
     sh.column_dimensions["B"].width = sh.column_dimensions["Q"].width = 24
 wb.save(out_dir / f"draft_optimizer_import_{target}.xlsx")
 print("wrote", out_dir, burbs.height, cbs.height)
+
+from ffmodel.guide import add_guide  # noqa: E402
+for f in (f"draft_boards_{target}_burbs.xlsx", f"draft_boards_{target}_cbs.xlsx", f"draft_optimizer_import_{target}.xlsx"):
+    add_guide(out_dir / f)
