@@ -73,14 +73,41 @@ def projections(target: int, league: str) -> pl.DataFrame:
                       for p in parts], how="vertical_relaxed")
 
 
-def _tiers(vorp: pl.Series) -> list[int]:
+def _tiers(vorp: pl.Series, top: int = 156, breaks: int = 11) -> list[int]:
+    """Tiers from the largest drops in value. `vorp` must be sorted high to low.
+
+    Among the top `top` players, the `breaks` largest gaps start a new tier; everyone
+    below `top` shares one final tier (waiver-level depth).
+    """
     v = vorp.to_list()
-    gaps = [v[i - 1] - v[i] for i in range(1, len(v))]
-    top = gaps[:150]
-    cut = float(np.mean(top) + np.std(top))
-    tier, out = 1, [1]
-    for g in gaps:
-        if g > cut:
+    n = min(top, len(v))
+    gaps = [(v[i - 1] - v[i], i) for i in range(1, n)]
+    cuts = {i for _, i in sorted(gaps, reverse=True)[:max(0, min(breaks, n - 1))]}
+    tier, out = 1, []
+    for i in range(len(v)):
+        if i in cuts or (i == n and i < len(v)):
+            tier += 1
+        out.append(tier)
+    return out
+
+
+def _window_tiers(vorp: pl.Series, lo: int = 6, hi: int = 18, top: int = 156) -> list[int]:
+    """Whole-board tiers: after each cut, the next cut is the biggest drop 6-18 picks later.
+
+    Keeps tiers roughly round-sized while still breaking at natural drops; past `top`
+    (13 rounds x 12 teams) everyone shares one final tier.
+    """
+    v = vorp.to_list()
+    n = min(top, len(v))
+    cuts, start = set(), 0
+    while start + lo < n:
+        window = range(start + lo, min(start + hi, n - 1) + 1)
+        cut = max(window, key=lambda i: v[i - 1] - v[i])
+        cuts.add(cut)
+        start = cut
+    tier, out = 1, []
+    for i in range(len(v)):
+        if i in cuts or (i == n and i < len(v)):
             tier += 1
         out.append(tier)
     return out
@@ -124,4 +151,4 @@ def burbs_board(target: int, workbook: str, market_csv: str | None = None) -> pl
 def cbs_board(target: int) -> pl.DataFrame:
     b, repl, depth = value(projections(target, "cbs"), "cbs", option=True)
     b = b.sort("vorp", descending=True)
-    return b.with_columns(pl.Series("tier", _tiers(b["vorp"])))
+    return b.with_columns(pl.Series("tier", _window_tiers(b["vorp"])))
