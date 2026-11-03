@@ -273,3 +273,42 @@ def sos(season: int, thru: int, league: str, k_def: float = 4.0) -> pl.DataFrame
     dst_ = dfaced.join(dleft, on="team", how="full", coalesce=True).rename({"team": "player_id"})
     return pl.concat([skill, dst_], how="vertical_relaxed").with_columns(
         pl.col("sos_faced").fill_null(0), pl.col("sos_left").fill_null(0))
+
+
+def role_flags(season: int, thru: int) -> pl.DataFrame:
+    """Displayed Role flag, from playing time and share of the team's work (not points):
+    snap share, and share of team carries + targets (RB) or targets (WR/TE), last 3 games vs
+    earlier games, compared on medians so one odd game can't flip it.
+    Up/down if snap share moves 10+ points or work share 8+ points (QBs: snaps 20+ points only)."""
+    ps = pl.read_parquet(DATA / "processed" / "player_seasons.parquet").filter(pl.col("season") == season)
+    pfr = ps.select("player_id", "pfr_id").drop_nulls()
+    sn = (data.snap_counts([season]).filter(pl.col("week") <= thru, pl.col("game_type") == "REG")
+          .join(pfr, left_on="pfr_player_id", right_on="pfr_id")
+          .select("player_id", pl.col("week").cast(pl.Int32), pl.col("offense_pct").cast(pl.Float64).alias("snap")))
+    w = pl.read_parquet(DATA / "processed" / "player_weeks.parquet").filter(
+        pl.col("season") == season, pl.col("week") <= thru)
+    w = w.with_columns(pl.col("week").cast(pl.Int32),
+                       pl.col("carries").fill_null(0).alias("car"), pl.col("targets").fill_null(0).alias("tgt"))
+    team = w.group_by("team", "week").agg(pl.col("car").sum().alias("t_car"), pl.col("tgt").sum().alias("t_tgt"))
+    w = (w.join(team, on=["team", "week"])
+          .with_columns(pl.when(pl.col("position") == "RB")
+                          .then((pl.col("car") + pl.col("tgt")) / (pl.col("t_car") + pl.col("t_tgt")))
+                          .otherwise(pl.col("tgt") / pl.col("t_tgt")).alias("share"))
+          .join(sn, on=["player_id", "week"], how="left"))
+
+    def split(c):
+        return [pl.col(c).sort_by("week").tail(3).median().alias(f"{c}_l3"),
+                pl.col(c).sort_by("week").head(pl.len() - 3).median().alias(f"{c}_pre")]
+    g = (w.group_by("player_id").agg(pl.col("position").last(), pl.len().alias("g"), *split("snap"), *split("share"))
+          .filter(pl.col("g") >= 5)
+          .with_columns((pl.col("snap_l3") - pl.col("snap_pre")).alias("d_snap"),
+                        (pl.col("share_l3") - pl.col("share_pre")).alias("d_share")))
+    qb = pl.col("position") == "QB"
+    up = pl.when(qb).then(pl.col("d_snap") >= 0.20).otherwise((pl.col("d_snap") >= 0.10) | (pl.col("d_share") >= 0.08))
+    dn = pl.when(qb).then(pl.col("d_snap") <= -0.20).otherwise((pl.col("d_snap") <= -0.10) | (pl.col("d_share") <= -0.08))
+    return g.select("player_id",
+                    pl.when(up.fill_null(False) & ~dn.fill_null(False)).then(pl.lit("Role up"))
+                      .when(dn.fill_null(False) & ~up.fill_null(False)).then(pl.lit("Role down"))
+                      .otherwise(pl.lit("")).alias("role_flag"),
+                    (pl.col("snap_l3") * 100).round(0).alias("snap_l3"), (pl.col("snap_pre") * 100).round(0).alias("snap_pre"),
+                    (pl.col("share_l3") * 100).round(0).alias("share_l3"), (pl.col("share_pre") * 100).round(0).alias("share_pre"))

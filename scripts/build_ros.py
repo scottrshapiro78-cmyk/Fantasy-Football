@@ -43,7 +43,9 @@ GUIDE.update({
     "Playoff Games (wk 15-17)": "His team's games in fantasy playoff weeks 15-17.",
     "Exp Games Left": "Games left (weeks through 17) he is expected to actually play, after injury risk and his current status.",
     "ROS Pts": "Projected points for the rest of the season through week 17: ROS PPG x expected games left.",
-    "Role": "'Role up' / 'Role down' = his usage in the last 3 games is worth 3+ points per game more / less than before, both on average and on a typical (median) game, so one huge game can't trigger it.",
+    "Role": "'Role up' / 'Role down' = his playing time or share of the team's work changed in his last 3 games vs earlier (typical games compared, so one odd game can't trigger it): snap share up/down 10+ points, or share of team carries+targets (RB) / targets (WR, TE) up/down 8+ points. QBs: snap share 20+ points (a starter change).",
+    "Snaps (before → last 3)": "Share of the offense's snaps he played: typical game before his last 3, then typical game in his last 3.",
+    "Work Share (before → last 3)": "Share of the team's work: carries + targets for RBs, targets for WRs and TEs (QBs: blank-ish). Typical game before vs last 3.",
     "Role Trend (xFP)": "Usage trend: expected fantasy points per game from his targets and carries (and where on the field) in his last 3 games, minus his season average. Part of it is built into ROS PPG.",
     "Schedule Adj (PPG)": "How much his remaining opponents add (+) or take away (-) per game, based on how those defenses have played this season against his position (run defense for RBs, pass defense for QB/WR/TE; for team defenses, the offenses they still face).",
     "ROS VORP": "Rest-of-season value over replacement: extra points over a waiver-level player at his position for the rest of the season. Drives the ranking; use it to compare trades.",
@@ -61,6 +63,7 @@ for lg in ("burbs", "cbs"):
         parts.append(s.with_columns(pl.int_range(1, pl.len() + 1).alias("pos_rank"),
                                     pl.Series("pos_tier", _tiers(s["vorp"], *TIER_SHAPE[p]))))
     b = pl.concat(parts).sort("vorp", descending=True).with_columns(pl.int_range(1, pl.len() + 1).alias("overall_rank"))
+    b = b.join(ros.role_flags(season, thru), on="player_id", how="left")
     b = b.with_columns(pl.when(pl.col("position") == "DEF")
                          .then(pl.col("team").replace_strict(TEAMS, default=pl.col("player_display_name")))
                          .otherwise(pl.col("player_display_name")).alias("player_display_name"))
@@ -70,10 +73,9 @@ for lg in ("burbs", "cbs"):
         pl.col("pos_tier").alias("Pos Tier"), pl.col("player_display_name").alias("Player"), pl.col("team").alias("Team"),
         pl.col("status").replace_strict(STATUS, default="").alias("Status"),
         r1(col).alias("ROS PPG"),
-        pl.when((pl.col("role_trend") >= 3) & (pl.col("xfp_med_last3") - pl.col("xfp_med_before") >= 3))
-          .then(pl.lit("Role up"))
-          .when((pl.col("role_trend") <= -3) & (pl.col("xfp_med_last3") - pl.col("xfp_med_before") <= -3))
-          .then(pl.lit("Role down")).otherwise(pl.lit("")).alias("Role"),
+        pl.col("role_flag").fill_null("").alias("Role"),
+        pl.format("{}% → {}%", pl.col("snap_pre").cast(pl.Int32), pl.col("snap_l3").cast(pl.Int32)).alias("Snaps (before → last 3)"),
+        pl.format("{}% → {}%", pl.col("share_pre").cast(pl.Int32), pl.col("share_l3").cast(pl.Int32)).alias("Work Share (before → last 3)"),
         r1("role_trend").alias("Role Trend (xFP)"), r1("sched_adj").alias("Schedule Adj (PPG)"),
         r1("prior").alias("Preseason PPG"), r1(f"ppg_{lg}_sofar").alias("PPG So Far"),
         pl.col("n").alias("Games Played"), pl.col("games_left_reg").alias("Games Left (reg season)"),
