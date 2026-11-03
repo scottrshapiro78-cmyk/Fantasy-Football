@@ -33,7 +33,7 @@ TEAMS = {
     "SEA": "Seattle Seahawks", "TB": "Tampa Bay Buccaneers", "TEN": "Tennessee Titans", "WAS": "Washington Commanders",
 }
 STATUS = {"active": "", "out_week": f"Out (week {thru} report)", "out_long": "IR / PUP / suspended",
-          "practice": "Practice squad", "no_games": "No games yet"}
+          "practice": "Practice squad", "no_games": "No games yet", "season": "Out for season", "dated": "Out"}
 GUIDE.update({
     "Status": "Roster status right now. 'IR / PUP / suspended' = on a reserve list; 'Out this week' = ruled out or doubtful on this week's injury report; 'Practice squad' / 'No games yet' = healthy but not playing (historically they play under 20% of the rest of the season and score about half their projection). All lower expected games.",
     "ROS PPG": "Projected points per game for the rest of the season: a blend of the preseason projection and this season's results so far (more games played = more weight on this season).",
@@ -44,6 +44,7 @@ GUIDE.update({
     "Playoff Games (wk 15-17)": "His team's games in fantasy playoff weeks 15-17.",
     "Exp Games Left": "Games left (weeks through 17) he is expected to actually play, after injury risk and his current status.",
     "ROS Pts": "Projected points for the rest of the season through week 17: ROS PPG x expected games left.",
+    "Injury News": "Latest injury report entry (status, estimated return date, note) from the injury list you pasted. Missed games before the return date are taken out of Exp Games Left; a return date in Jan/Feb means out for the fantasy season.",
     "Role": "'Role up' / 'Role down' = his playing time or share of the team's work changed in his last 3 games vs earlier (typical games compared, so one odd game can't trigger it): snap share up/down 10+ points, or share of team carries+targets (RB) / targets (WR, TE) up/down 8+ points. QBs: snap share 20+ points (a starter change).",
     "Snaps (before → last 3)": "Share of the offense's snaps he played: typical game before his last 3, then typical game in his last 3.",
     "Work Share (before → last 3)": "Share of the team's work: carries + targets for RBs, targets for WRs and TEs (QBs: blank-ish). Typical game before vs last 3.",
@@ -72,7 +73,10 @@ for lg in ("burbs", "cbs"):
     df = b.select(
         pl.col("overall_rank").alias("Overall Rk"), pl.col("position").alias("Pos"), pl.col("pos_rank").alias("Pos Rk"),
         pl.col("pos_tier").alias("Pos Tier"), pl.col("player_display_name").alias("Player"), pl.col("team").alias("Team"),
-        pl.col("status").replace_strict(STATUS, default="").alias("Status"),
+        pl.when(pl.col("status") == "season").then(pl.lit("Out for season"))
+          .when(pl.col("news").fill_null("") != "").then(pl.col("news").str.split(",").list.first())
+          .otherwise(pl.col("status").replace_strict(STATUS, default="")).alias("Status"),
+        pl.col("news").fill_null("").alias("Injury News"),
         r1(col).alias("ROS PPG"),
         pl.col("role_flag").fill_null("").alias("Role"),
         pl.format("{}% → {}%", pl.col("snap_pre").cast(pl.Int32), pl.col("snap_l3").cast(pl.Int32)).alias("Snaps (before → last 3)"),

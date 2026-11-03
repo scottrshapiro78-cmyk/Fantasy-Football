@@ -248,11 +248,14 @@ def project(season: int, thru: int, league: str, fitp: dict | None = None) -> pl
         m = pl.read_csv(manual).select(pl.col("Player").alias("player_display_name"), pl.col("Status").alias("manual"))
         d = d.join(m, on="player_display_name", how="left").with_columns(
             pl.coalesce("manual", "status").alias("status")).drop("manual")
+    d = d.with_columns(pl.lit(0).alias("missed_reg"), pl.lit(0).alias("missed_po"), pl.lit("").alias("news"))
+    d = apply_news(d, season, thru)
     ratio = fitp.get("ppg_ratio", {})
     d = d.with_columns((pl.col(col) * pl.col("status").replace_strict(ratio, default=1.0, return_dtype=pl.Float64)).alias(col))
     d = d.filter(pl.col("status") != "gone")
     reg, po = team_games(season, thru + 1, 14, unplayed_before=True), team_games(season, 15, 17)
-    rate = (pl.when(pl.col("position").is_in(["K", "DEF"])).then(
+    play = {**play, "dated": play["active"], "season": 0.0}
+    rate = (pl.when(pl.col("position").is_in(["K", "DEF"]) & ~pl.col("status").is_in(["season", "dated"])).then(
                 pl.when(pl.col("status") == "active").then(0.97).otherwise(play["out_long"]))
             .otherwise(pl.col("status").replace_strict(play, default=play["active"], return_dtype=pl.Float64)))
     d = d.with_columns(
@@ -260,8 +263,8 @@ def project(season: int, thru: int, league: str, fitp: dict | None = None) -> pl
         pl.col("team").replace_strict(po, default=0, return_dtype=pl.Int64).alias("games_left_po"),
         rate.alias("play_rate"))
     return d.with_columns(
-        (pl.col("games_left_reg") * pl.col("play_rate")).alias("exp_reg"),
-        (pl.col("games_left_po") * pl.col("play_rate")).alias("exp_po"))
+        ((pl.col("games_left_reg") - pl.col("missed_reg")).clip(0) * pl.col("play_rate")).alias("exp_reg"),
+        ((pl.col("games_left_po") - pl.col("missed_po")).clip(0) * pl.col("play_rate")).alias("exp_po"))
 
 
 def _remaining_opps(season: int, thru: int, end: int = 17) -> pl.DataFrame:
@@ -372,3 +375,68 @@ def vacated(season: int, thru: int, league: str) -> pl.DataFrame:
     tot = act.group_by("team", "position").agg(pl.col("share_l3").sum().alias("tot_share"))
     return (act.join(gone, on=["team", "position"]).join(tot, on=["team", "position"])
                .select("player_id", (pl.col("vac_ppg") * pl.col("share_l3") / pl.col("tot_share")).alias("inherit")))
+
+
+def _remaining_games(season: int, thru: int) -> pl.DataFrame:
+    s = data.schedules([season]).filter(pl.col("game_type") == "REG")
+    s = s.filter((pl.col("week") > thru) | pl.col("home_score").is_null())
+    return pl.concat([s.select("week", "gameday", pl.col(t).alias("team")) for t in ("home_team", "away_team")]
+                     ).with_columns(pl.col("gameday").str.to_date())
+
+
+def apply_news(d: pl.DataFrame, season: int, thru: int) -> pl.DataFrame:
+    """Apply a pasted injury report (data/input/news_<season>.tsv: Player, Pos, Return, Status, Note;
+    e.g. Rotowire's injury page). It is treated as the current, complete list for skill players
+    and kickers:
+      Questionable -> plays (normal risk); Doubtful -> likely out this week;
+      Out / IR with a return date -> misses every game before that date, then normal risk;
+      return date in Jan/Feb -> out for the fantasy season;
+      IR with no real date yet (return shown as the next game) -> the usual IR rate;
+      not on the list -> healthy, even if last week's report or roster had him out."""
+    import datetime as dt
+    from .market import _norm
+    path = DATA / "input" / f"news_{season}.tsv"
+    if not path.exists():
+        return d
+    news = pl.read_csv(path, separator="\t", quote_char=None).with_columns(pl.col("Note").fill_null(""))
+    months = {m: i for i, m in enumerate(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], 1)}
+
+    def ret(x):
+        mon, day = x.split()
+        y = season + 1 if months[mon] <= 3 else season
+        return dt.date(y, months[mon], int(day))
+    news = news.with_columns(pl.col("Player").map_elements(_norm, return_dtype=pl.Utf8).alias("key"),
+                             pl.col("Return").map_elements(ret, return_dtype=pl.Date).alias("ret"))
+    games = _remaining_games(season, thru)
+    nxt = games.group_by("team").agg(pl.col("gameday").min().alias("next_game"))
+    d = d.with_columns(pl.col("player_display_name").map_elements(_norm, return_dtype=pl.Utf8).alias("key"))
+    d = (d.join(news.select("key", "Status", "ret", "Note", "Return"), on="key", how="left")
+          .join(nxt, on="team", how="left"))
+    # games missed before the return date, split regular season (wk <= 14) / playoffs
+    miss = (d.filter(pl.col("ret").is_not_null()).select("player_id", "team", "ret")
+              .join(games, on="team").filter(pl.col("gameday") < pl.col("ret"))
+              .group_by("player_id").agg((pl.col("week") <= 14).sum().alias("m_reg"),
+                                         (pl.col("week") > 14).sum().alias("m_po")))
+    d = d.join(miss, on="player_id", how="left")
+    skill = pl.col("position").is_in(["QB", "RB", "WR", "TE", "K"])
+    out = pl.col("Status").is_in(["Out", "Injured Reserve"])
+    season_over = out & (pl.col("ret") >= dt.date(season + 1, 1, 1))
+    dated = out & ~season_over & (pl.col("ret") > pl.col("next_game"))
+    d = d.with_columns(
+        pl.when(~skill).then(pl.col("status"))
+          .when(pl.col("Status").is_null() & pl.col("status").is_in(["out_week", "out_long"])).then(pl.lit("active"))
+          .when(pl.col("Status") == "Questionable").then(pl.lit("active"))
+          .when(pl.col("Status") == "Doubtful").then(pl.lit("out_week"))
+          .when(season_over).then(pl.lit("season"))
+          .when(dated).then(pl.lit("dated"))
+          .when(out & (pl.col("Status") == "Injured Reserve")).then(pl.lit("out_long"))
+          .when(out).then(pl.lit("out_week"))
+          .otherwise(pl.col("status")).alias("status"),
+        pl.when(dated).then(pl.col("m_reg").fill_null(0)).otherwise(pl.col("missed_reg")).alias("missed_reg"),
+        pl.when(dated).then(pl.col("m_po").fill_null(0)).otherwise(pl.col("missed_po")).alias("missed_po"),
+        pl.when(pl.col("Status").is_not_null() & skill)
+          .then(pl.concat_str([pl.col("Status"), pl.lit(", est. return "), pl.col("Return"),
+                               pl.when(pl.col("Note") != "").then(pl.concat_str([pl.lit(" ("), pl.col("Note"), pl.lit(")")]))
+                                 .otherwise(pl.lit(""))]))
+          .otherwise(pl.col("news")).alias("news"))
+    return d.drop("key", "Status", "ret", "Note", "Return", "next_game", "m_reg", "m_po")
