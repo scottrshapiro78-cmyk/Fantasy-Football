@@ -43,6 +43,9 @@ GUIDE.update({
     "Playoff Games (wk 15-17)": "His team's games in fantasy playoff weeks 15-17.",
     "Exp Games Left": "Games left (weeks through 17) he is expected to actually play, after injury risk and his current status.",
     "ROS Pts": "Projected points for the rest of the season through week 17: ROS PPG x expected games left.",
+    "Role": "'Role up' / 'Role down' = his usage in the last 3 games is worth 3+ points per game more / less than his season average (e.g. Tuten taking over the JAX backfield).",
+    "Role Trend (xFP)": "Usage trend: expected fantasy points per game from his targets and carries (and where on the field) in his last 3 games, minus his season average. Part of it is built into ROS PPG.",
+    "Schedule Adj (PPG)": "How much his remaining opponents add (+) or take away (-) per game, based on how those defenses have played this season against his position (run defense for RBs, pass defense for QB/WR/TE; for team defenses, the offenses they still face).",
     "ROS VORP": "Rest-of-season value over replacement: extra points over a waiver-level player at his position for the rest of the season. Drives the ranking; use it to compare trades.",
 })
 
@@ -66,7 +69,11 @@ for lg in ("burbs", "cbs"):
         pl.col("overall_rank").alias("Overall Rk"), pl.col("position").alias("Pos"), pl.col("pos_rank").alias("Pos Rk"),
         pl.col("pos_tier").alias("Pos Tier"), pl.col("player_display_name").alias("Player"), pl.col("team").alias("Team"),
         pl.col("status").replace_strict(STATUS, default="").alias("Status"),
-        r1(col).alias("ROS PPG"), r1("prior").alias("Preseason PPG"), r1(f"ppg_{lg}_sofar").alias("PPG So Far"),
+        r1(col).alias("ROS PPG"),
+        pl.when(pl.col("role_trend") >= 3).then(pl.lit("Role up")).when(pl.col("role_trend") <= -3)
+          .then(pl.lit("Role down")).otherwise(pl.lit("")).alias("Role"),
+        r1("role_trend").alias("Role Trend (xFP)"), r1("sched_adj").alias("Schedule Adj (PPG)"),
+        r1("prior").alias("Preseason PPG"), r1(f"ppg_{lg}_sofar").alias("PPG So Far"),
         pl.col("n").alias("Games Played"), pl.col("games_left_reg").alias("Games Left (reg season)"),
         pl.col("games_left_po").alias("Playoff Games (wk 15-17)"), r1("exp_games").alias("Exp Games Left"),
         (pl.col(col) * pl.col("exp_games")).round(1).alias("ROS Pts"), r1("repl_ppg").alias("Repl PPG"),
@@ -99,10 +106,15 @@ for lg in ("burbs", "cbs"):
         "ROS PPG blends the preseason projection with this season's results. After 8 games this season counts about",
         "60% for QB/RB and 70-75% for WR/TE (fitted on 2021-2025); kickers and defenses still lean mostly on the",
         "preseason projection because their weekly scoring is so noisy.",
+        "Role: usage over the last 3 games vs the season (expected points from targets and carries) also counts for RBs and TEs,",
+        "where it improved the backtest; for QBs and WRs it did not help, so it is shown but not used.",
+        "Schedule: remaining opponents' defense vs the position this season (run D for RBs, pass D for QB/WR/TE),",
+        "and the offenses left for team defenses. It helped most for defenses and TEs, a little for RBs/WRs, not for QBs.",
         "Expected games count byes, current IR / suspension / injury-report status and normal injury risk.",
+        "A game not yet played this week (e.g. Monday night) counts as a game left.",
         "Playoff weeks 15-17 are counted the same as regular-season weeks.",
         "Tested on 2021-2025 (Burbs, error in PPG for weeks 9-17): QB 3.43 vs 3.82 preseason-only / 3.81 season-so-far-only;",
-        "RB 3.05 vs 3.66 / 3.40; WR 2.99 vs 3.42 / 3.27; TE 2.52 vs 2.98 / 2.71.",
+        "RB 3.01 vs 3.66 / 3.40; WR 2.99 vs 3.42 / 3.27; TE 2.44 vs 2.98 / 2.71; DEF 2.06 vs 2.15 / 2.93.",
         "Rerun each week: PYTHONPATH=src python3 scripts/build_ros.py 2026 <last completed week>",
     ]:
         ws.append([n])

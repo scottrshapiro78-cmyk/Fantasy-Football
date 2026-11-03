@@ -24,6 +24,8 @@ LEAGUES = ("burbs", "cbs")
 POS = ["QB", "RB", "WR", "TE", "K", "DEF"]
 K_GRID = [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 30]
 U_GRID = [0.0, 0.25, 0.5, 0.75, 1.0]
+R_GRID = [0.0, 0.25, 0.5, 0.75, 1.0, 1.5]
+S_GRID = [0.0, 0.25, 0.5, 0.75, 1.0, 1.25]
 
 
 def _weekly(season: int) -> pl.DataFrame:
@@ -32,23 +34,29 @@ def _weekly(season: int) -> pl.DataFrame:
     o = data.opportunity([season]).filter(pl.col("player_id").is_not_null()).select(
         "player_id", pl.col("week").cast(pl.Int32),
         (pl.col("total_fantasy_points_exp").cast(pl.Float64) - pl.col("total_fantasy_points").cast(pl.Float64))
-        .alias("luck_gap"))
+        .alias("luck_gap"), pl.col("total_fantasy_points_exp").cast(pl.Float64).alias("xfp"))
     w = (w.select("player_id", "player_display_name", "position", "team", pl.col("week").cast(pl.Int32),
                   "fpts_burbs", "fpts_cbs")
-          .join(o.group_by("player_id", "week").agg(pl.col("luck_gap").sum()), on=["player_id", "week"], how="left"))
+          .join(o.group_by("player_id", "week").agg(pl.col("luck_gap").sum(), pl.col("xfp").sum()),
+                on=["player_id", "week"], how="left"))
     d = (dst_weeks().filter(pl.col("season") == season)
          .select(pl.col("team").alias("player_id"), (pl.col("team") + " DEF").alias("player_display_name"),
                  pl.lit("DEF").alias("position"), "team", pl.col("week").cast(pl.Int32), "fpts_burbs", "fpts_cbs",
-                 pl.lit(None, dtype=pl.Float64).alias("luck_gap")))
+                 pl.lit(None, dtype=pl.Float64).alias("luck_gap"), pl.lit(None, dtype=pl.Float64).alias("xfp")))
     return pl.concat([w, d], how="vertical_relaxed")
 
 
 def to_date(season: int, thru: int) -> pl.DataFrame:
     w = _weekly(season).filter(pl.col("week") <= thru)
-    return w.group_by("player_id").agg(
+    return (w.group_by("player_id").agg(
         pl.len().alias("n"), pl.col("team").sort_by("week").last().alias("team_now"),
         *[pl.col(f"fpts_{lg}").mean().alias(f"ppg_{lg}_sofar") for lg in LEAGUES],
-        pl.col("luck_gap").mean().fill_null(0).alias("luck_pg"))
+        pl.col("luck_gap").mean().fill_null(0).alias("luck_pg"),
+        # role trend: expected fantasy points from usage (targets, carries, where on the field) in his
+        # last 3 games vs his season average; > 0 = his role is growing (e.g. Tuten taking over JAX)
+        pl.col("xfp").mean().alias("xfp_pg"),
+        pl.col("xfp").sort_by("week").tail(3).mean().alias("xfp_last3"))
+    .with_columns((pl.col("xfp_last3") - pl.col("xfp_pg")).fill_null(0).alias("role_trend")))
 
 
 def after(season: int, start: int, end: int = 17) -> pl.DataFrame:
@@ -74,8 +82,10 @@ def status(season: int, week: int) -> pl.DataFrame:
         pl.col("status_description_abbr").alias("status_code"))
 
 
-def team_games(season: int, start: int, end: int) -> dict:
-    s = data.schedules([season]).filter(pl.col("game_type") == "REG", pl.col("week").is_between(start, end))
+def team_games(season: int, start: int, end: int, unplayed_before: bool = False) -> dict:
+    s = data.schedules([season]).filter(pl.col("game_type") == "REG")
+    s = s.filter(pl.col("week").is_between(start, end)
+                 | (pl.lit(unplayed_before) & (pl.col("week") < start) & pl.col("home_score").is_null()))
     t = pl.concat([s.select(pl.col("home_team").alias("t")), s.select(pl.col("away_team").alias("t"))])
     return dict(t.group_by("t").len().iter_rows())
 
@@ -102,9 +112,24 @@ def fit(thru: int = 8) -> dict:
     cache = DATA / "processed" / f"ros_history_wk{thru}.parquet"
     h = pl.read_parquet(cache) if cache.exists() else _history(thru=thru)
     h.write_parquet(cache)
-    out = {"k": {}, "u": {}, "play": {}, "thru": thru}
+    if "role_trend" not in h.columns:  # cache predates the role signal: refresh the season-to-date part
+        td = pl.concat([to_date(s_, thru).with_columns(pl.lit(s_).cast(h["season"].dtype).alias("season"))
+                        for s_ in h["season"].unique().to_list()])
+        keep = [c for c in h.columns if c not in td.columns or c in ("player_id", "season")]
+        h = h.select(keep).join(td, on=["player_id", "season"], how="left").with_columns(pl.col("n").fill_null(0))
+        h.write_parquet(cache)
+    if "sos_left_burbs" not in h.columns:
+        parts = []
+        for s_ in h["season"].unique().to_list():
+            a = sos(s_, thru, "burbs").rename({"sos_faced": "sos_faced_burbs", "sos_left": "sos_left_burbs"})
+            b = sos(s_, thru, "cbs").rename({"sos_faced": "sos_faced_cbs", "sos_left": "sos_left_cbs"})
+            parts.append(a.join(b, on="player_id", how="full", coalesce=True)
+                          .with_columns(pl.lit(s_).cast(h["season"].dtype).alias("season")))
+        h = h.join(pl.concat(parts), on=["player_id", "season"], how="left")
+        h.write_parquet(cache)
+    out = {"k": {}, "u": {}, "r": {}, "play": {}, "thru": thru}
     for lg in LEAGUES:
-        out["k"][lg], out["u"][lg] = {}, {}
+        out["k"][lg], out["u"][lg], out["r"][lg] = {}, {}, {}
         for p in POS:
             d = h.filter(pl.col("position") == p, pl.col("n_after") >= 3, pl.col("n") >= 1,
                          pl.col(f"pred_ppg_{lg}").is_not_null())
@@ -112,17 +137,34 @@ def fit(thru: int = 8) -> dict:
                 d = d.filter(pl.col(f"pred_ppg_{lg}") >= {"QB": 12, "RB": 6, "WR": 6, "TE": 5}[p])
             pri, n = d[f"pred_ppg_{lg}"].to_numpy(), d["n"].to_numpy()
             so, gap, y = d[f"ppg_{lg}_sofar"].to_numpy(), d["luck_pg"].fill_null(0).to_numpy(), d[f"ppg_{lg}_after"].to_numpy()
-            best = None
-            for k, u in itertools.product(K_GRID, U_GRID if p not in ("K", "DEF") else [0.0]):
-                pred = (k * pri + n * (so + u * gap)) / (k + n)
+            rt = d["role_trend"].fill_null(0).to_numpy()
+            skill = p not in ("K", "DEF")
+            best, no_role = None, None
+            for k, u, r in itertools.product(K_GRID, U_GRID if skill else [0.0], R_GRID if skill else [0.0]):
+                pred = (k * pri + n * (so + u * gap + r * rt)) / (k + n)
                 mae = float(np.mean(np.abs(pred - y)))
                 if best is None or mae < best[0]:
-                    best = (mae, k, u)
+                    best = (mae, k, u, r)
+                if r == 0 and (no_role is None or mae < no_role):
+                    no_role = mae
             base = float(np.mean(np.abs(pri - y)))
             sofar = float(np.mean(np.abs(so - y)))
-            out["k"][lg][p], out["u"][lg][p] = best[1], best[2]
+            out["k"][lg][p], out["u"][lg][p], out["r"][lg][p] = best[1], best[2], best[3]
+            # schedule: take the faced schedule out of results so far, add the remaining schedule
+            sf, sl = d[f"sos_faced_{lg}"].fill_null(0).to_numpy(), d[f"sos_left_{lg}"].fill_null(0).to_numpy()
+            k_, u_, r_ = best[1], best[2], best[3]
+            sbest = None
+            for sw in S_GRID:
+                pred = (k_ * pri + n * (so + u_ * gap + r_ * rt - sw * sf)) / (k_ + n) + sw * sl
+                mae = float(np.mean(np.abs(pred - y)))
+                if sbest is None or mae < sbest[0] - 1e-9:
+                    sbest = (mae, sw)
+            out.setdefault("s", {}).setdefault(lg, {})[p] = sbest[1]
+            no_sched = best[0]
+            best = (sbest[0],) + best[1:]
             out.setdefault("check", {}).setdefault(lg, {})[p] = {
-                "n": len(y), "mae_preseason": round(base, 2), "mae_sofar": round(sofar, 2), "mae_ros": round(best[0], 2)}
+                "n": len(y), "mae_preseason": round(base, 2), "mae_sofar": round(sofar, 2), "mae_ros": round(best[0], 2), "mae_ros_no_role": round(no_role, 2),
+                "mae_ros_no_schedule": round(no_sched, 2)}
     pl_ = h.filter(pl.col("tg_left") > 0, pl.col("status").is_not_null(), pl.col("n") >= 2,
                    pl.col("position").is_in(["QB", "RB", "WR", "TE"]),
                    pl.col("pred_ppg_burbs") >= 8)  # fantasy-relevant players
@@ -137,6 +179,7 @@ def project(season: int, thru: int, league: str, fitp: dict | None = None) -> pl
     import json
     fitp = fitp or json.loads((DATA / "processed" / "ros_fit.json").read_text())
     k, u, play = fitp["k"][league], fitp["u"][league], fitp["play"]
+    rr = fitp.get("r", {}).get(league, {p: 0.0 for p in POS})
     col = f"pred_ppg_{league}"
     pri = projections(season, league).select("player_id", "player_display_name", "position", "team",
                                              pl.col(col).alias("prior"), "rookie")
@@ -153,11 +196,17 @@ def project(season: int, thru: int, league: str, fitp: dict | None = None) -> pl
         pl.coalesce("pp", "position").alias("position")).drop("pn", "pp")
     d = d.filter(pl.col("position").is_in(POS)).join(low, on="position", how="left").with_columns(
         pl.col("prior").fill_null(pl.col("low")), pl.col("n").fill_null(0),
-        pl.col("rookie").fill_null(False), pl.col("luck_pg").fill_null(0))
+        pl.col("rookie").fill_null(False), pl.col("luck_pg").fill_null(0), pl.col("role_trend").fill_null(0))
     kk = pl.col("position").replace_strict(k, return_dtype=pl.Float64)
     uu = pl.col("position").replace_strict(u, return_dtype=pl.Float64)
-    obs = pl.col(f"ppg_{league}_sofar").fill_null(0) + uu * pl.col("luck_pg")
-    d = d.with_columns(((kk * pl.col("prior") + pl.col("n") * obs) / (kk + pl.col("n"))).alias(col))
+    rt = pl.col("position").replace_strict(rr, return_dtype=pl.Float64)
+    obs = pl.col(f"ppg_{league}_sofar").fill_null(0) + uu * pl.col("luck_pg") + rt * pl.col("role_trend").fill_null(0)
+    ss = pl.col("position").replace_strict(fitp.get("s", {}).get(league, {p: 0.0 for p in POS}), return_dtype=pl.Float64)
+    d = d.join(sos(season, thru, league), on="player_id", how="left").with_columns(
+        pl.col("sos_faced").fill_null(0), pl.col("sos_left").fill_null(0))
+    obs = obs - ss * pl.col("sos_faced")
+    d = d.with_columns(((kk * pl.col("prior") + pl.col("n") * obs) / (kk + pl.col("n"))
+                        + ss * pl.col("sos_left")).alias(col), (ss * pl.col("sos_left")).alias("sched_adj"))
 
     st = status(season, thru)
     d = d.join(st, on="player_id", how="left").with_columns(
@@ -166,7 +215,7 @@ def project(season: int, thru: int, league: str, fitp: dict | None = None) -> pl
         pl.when(pl.col("position") == "DEF").then(pl.lit("active"))
           .otherwise(pl.col("status").fill_null("active")).alias("status"))
     d = d.filter(pl.col("status") != "gone")
-    reg, po = team_games(season, thru + 1, 14), team_games(season, 15, 17)
+    reg, po = team_games(season, thru + 1, 14, unplayed_before=True), team_games(season, 15, 17)
     rate = (pl.when(pl.col("position").is_in(["K", "DEF"])).then(
                 pl.when(pl.col("status") == "active").then(0.97).otherwise(play["out_long"]))
             .otherwise(pl.col("status").replace_strict(play, default=play["active"], return_dtype=pl.Float64)))
@@ -177,3 +226,47 @@ def project(season: int, thru: int, league: str, fitp: dict | None = None) -> pl
     return d.with_columns(
         (pl.col("games_left_reg") * pl.col("play_rate")).alias("exp_reg"),
         (pl.col("games_left_po") * pl.col("play_rate")).alias("exp_po"))
+
+
+def _remaining_opps(season: int, thru: int, end: int = 17) -> pl.DataFrame:
+    s = data.schedules([season]).filter(pl.col("game_type") == "REG")
+    s = s.filter(pl.col("week").is_between(thru + 1, end) | ((pl.col("week") <= thru) & pl.col("home_score").is_null()))
+    return pl.concat([s.select(pl.col("home_team").alias("team"), pl.col("away_team").alias("opp")),
+                      s.select(pl.col("away_team").alias("team"), pl.col("home_team").alias("opp"))])
+
+
+def sos(season: int, thru: int, league: str, k_def: float = 4.0) -> pl.DataFrame:
+    """Strength of schedule from this season's games through `thru`.
+
+    Skill players: each defense's points allowed to the position above what those same players
+    usually score (opponent.defense_effects: run defense shows up at RB, pass defense at QB/WR/TE).
+    Fantasy defenses: each offense's points given up to opposing defenses vs average, shrunk.
+    Returns per player: sos_faced (avg of opponents already played) and sos_left (avg of
+    opponents still to play), in fantasy points per game.
+    """
+    from .opponent import defense_effects
+    col = f"fpts_{league}"
+    w = pl.read_parquet(DATA / "processed" / "player_weeks.parquet").filter(
+        pl.col("season") == season, pl.col("week") <= thru)
+    eff = defense_effects(w, col).select("position", pl.col("opponent_team").alias("opp"), pl.col(f"def_{col}").alias("eff"))
+    faced = (w.select("player_id", "position", pl.col("opponent_team").alias("opp"))
+               .join(eff, on=["position", "opp"], how="left")
+               .group_by("player_id").agg(pl.col("eff").fill_null(0).mean().alias("sos_faced")))
+    pos = (w.sort("week").group_by("player_id").agg(pl.col("position").last(), pl.col("team").last()))
+    rem = _remaining_opps(season, thru)
+    left = (pos.join(rem, on="team", how="left").join(eff, on=["position", "opp"], how="left")
+               .group_by("player_id").agg(pl.col("eff").fill_null(0).mean().fill_null(0).alias("sos_left")))
+    skill = faced.join(left, on="player_id", how="full", coalesce=True)
+
+    dw = dst_weeks().filter(pl.col("season") == season, pl.col("week") <= thru)
+    sch = data.schedules([season]).filter(pl.col("game_type") == "REG", pl.col("week") <= thru)
+    opp_of = pl.concat([sch.select("week", pl.col("home_team").alias("team"), pl.col("away_team").alias("opp")),
+                        sch.select("week", pl.col("away_team").alias("team"), pl.col("home_team").alias("opp"))])
+    dw = dw.join(opp_of.with_columns(pl.col("week").cast(dw["week"].dtype)), on=["week", "team"], how="left")
+    mu = dw[col].mean()
+    off = dw.group_by("opp").agg(((pl.col(col) - mu).sum() / (pl.len() + k_def)).alias("eff"))
+    dfaced = dw.join(off, on="opp", how="left").group_by("team").agg(pl.col("eff").fill_null(0).mean().alias("sos_faced"))
+    dleft = rem.join(off, on="opp", how="left").group_by("team").agg(pl.col("eff").fill_null(0).mean().alias("sos_left"))
+    dst_ = dfaced.join(dleft, on="team", how="full", coalesce=True).rename({"team": "player_id"})
+    return pl.concat([skill, dst_], how="vertical_relaxed").with_columns(
+        pl.col("sos_faced").fill_null(0), pl.col("sos_left").fill_null(0))

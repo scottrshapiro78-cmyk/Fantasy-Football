@@ -227,3 +227,9 @@ Suggested = league price, capped at 90% of the max bid.
 - 2026 draft night through week 8 (rank corr with actual PPG): QB 0.09 -> 0.13, RB 0.40 -> 0.45, WR 0.54 -> 0.62 (Rotoballer 0.61), TE 0.88. Rotoballer still better at QB (0.46) and RB (0.53).
 - Walker RB24 $22 -> RB17 $27 (room paid $40). Tuten RB56 $1 -> RB45 $7 ($20). Jacobs now carries 6 games out (6.3 of 13 expected games).
 - 2027 boards: depth charts and suspensions fill in once August data exists; until then those features sit at neutral values.
+
+## Rest of season (Nov 2026)
+- ROS PPG = (k x preseason + n x so-far) / (k + n); k fitted at week 8 on 2021-25: QB 5-6, RB 5-6, WR 3, TE 2-3, K 20, DEF 30.
+- Role trend (usage-based expected points, last 3 games minus season) helps RB and TE a little (Burbs RB 3.05 -> 3.01, TE 2.52 -> 2.47); not QB/WR.
+- Cutting the preseason weight when this season's usage differs a lot from the projection hurt RBs (usage spikes regress); small help for QBs; not adopted.
+- Remaining schedule (defense vs position from this season's games, backfitted against each player's own level): DEF 2.16 -> 2.06, TE 2.47 -> 2.44, RB/WR ~0, QB 0. Effects for skill players are under ~0.3 PPG after shrinkage.
