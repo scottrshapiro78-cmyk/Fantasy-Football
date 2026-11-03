@@ -396,6 +396,17 @@ def apply_news(d: pl.DataFrame, season: int, thru: int) -> pl.DataFrame:
     import datetime as dt
     from .market import _norm
     path = DATA / "input" / f"news_{season}.tsv"
+    live = sleeper_injuries()
+    if live is not None:  # live feed first; a pasted report (with return dates) overrides it below
+        d = d.join(live, on="player_id", how="left").with_columns(
+            pl.when(pl.col("sl_status").is_in(["IR", "PUP", "Sus", "NFI"])).then(pl.lit("out_long"))
+              .when(pl.col("sl_status").is_in(["Out", "Doubtful"])).then(pl.lit("out_week"))
+              .when(pl.col("sl_status").is_null() & pl.col("status").is_in(["out_week", "out_long"])
+                    & pl.col("position").is_in(["QB", "RB", "WR", "TE", "K"])).then(pl.lit("active"))
+              .when(pl.col("sl_status") == "Questionable").then(pl.lit("active"))
+              .otherwise(pl.col("status")).alias("status"),
+            pl.when(pl.col("sl_status").is_not_null()).then(pl.concat_str([pl.lit("Sleeper: "), pl.col("sl_status")]))
+              .otherwise(pl.col("news")).alias("news")).drop("sl_status")
     if not path.exists():
         return d
     news = pl.read_csv(path, separator="\t", quote_char=None).with_columns(pl.col("Note").fill_null(""))
@@ -440,3 +451,26 @@ def apply_news(d: pl.DataFrame, season: int, thru: int) -> pl.DataFrame:
                                  .otherwise(pl.lit(""))]))
           .otherwise(pl.col("news")).alias("news"))
     return d.drop("key", "Status", "ret", "Note", "Return", "next_game", "m_reg", "m_po")
+
+
+SLEEPER_URL = "https://api.sleeper.app/v1/players/nfl"
+
+
+def sleeper_injuries() -> pl.DataFrame | None:
+    """Live injury status from Sleeper (no key needed). Returns player_id, sl_status
+    (IR / PUP / Sus / Out / Doubtful / Questionable ...) or None if the host is unreachable
+    (it must be allowed in the environment's network settings)."""
+    import json
+    import urllib.request
+    try:
+        with urllib.request.urlopen(SLEEPER_URL, timeout=30) as r:
+            players = json.load(r)
+    except Exception:
+        return None
+    rows = [{"sleeper_id": str(k), "sl_status": v.get("injury_status")}
+            for k, v in players.items() if v.get("injury_status")]
+    if not rows:
+        return None
+    ids = (pl.read_parquet(DATA / "processed" / "player_seasons.parquet")
+             .select("player_id", pl.col("sleeper_id").cast(pl.Utf8)).drop_nulls().unique("sleeper_id"))
+    return pl.DataFrame(rows).join(ids, on="sleeper_id").select("player_id", "sl_status")
