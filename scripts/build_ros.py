@@ -32,7 +32,7 @@ TEAMS = {
     "NYJ": "New York Jets", "PHI": "Philadelphia Eagles", "PIT": "Pittsburgh Steelers", "SF": "San Francisco 49ers",
     "SEA": "Seattle Seahawks", "TB": "Tampa Bay Buccaneers", "TEN": "Tennessee Titans", "WAS": "Washington Commanders",
 }
-STATUS = {"active": "", "out_week": "Out this week", "out_long": "IR / PUP / suspended",
+STATUS = {"active": "", "out_week": f"Out (week {thru} report)", "out_long": "IR / PUP / suspended",
           "practice": "Practice squad", "no_games": "No games yet"}
 GUIDE.update({
     "Status": "Roster status right now. 'IR / PUP / suspended' = on a reserve list; 'Out this week' = ruled out or doubtful on this week's injury report; 'Practice squad' / 'No games yet' = healthy but not playing (historically they play under 20% of the rest of the season and score about half their projection). All lower expected games.",
