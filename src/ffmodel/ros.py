@@ -80,6 +80,8 @@ def status(season: int, week: int) -> pl.DataFrame:
         pl.col("gsis_id").alias("player_id"), pl.col("team").alias("roster_team"),
         pl.when(pl.col("status").is_in(["CUT", "RET"])).then(pl.lit("gone"))
           .when(pl.col("status").is_in(["RES", "EXE", "SUS"])).then(pl.lit("out_long"))
+          .when((pl.col("status") == "DEV") | pl.col("status_description_abbr").str.starts_with("P").fill_null(False))
+          .then(pl.lit("practice"))
           .when(pl.col("report_status").is_in(["Out", "Doubtful"])).then(pl.lit("out_week"))
           .otherwise(pl.lit("active")).alias("status"),
         pl.col("status_description_abbr").alias("status_code"))
@@ -173,6 +175,18 @@ def fit(thru: int = 8) -> dict:
                    pl.col("pred_ppg_burbs") >= 8)  # fantasy-relevant players
     pl_ = pl_.with_columns((pl.col("n_after").fill_null(0) / pl.col("tg_left")).clip(0, 1).alias("rate"))
     out["play"] = {s: round(float(v), 3) for s, v in pl_.group_by("status").agg(pl.col("rate").mean()).iter_rows()}
+    # practice squad / no games yet (healthy but not playing): rarely play, and score less when they do
+    q = h.filter(pl.col("tg_left") > 0, pl.col("position").is_in(["QB", "RB", "WR", "TE"]),
+                 pl.col("pred_ppg_burbs") >= 6).with_columns(
+        (pl.col("n_after").fill_null(0) / pl.col("tg_left")).clip(0, 1).alias("rate"),
+        pl.when(pl.col("status_code").str.starts_with("P").fill_null(False)).then(pl.lit("practice"))
+          .when((pl.col("n") == 0) & (pl.col("status") == "active")).then(pl.lit("no_games"))
+          .otherwise(None).alias("grp")).filter(pl.col("grp").is_not_null())
+    for g_, rate, ratio in q.group_by("grp").agg(
+            pl.col("rate").mean(),
+            (pl.col("ppg_burbs_after").mean() / pl.col("pred_ppg_burbs").mean())).iter_rows():
+        out["play"][g_] = round(float(rate), 3)
+        out.setdefault("ppg_ratio", {})[g_] = round(float(ratio), 3)
     import json
     (DATA / "processed" / "ros_fit.json").write_text(json.dumps(out, indent=1))
     return out
@@ -217,6 +231,15 @@ def project(season: int, thru: int, league: str, fitp: dict | None = None) -> pl
           .otherwise(pl.coalesce("roster_team", "team_now", "team")).alias("team"),
         pl.when(pl.col("position") == "DEF").then(pl.lit("active"))
           .otherwise(pl.col("status").fill_null("active")).alias("status"))
+    d = d.with_columns(pl.when((pl.col("status") == "active") & (pl.col("n") == 0) & (pl.col("position") != "DEF"))
+                         .then(pl.lit("no_games")).otherwise(pl.col("status")).alias("status"))
+    manual = DATA / "input" / f"status_{season}.csv"  # news the data doesn't have yet: Player, Status
+    if manual.exists():
+        m = pl.read_csv(manual).select(pl.col("Player").alias("player_display_name"), pl.col("Status").alias("manual"))
+        d = d.join(m, on="player_display_name", how="left").with_columns(
+            pl.coalesce("manual", "status").alias("status")).drop("manual")
+    ratio = fitp.get("ppg_ratio", {})
+    d = d.with_columns((pl.col(col) * pl.col("status").replace_strict(ratio, default=1.0, return_dtype=pl.Float64)).alias(col))
     d = d.filter(pl.col("status") != "gone")
     reg, po = team_games(season, thru + 1, 14, unplayed_before=True), team_games(season, 15, 17)
     rate = (pl.when(pl.col("position").is_in(["K", "DEF"])).then(
