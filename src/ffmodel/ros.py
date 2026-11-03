@@ -55,7 +55,10 @@ def to_date(season: int, thru: int) -> pl.DataFrame:
         # role trend: expected fantasy points from usage (targets, carries, where on the field) in his
         # last 3 games vs his season average; > 0 = his role is growing (e.g. Tuten taking over JAX)
         pl.col("xfp").mean().alias("xfp_pg"),
-        pl.col("xfp").sort_by("week").tail(3).mean().alias("xfp_last3"))
+        pl.col("xfp").sort_by("week").tail(3).mean().alias("xfp_last3"),
+        # for the displayed Role flag: medians, so one huge game (e.g. a 24-target day) can't flip it
+        pl.col("xfp").sort_by("week").tail(3).median().alias("xfp_med_last3"),
+        pl.col("xfp").sort_by("week").head(pl.len() - 3).median().alias("xfp_med_before"))
     .with_columns((pl.col("xfp_last3") - pl.col("xfp_pg")).fill_null(0).alias("role_trend")))
 
 

@@ -43,7 +43,7 @@ GUIDE.update({
     "Playoff Games (wk 15-17)": "His team's games in fantasy playoff weeks 15-17.",
     "Exp Games Left": "Games left (weeks through 17) he is expected to actually play, after injury risk and his current status.",
     "ROS Pts": "Projected points for the rest of the season through week 17: ROS PPG x expected games left.",
-    "Role": "'Role up' / 'Role down' = his usage in the last 3 games is worth 3+ points per game more / less than his season average (e.g. Tuten taking over the JAX backfield).",
+    "Role": "'Role up' / 'Role down' = his usage in the last 3 games is worth 3+ points per game more / less than before, both on average and on a typical (median) game, so one huge game can't trigger it.",
     "Role Trend (xFP)": "Usage trend: expected fantasy points per game from his targets and carries (and where on the field) in his last 3 games, minus his season average. Part of it is built into ROS PPG.",
     "Schedule Adj (PPG)": "How much his remaining opponents add (+) or take away (-) per game, based on how those defenses have played this season against his position (run defense for RBs, pass defense for QB/WR/TE; for team defenses, the offenses they still face).",
     "ROS VORP": "Rest-of-season value over replacement: extra points over a waiver-level player at his position for the rest of the season. Drives the ranking; use it to compare trades.",
@@ -70,7 +70,9 @@ for lg in ("burbs", "cbs"):
         pl.col("pos_tier").alias("Pos Tier"), pl.col("player_display_name").alias("Player"), pl.col("team").alias("Team"),
         pl.col("status").replace_strict(STATUS, default="").alias("Status"),
         r1(col).alias("ROS PPG"),
-        pl.when(pl.col("role_trend") >= 3).then(pl.lit("Role up")).when(pl.col("role_trend") <= -3)
+        pl.when((pl.col("role_trend") >= 3) & (pl.col("xfp_med_last3") - pl.col("xfp_med_before") >= 3))
+          .then(pl.lit("Role up"))
+          .when((pl.col("role_trend") <= -3) & (pl.col("xfp_med_last3") - pl.col("xfp_med_before") <= -3))
           .then(pl.lit("Role down")).otherwise(pl.lit("")).alias("Role"),
         r1("role_trend").alias("Role Trend (xFP)"), r1("sched_adj").alias("Schedule Adj (PPG)"),
         r1("prior").alias("Preseason PPG"), r1(f"ppg_{lg}_sofar").alias("PPG So Far"),
