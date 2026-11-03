@@ -25,6 +25,10 @@ POS = ["QB", "RB", "WR", "TE", "K", "DEF"]
 K_GRID = [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 30]
 U_GRID = [0.0, 0.25, 0.5, 0.75, 1.0]
 R_GRID = [0.0, 0.25, 0.5, 0.75, 1.0, 1.5]
+# Rookies (fitted on 2021-25 at week 8, small samples: 23 QB, 43 RB, 88 WR, 37 TE): the draft-slot
+# preseason projection deserves less weight for QB/WR, and recent usage more weight for RB/TE.
+ROOKIE_K_MULT = {"QB": 0.25, "WR": 0.25}
+ROOKIE_R = {"QB": 0.75, "RB": 1.0, "TE": 0.75}
 S_GRID = [0.0, 0.25, 0.5, 0.75, 1.0, 1.25]
 
 
@@ -38,7 +42,10 @@ def _weekly(season: int) -> pl.DataFrame:
     w = (w.select("player_id", "player_display_name", "position", "team", pl.col("week").cast(pl.Int32),
                   "fpts_burbs", "fpts_cbs")
           .join(o.group_by("player_id", "week").agg(pl.col("luck_gap").sum(), pl.col("xfp").sum()),
-                on=["player_id", "week"], how="left"))
+                on=["player_id", "week"], how="left")
+          # a game played with no touches is zero usage, not missing
+          .with_columns(pl.when(pl.col("position").is_in(["QB", "RB", "WR", "TE"]))
+                          .then(pl.col("xfp").fill_null(0)).otherwise(pl.col("xfp")).alias("xfp")))
     d = (dst_weeks().filter(pl.col("season") == season)
          .select(pl.col("team").alias("player_id"), (pl.col("team") + " DEF").alias("player_display_name"),
                  pl.lit("DEF").alias("position"), "team", pl.col("week").cast(pl.Int32), "fpts_burbs", "fpts_cbs",
@@ -217,6 +224,9 @@ def project(season: int, thru: int, league: str, fitp: dict | None = None) -> pl
     kk = pl.col("position").replace_strict(k, return_dtype=pl.Float64)
     uu = pl.col("position").replace_strict(u, return_dtype=pl.Float64)
     rt = pl.col("position").replace_strict(rr, return_dtype=pl.Float64)
+    rk = pl.col("rookie").fill_null(False)
+    kk = pl.when(rk).then(kk * pl.col("position").replace_strict(ROOKIE_K_MULT, default=1.0, return_dtype=pl.Float64)).otherwise(kk)
+    rt = pl.when(rk).then(pl.max_horizontal(rt, pl.col("position").replace_strict(ROOKIE_R, default=0.0, return_dtype=pl.Float64))).otherwise(rt)
     obs = pl.col(f"ppg_{league}_sofar").fill_null(0) + uu * pl.col("luck_pg") + rt * pl.col("role_trend").fill_null(0)
     ss = pl.col("position").replace_strict(fitp.get("s", {}).get(league, {p: 0.0 for p in POS}), return_dtype=pl.Float64)
     d = d.join(sos(season, thru, league), on="player_id", how="left").with_columns(
@@ -323,7 +333,7 @@ def role_flags(season: int, thru: int) -> pl.DataFrame:
         return [pl.col(c).sort_by("week").tail(3).median().alias(f"{c}_l3"),
                 pl.col(c).sort_by("week").head(pl.len() - 3).median().alias(f"{c}_pre")]
     g = (w.group_by("player_id").agg(pl.col("position").last(), pl.len().alias("g"), *split("snap"), *split("share"))
-          .filter(pl.col("g") >= 5)
+          .filter(pl.col("g") >= 4)
           .with_columns((pl.col("snap_l3") - pl.col("snap_pre")).alias("d_snap"),
                         (pl.col("share_l3") - pl.col("share_pre")).alias("d_share")))
     qb = pl.col("position") == "QB"
@@ -335,3 +345,30 @@ def role_flags(season: int, thru: int) -> pl.DataFrame:
                       .otherwise(pl.lit("")).alias("role_flag"),
                     (pl.col("snap_l3") * 100).round(0).alias("snap_l3"), (pl.col("snap_pre") * 100).round(0).alias("snap_pre"),
                     (pl.col("share_l3") * 100).round(0).alias("share_l3"), (pl.col("share_pre") * 100).round(0).alias("share_pre"))
+
+
+def vacated(season: int, thru: int, league: str) -> pl.DataFrame:
+    """Work freed up by injured / released teammates, handed to whoever is getting the work now.
+
+    For each team and position: points per game so far of teammates now on IR / PUP / suspended
+    or released (2+ games played), times each active teammate's share of the work in his last
+    3 games over the active teammates' total share. inherit = expected extra PPG from that.
+    """
+    w = pl.read_parquet(DATA / "processed" / "player_weeks.parquet").filter(
+        pl.col("season") == season, pl.col("week") <= thru, pl.col("position").is_in(["RB", "WR", "TE"]))
+    w = w.with_columns(pl.col("carries").fill_null(0).alias("car"), pl.col("targets").fill_null(0).alias("tgt"))
+    team = w.group_by("team", "week").agg(pl.col("car").sum().alias("t_car"), pl.col("tgt").sum().alias("t_tgt"))
+    w = w.join(team, on=["team", "week"]).with_columns(
+        pl.when(pl.col("position") == "RB").then((pl.col("car") + pl.col("tgt")) / (pl.col("t_car") + pl.col("t_tgt")))
+          .otherwise(pl.col("tgt") / pl.col("t_tgt")).alias("share"))
+    p = (w.sort("week").group_by("player_id").agg(
+            pl.col("team").last(), pl.col("position").last(), pl.len().alias("g"),
+            pl.col(f"fpts_{league}").mean().alias("ppg"), pl.col("share").tail(3).mean().alias("share_l3"))
+         .join(status(season, thru).select("player_id", "status"), on="player_id", how="left")
+         .with_columns(pl.col("status").fill_null("active")))
+    gone = (p.filter(pl.col("status").is_in(["out_long", "gone"]), pl.col("g") >= 2)
+              .group_by("team", "position").agg(pl.col("ppg").sum().alias("vac_ppg")))
+    act = p.filter(pl.col("status").is_in(["active", "out_week"]))
+    tot = act.group_by("team", "position").agg(pl.col("share_l3").sum().alias("tot_share"))
+    return (act.join(gone, on=["team", "position"]).join(tot, on=["team", "position"])
+               .select("player_id", (pl.col("vac_ppg") * pl.col("share_l3") / pl.col("tot_share")).alias("inherit")))

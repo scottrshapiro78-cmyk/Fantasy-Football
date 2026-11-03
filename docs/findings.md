@@ -233,3 +233,7 @@ Suggested = league price, capped at 90% of the max bid.
 - Role trend (usage-based expected points, last 3 games minus season) helps RB and TE a little (Burbs RB 3.05 -> 3.01, TE 2.52 -> 2.47); not QB/WR.
 - Cutting the preseason weight when this season's usage differs a lot from the projection hurt RBs (usage spikes regress); small help for QBs; not adopted.
 - Remaining schedule (defense vs position from this season's games, backfitted against each player's own level): DEF 2.16 -> 2.06, TE 2.47 -> 2.44, RB/WR ~0, QB 0. Effects for skill players are under ~0.3 PPG after shrinkage.
+- Rookies (2021-25, week 8): QB/WR draft-slot projections deserve ~1/4 the usual weight; RB/TE recent usage deserves more (r 0.75-1.0). Adopted.
+- Handing an injured teammate's PPG to backups by work share did not help RB/WR (TE slightly): not adopted; the usage-so-far and role trend already carry it.
+- Practice-squad and healthy-no-games players: play 7% / 19% of remaining games and score ~55% of projection. Now statuses.
+- Manual news file: data/input/status_<season>.csv (Player, Status in active/out_week/out_long/gone).
