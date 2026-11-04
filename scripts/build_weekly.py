@@ -71,6 +71,7 @@ GUIDE.update({
     "Team Implied Pts": "Points Vegas expects his team to score this week (from the over/under and spread). For a team defense: points the opponent is expected to score.",
     "Vegas Adj": "Points added or taken away because his team's implied total is higher or lower than its usual this season (fitted: matters for RB, TE, K and defenses; not for QB/WR once the matchup is counted).",
     "Play Chance": "Chance he plays this week: 0% if Out / Doubtful / IR, 85% if Questionable, 55% if in the concussion protocol, low for practice-squad or players with no games yet.",
+    "Teammate Out Adj": "Points added because his team's top WR may sit this week (weighted by the chance he sits). When a team's top WR missed a game (2016-2025), the other WRs scored about 2 points more than usual and the top TE about 1 point more. If the top WR is ruled out, this becomes the full +2.0 / +0.9.",
     "Last 3 PPG": "Average points in his last 3 games.",
     "Pts Over Repl": "Week projection minus a replacement-level starter at his position (the last starter in a 12-team league). Ranks the Overall tab across positions.",
     "Status": "Injury report status (from the latest report you pasted) or roster status.",
@@ -103,7 +104,24 @@ for lg in ("burbs", "cbs"):
               .otherwise(1.0))
     d = d.with_columns((m * pl.col("eff").fill_null(0)).alias("match_adj"), (v * impd.fill_null(0)).alias("vegas_adj"),
                        play.alias("play"))
-    d = d.with_columns(((pl.col("base") + pl.col("match_adj") + pl.col("vegas_adj")).clip(0) * pl.col("play")).alias("wk"))
+    # top WR (7+ targets a game) may sit: teammates pick up his work. 2016-2025, games the team's top WR
+    # missed: other WRs scored about +2.0 pts and the top TE about +0.9 vs their usual (scratch study).
+    # Scaled by the chance he sits.
+    tg = (pl.read_parquet(DATA / "processed" / "player_weeks.parquet")
+            .filter(pl.col("season") == season, pl.col("week") <= thru, pl.col("position") == "WR")
+            .group_by("player_id").agg(pl.len().alias("g"), pl.col("targets").fill_null(0).mean().alias("tpg")))
+    star = (d.join(tg, on="player_id").filter(pl.col("g") >= 3, pl.col("tpg") >= 7)
+              .sort("tpg", descending=True).group_by("team").first()
+              .select("team", pl.col("player_id").alias("star_id"), pl.col("player_display_name").alias("star"),
+                      (1 - pl.col("play")).alias("sit")))
+    d = d.join(star, on="team", how="left").with_columns(pl.col("sit").fill_null(0))
+    te1 = pl.col("base").rank("ordinal", descending=True).over("team", "position") == 1
+    bump = (pl.when(pl.col("player_id") == pl.col("star_id")).then(0.0)
+              .when(pl.col("position") == "WR").then(2.0).when((pl.col("position") == "TE") & te1).then(0.9)
+              .otherwise(0.0) * pl.col("sit"))
+    d = d.with_columns(bump.alias("absence_adj"))
+    d = d.with_columns(((pl.col("base") + pl.col("match_adj") + pl.col("vegas_adj") + pl.col("absence_adj")).clip(0)
+                        * pl.col("play")).alias("wk"))
     # replacement = last starter in the league (flex filled by the best leftover RB/WR/TE)
     L = cfg[lg]
     n, ros_ = L["teams"], L["roster"]
@@ -142,6 +160,7 @@ for lg in ("burbs", "cbs"):
         r1("base").alias("Base PPG"), pl.col("match_adj").round(2).alias("Matchup Adj"),
         pl.when(pl.col("position") == "DEF").then(pl.col("opp_imp")).otherwise(pl.col("imp")).round(1).alias("Team Implied Pts"),
         pl.col("vegas_adj").round(2).alias("Vegas Adj"),
+        pl.col("absence_adj").round(2).alias("Teammate Out Adj"),
         pl.col("role_flag").fill_null("").alias("Role"),
         r1(f"ppg_{lg}_sofar").alias("PPG So Far"), r1("l3").alias("Last 3 PPG"), pl.col("n").alias("Games Played"),
         r1("por").alias("Pts Over Repl"), pl.col("news").fill_null("").alias("Injury News"),
@@ -180,6 +199,7 @@ for lg in ("burbs", "cbs"):
         "  matchup x1.0 QB, x0.45 RB, x0.35 WR, x0.55 TE, x0.5 DEF; Vegas +0.075/pt RB and TE, +0.13/pt K, -0.25/pt of opponent's total for DEF.",
         "  Honest caveat: matchups and lines explain only a small part of one week's score (week-to-week noise is large);",
         "  they mattered most for defenses. Use them as tiebreakers between similar players, not to bench a stud.",
+        "Teammate out: if a team's top WR may sit, other WRs get up to +2.0 and the top TE +0.9 (history 2016-2025), scaled by the chance he sits.",
         "Injuries: from the latest injury report you pasted. Out / Doubtful / IR = 0; Questionable = 85% chance to play; concussion protocol = 55%.",
         "  Paste Friday's or Saturday's report and these refresh with final designations.",
         "Overall tab is ranked by points over the last starter at the position in a 12-team league (for trades of value across positions,",
