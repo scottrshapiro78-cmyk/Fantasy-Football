@@ -237,3 +237,11 @@ Suggested = league price, capped at 90% of the max bid.
 - Handing an injured teammate's PPG to backups by work share did not help RB/WR (TE slightly): not adopted; the usage-so-far and role trend already carry it.
 - Practice-squad and healthy-no-games players: play 7% / 19% of remaining games and score ~55% of projection. Now statuses.
 - Manual news file: data/input/status_<season>.csv (Player, Status in active/out_week/out_long/gone).
+
+## Injury-shortened games (tested Nov 2026, prompted by Ladd McConkey)
+Question: should games a player left early (low snap share vs his normal, then missed the next game or
+was on the next injury report) be dropped from "PPG so far"? Tested on 2021-2025 at week 8, refitting k.
+Dropping them made RB/WR/TE ROS error slightly worse (e.g. Burbs WR 2.99 -> 3.00-3.06, RB 3.01 -> 3.02-3.07)
+and QB slightly better (3.43 -> 3.40-3.41). Not adopted: players who leave games hurt keep underperforming
+often enough that those games carry signal. McConkey 2026: ROS 9.3 PPG (WR49) as is; ~11.7 (about WR30)
+if weeks 4 and 6 were ignored.
