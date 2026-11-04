@@ -29,6 +29,7 @@ POS = ["QB", "RB", "WR", "TE", "K", "DEF"]
 MATCH = {"QB": 1.0, "RB": 0.45, "WR": 0.35, "TE": 0.55, "K": 0.0, "DEF": 0.5}
 VEGAS = {"QB": 0.0, "RB": 0.075, "WR": 0.0, "TE": 0.075, "K": 0.13, "DEF": -0.25}  # DEF uses the opponent's implied pts
 QUESTIONABLE_PLAY = 0.85
+CONCUSSION_PLAY = 0.55  # in protocol midweek: roughly half clear it in time (rough figure, not fitted)
 TIER_SHAPE = {"QB": (24, 5), "RB": (40, 7), "WR": (50, 8), "TE": (20, 5), "K": (16, 3), "DEF": (16, 3)}
 
 TEAMS = {
@@ -69,7 +70,7 @@ GUIDE.update({
     "Matchup Adj": "Points added (+) or taken away (-) by this opponent: how that defense has done this season against his position (run D for RBs, pass D for QB/WR/TE). For a team defense: how many points that offense gives up to defenses.",
     "Team Implied Pts": "Points Vegas expects his team to score this week (from the over/under and spread). For a team defense: points the opponent is expected to score.",
     "Vegas Adj": "Points added or taken away because his team's implied total is higher or lower than its usual this season (fitted: matters for RB, TE, K and defenses; not for QB/WR once the matchup is counted).",
-    "Play Chance": "Chance he plays this week: 0% if Out / Doubtful / IR, 85% if Questionable, low for practice-squad or players with no games yet.",
+    "Play Chance": "Chance he plays this week: 0% if Out / Doubtful / IR, 85% if Questionable, 55% if in the concussion protocol, low for practice-squad or players with no games yet.",
     "Last 3 PPG": "Average points in his last 3 games.",
     "Pts Over Repl": "Week projection minus a replacement-level starter at his position (the last starter in a 12-team league). Ranks the Overall tab across positions.",
     "Status": "Injury report status (from the latest report you pasted) or roster status.",
@@ -97,6 +98,7 @@ for lg in ("burbs", "cbs"):
     play = (pl.when(pl.col("status").is_in(["out_week", "out_long", "season", "dated", "gone"])).then(0.0)
               .when(pl.col("status") == "practice").then(0.05)
               .when(pl.col("status") == "no_games").then(0.15)
+              .when(news.str.to_lowercase().str.contains("concussion")).then(CONCUSSION_PLAY)
               .when(news.str.starts_with("Questionable")).then(QUESTIONABLE_PLAY)
               .otherwise(1.0))
     d = d.with_columns((m * pl.col("eff").fill_null(0)).alias("match_adj"), (v * impd.fill_null(0)).alias("vegas_adj"),
@@ -178,7 +180,7 @@ for lg in ("burbs", "cbs"):
         "  matchup x1.0 QB, x0.45 RB, x0.35 WR, x0.55 TE, x0.5 DEF; Vegas +0.075/pt RB and TE, +0.13/pt K, -0.25/pt of opponent's total for DEF.",
         "  Honest caveat: matchups and lines explain only a small part of one week's score (week-to-week noise is large);",
         "  they mattered most for defenses. Use them as tiebreakers between similar players, not to bench a stud.",
-        "Injuries: from the latest injury report you pasted. Out / Doubtful / IR = 0; Questionable = 85% chance to play.",
+        "Injuries: from the latest injury report you pasted. Out / Doubtful / IR = 0; Questionable = 85% chance to play; concussion protocol = 55%.",
         "  Paste Friday's or Saturday's report and these refresh with final designations.",
         "Overall tab is ranked by points over the last starter at the position in a 12-team league (for trades of value across positions,",
         "  use the ROS file instead). FLEX tab ranks RB/WR/TE together by Wk Proj.",
