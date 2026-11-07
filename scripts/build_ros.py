@@ -21,6 +21,7 @@ thru = int(args[1]) if len(args) > 1 else 8
 if "--refit" in sys.argv or not (DATA / "processed" / "ros_fit.json").exists():
     ros.fit(thru)
 POS = ["QB", "RB", "WR", "TE", "K", "DEF"]
+MY_TEAM = {"burbs": "Gin and Jews"}  # Scott's team name per league (CBS: add when rosters are pasted)
 TIER_SHAPE = {"QB": (20, 5), "RB": (45, 7), "WR": (60, 8), "TE": (20, 5), "K": (14, 3), "DEF": (14, 3)}
 TEAMS = {
     "ARI": "Arizona Cardinals", "ATL": "Atlanta Falcons", "BAL": "Baltimore Ravens", "BUF": "Buffalo Bills",
@@ -138,4 +139,18 @@ for lg in ("burbs", "cbs"):
     ws.column_dimensions["A"].width = 115
     wb.save(path)
     add_guide(path)
+    # My Team (last tab): Scott's roster from the latest pasted league rosters
+    rost = sorted((DATA / "input").glob(f"{lg}_rosters_{season}wk*.csv"))
+    if rost:
+        from openpyxl import load_workbook
+        r = pl.read_csv(rost[-1]).filter(pl.col("Team") == MY_TEAM.get(lg, ""))
+        if r.height:
+            mine = (r.select("Player", pl.col("Slot").alias("Lineup Slot"), pl.col("Yahoo Status"))
+                     .join(df, on="Player", how="left").sort("Overall Rk", nulls_last=True))
+            cols = ["ROS Pick", "ROS Draft Rd", "Overall Rk", "Pos", "Pos Rk", "Pos Tier", "Player", "Team", "Lineup Slot",
+                    "Yahoo Status", "Status", "ROS PPG", "PPG So Far", "Role", "Exp Games Left", "ROS Pts", "ROS VORP", "Injury News"]
+            mine = mine.select([c for c in cols if c in mine.columns])
+            wb2 = load_workbook(path)
+            sheet(wb2.create_sheet("My Team"), mine, "H2")
+            wb2.save(path)
     print(path, df.height)
