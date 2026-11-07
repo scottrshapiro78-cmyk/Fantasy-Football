@@ -18,10 +18,10 @@ from ffmodel.config import DATA, load_leagues
 lg, week, rpath, spath = sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4]
 n_po = int(sys.argv[5]) if len(sys.argv) > 5 else 6
 season, out = 2026, DATA / "output"
-# Scott's schedule: round robin weeks 1-11 (Broken Ankles and BKs Ballers still to play, order assumed),
-# then weeks 12-14 repeat weeks 1-3 (usual Yahoo 12-team pattern; assumed)
+# Scott's schedule: round robin weeks 1-11 (confirmed by Scott),
+# weeks 10-14 as pasted by Scott
 ME = "Gin and Jews"
-KNOWN = {9: [(ME, "Who Are You People")], 10: [(ME, "The Broken Ankles")], 11: [(ME, "BKs Ballers")],
+KNOWN = {9: [(ME, "Who Are You People")], 10: [(ME, "BKs Ballers")], 11: [(ME, "The Broken Ankles")],
          12: [(ME, "Gaza Vybz")], 13: [(ME, "Daddy Fat Sax")], 14: [(ME, "🙏")]}
 SD, N = 22.5, 20000
 cfg = load_leagues()[lg]
@@ -120,7 +120,7 @@ with pd.ExcelWriter(fp) as xw:
         f"Simulated {N:,} times. Playoffs: top {n_po} by record, ties broken by points for. Top 2 = bye (assumed).",
         "Team projection each week = best legal lineup from rest-of-season PPG, byes removed; injured/IR players discounted by the chance they play.",
         f"Week {week}: weekly projections, with games already played at actual points.",
-        "Gin and Jews schedule fixed: wk 10 Broken Ankles, wk 11 BKs Ballers (order assumed), wks 12-14 repeat wks 1-3 (Gaza Vybz, Daddy Fat Sax, 🙏; assumed). Other teams: random opponents.",
+        "Gin and Jews schedule fixed: wk 10 BKs Ballers, wk 11 Broken Ankles, wk 12 Gaza Vybz, wk 13 Daddy Fat Sax, wk 14 🙏 (from Yahoo). Other teams: random opponents.",
         "Each team's weekly score varies about +/-22.5 points (from 2021-2025 player-level misses). Rosters as pasted: no future trades/pickups.",
     ]}).to_excel(xw, sheet_name="Notes", index=False)
 if KNOWN.get(week):
