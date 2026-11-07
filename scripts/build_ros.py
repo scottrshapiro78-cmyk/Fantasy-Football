@@ -50,6 +50,8 @@ GUIDE.update({
     "Work Share (before → last 3)": "Share of the team's work: carries + targets for RBs, targets for WRs and TEs (QBs: blank-ish). Typical game before vs last 3.",
     "Role Trend (xFP)": "Usage trend: expected fantasy points per game from his targets and carries (and where on the field) in his last 3 games, minus his season average. Part of it is built into ROS PPG.",
     "Schedule Adj (PPG)": "How much his remaining opponents add (+) or take away (-) per game, based on how those defenses have played this season against his position (run defense for RBs, pass defense for QB/WR/TE; for team defenses, the offenses they still face).",
+    "ROS Draft Rd": "The round he'd go in if your 12-team league re-drafted today on rest-of-season value (15 rounds; past that = Waiver). Use it to compare players across positions and in trades.",
+    "ROS Pick": "Round.pick of that re-draft, e.g. 3.07 = 7th pick of round 3 (31st overall).",
     "ROS VORP": "Rest-of-season value over replacement: extra points over a waiver-level player at his position for the rest of the season. Drives the ranking; use it to compare trades.",
 })
 
@@ -71,7 +73,13 @@ for lg in ("burbs", "cbs"):
                          .otherwise(pl.col("player_display_name")).alias("player_display_name"))
     r1 = lambda c: pl.col(c).round(1)
     df = b.select(
-        pl.col("overall_rank").alias("Overall Rk"), pl.col("position").alias("Pos"), pl.col("pos_rank").alias("Pos Rk"),
+        pl.col("overall_rank").alias("Overall Rk"),
+        # if the league re-drafted today on rest-of-season value: 12 teams, 15 rounds (starters + bench)
+        pl.when(pl.col("overall_rank") <= 180).then(((pl.col("overall_rank") - 1) // 12 + 1).cast(pl.Utf8))
+          .otherwise(pl.lit("Waiver")).alias("ROS Draft Rd"),
+        pl.when(pl.col("overall_rank") <= 180).then(pl.format("{}.{}", ((pl.col("overall_rank") - 1) // 12 + 1),
+                 ((pl.col("overall_rank") - 1) % 12 + 1).cast(pl.Utf8).str.zfill(2))).otherwise(pl.lit("")).alias("ROS Pick"),
+        pl.col("position").alias("Pos"), pl.col("pos_rank").alias("Pos Rk"),
         pl.col("pos_tier").alias("Pos Tier"), pl.col("player_display_name").alias("Player"), pl.col("team").alias("Team"),
         pl.when(pl.col("status") == "season").then(pl.lit("Out for season"))
           .when(pl.col("news").fill_null("") != "").then(pl.col("news").str.split(",").list.first())
@@ -104,7 +112,7 @@ for lg in ("burbs", "cbs"):
 
     ws = wb.active
     ws.title = "Overall"
-    sheet(ws, df, "F2")
+    sheet(ws, df, "H2")
     for p in POS:
         sub = df.filter(pl.col("Pos") == p).sort("Pos Rk").drop("Pos")
         sheet(wb.create_sheet(p), sub.select(["Pos Rk"] + [c for c in sub.columns if c != "Pos Rk"]), "D2")
