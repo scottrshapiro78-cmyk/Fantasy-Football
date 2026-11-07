@@ -18,7 +18,11 @@ from ffmodel.config import DATA, load_leagues
 lg, week, rpath, spath = sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4]
 n_po = int(sys.argv[5]) if len(sys.argv) > 5 else 6
 season, out = 2026, DATA / "output"
-KNOWN = {9: [("Gin and Jews", "Who Are You People")]}
+# Scott's schedule: round robin weeks 1-11 (Broken Ankles and BKs Ballers still to play, order assumed),
+# then weeks 12-14 repeat weeks 1-3 (usual Yahoo 12-team pattern; assumed)
+ME = "Gin and Jews"
+KNOWN = {9: [(ME, "Who Are You People")], 10: [(ME, "The Broken Ankles")], 11: [(ME, "BKs Ballers")],
+         12: [(ME, "Gaza Vybz")], 13: [(ME, "Daddy Fat Sax")], 14: [(ME, "🙏")]}
 SD, N = 22.5, 20000
 cfg = load_leagues()[lg]
 slots, flex = cfg["roster"], cfg["flex_eligible"]
@@ -72,6 +76,7 @@ W = np.tile(st.W.to_numpy(float) + 0.5 * st["T"].to_numpy(float), (N, 1))
 PF = np.tile(st.PF.to_numpy(float), (N, 1))
 idx = {t: i for i, t in enumerate(teams)}
 first_win = np.zeros(N, dtype=bool)
+my_w = {w: np.zeros(N, dtype=bool) for w in KNOWN}
 for w in range(week, last_reg + 1):
     mu = np.array([proj[t][w] for t in teams])
     sd = np.full(len(teams), SD)
@@ -88,6 +93,8 @@ for w in range(week, last_reg + 1):
         for a, b in pairs:
             if w == week and fixed_ids and (a, b) == fixed_ids[0]:
                 first_win[k] = sc[k, a] > sc[k, b]
+            if fixed_ids and (a, b) == fixed_ids[0]:
+                my_w[w][k] = sc[k, a] > sc[k, b]
             if sc[k, a] > sc[k, b]:
                 W[k, a] += 1
             else:
@@ -113,11 +120,13 @@ with pd.ExcelWriter(fp) as xw:
         f"Simulated {N:,} times. Playoffs: top {n_po} by record, ties broken by points for. Top 2 = bye (assumed).",
         "Team projection each week = best legal lineup from rest-of-season PPG, byes removed; injured/IR players discounted by the chance they play.",
         f"Week {week}: weekly projections, with games already played at actual points.",
-        "Remaining schedule unknown, so opponents are random each week (only known pairings fixed). Paste the schedule to tighten this.",
+        "Gin and Jews schedule fixed: wk 10 Broken Ankles, wk 11 BKs Ballers (order assumed), wks 12-14 repeat wks 1-3 (Gaza Vybz, Daddy Fat Sax, 🙏; assumed). Other teams: random opponents.",
         "Each team's weekly score varies about +/-22.5 points (from 2021-2025 player-level misses). Rosters as pasted: no future trades/pickups.",
     ]}).to_excel(xw, sheet_name="Notes", index=False)
 if KNOWN.get(week):
     a = idx[KNOWN[week][0][0]]
     print(f"{teams[a]}: wins wk {week} {first_win.mean():.0%}; playoffs if win {(rank[first_win, a] <= n_po).mean():.0%}, if loss {(rank[~first_win, a] <= n_po).mean():.0%}")
+for w in sorted(KNOWN):
+    print(f"wk {w} vs {KNOWN[w][0][1]}: win {my_w[w].mean():.0%}")
 print(fp)
 print(res.to_string(index=False))
