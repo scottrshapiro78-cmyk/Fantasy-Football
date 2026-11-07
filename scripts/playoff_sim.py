@@ -199,6 +199,9 @@ res = pd.DataFrame({
     f"Avg wk {week + 1}-{last_reg} (w/ injuries)": [round(S[t][:, :last_reg - week].mean(), 1) for t in teams],
     "Avg wk 15-17 (w/ injuries)": [round(S[t][:, -3:].mean(), 1) for t in teams],
     "Proj Wins": Wn.mean(axis=0).round(1),
+    "Proj Final Record": [f"{w:.0f}-{14 - w:.0f}" for w in Wn.mean(axis=0).round(0)],
+    "Proj Final PF": PF.mean(axis=0).round(0),
+    "Avg Final Seed": rank.mean(axis=0).round(1),
     "Make Playoffs %": ((rank <= n_po).mean(axis=0) * 100).round(0),
     "Top-2 Bye %": ((rank <= 2).mean(axis=0) * 100).round(0),
 }).sort_values("Make Playoffs %", ascending=False)
