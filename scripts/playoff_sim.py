@@ -193,6 +193,19 @@ for w in range(week, last_reg + 1):
         mywin[w] = (sc[:, a] > sc[:, b])
 rank = (-(Wn * 10000 + PF)).argsort(axis=1).argsort(axis=1) + 1
 mi = idx[ME]
+# playoffs (6 teams): wk 15 3v6, 4v5 (1-2 bye); wk 16 1 v lowest seed left, 2 v other; wk 17 final
+order = (-(Wn * 10000 + PF)).argsort(axis=1)  # seeds -> team index
+P = {w: rng.normal(np.stack([S[t][:, WEEKS.index(w)] for t in teams], axis=1), SD) for w in (15, 16, 17)}
+final = np.zeros((N, len(teams)), bool); champ = np.zeros((N, len(teams)), bool)
+for k in range(N):
+    sd_ = order[k]
+    g = lambda w, a, b: a if P[w][k, a] > P[w][k, b] else b
+    w36, w45 = g(15, sd_[2], sd_[5]), g(15, sd_[3], sd_[4])
+    r1 = sorted([w36, w45], key=lambda t: list(sd_).index(t))
+    f1, f2 = g(16, sd_[0], r1[1]), g(16, sd_[1], r1[0])
+    final[k, f1] = final[k, f2] = True
+    champ[k, g(17, f1, f2)] = True
+made = rank <= n_po
 res = pd.DataFrame({
     "Team": teams, "Record": [f"{a}-{b}" for a, b in zip(st.W, st.L)], "PF": st.PF,
     f"Wk {week}": [round(wk9[t], 1) for t in teams],
@@ -204,6 +217,10 @@ res = pd.DataFrame({
     "Avg Final Seed": rank.mean(axis=0).round(1),
     "Make Playoffs %": ((rank <= n_po).mean(axis=0) * 100).round(0),
     "Top-2 Bye %": ((rank <= 2).mean(axis=0) * 100).round(0),
+    "Make Final %": (final.mean(axis=0) * 100).round(1),
+    "Champion %": (champ.mean(axis=0) * 100).round(1),
+    "Final % if in playoffs": [round(final[made[:, i], i].mean() * 100, 0) if made[:, i].any() else 0 for i in range(len(teams))],
+    "Champion % if in playoffs": [round(champ[made[:, i], i].mean() * 100, 0) if made[:, i].any() else 0 for i in range(len(teams))],
 }).sort_values("Make Playoffs %", ascending=False)
 mine = pd.DataFrame([{"Week": w, "Opponent": SCHED[w][0][1],
                       "You": round(wk9[ME] if w == week else S[ME][:, WEEKS.index(w)].mean(), 1),
