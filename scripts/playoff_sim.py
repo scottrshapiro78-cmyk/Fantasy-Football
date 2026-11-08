@@ -37,8 +37,14 @@ DUR = {"QB": [.40, .18, .15, .07, .04, .16], "RB": [.50, .21, .11, .08, .03, .07
        "TE": [.50, .15, .15, .02, .06, .12], "K": [.30, .18, .12, .17, .03, .20], "DEF": [1, 0, 0, 0, 0, 0]}
 MATCH = {"QB": 1.0, "RB": 0.45, "WR": 0.35, "TE": 0.55, "K": 0.0, "DEF": 0.5}
 ME = "Gin and Jews"
-SCHED = {9: [(ME, "Who Are You People")], 10: [(ME, "BKs Ballers")], 11: [(ME, "The Broken Ankles")],
-         12: [(ME, "Gaza Vybz")], 13: [(ME, "Daddy Fat Sax")], 14: [(ME, "🙏")]}
+MC = "I can't find McConkeys"
+# known pairings (pasted schedules). Weeks 12-14 repeat weeks 1-3 (confirmed by both pasted schedules).
+SCHED = {9: [(ME, "Who Are You People"), (MC, "Bring the Ruckus")],
+         10: [(ME, "BKs Ballers"), (MC, "TY Dolla $ign")],
+         11: [(ME, "The Broken Ankles"), (MC, "Degenerates")],
+         12: [(ME, "Gaza Vybz"), (MC, "Daddy Fat Sax")],
+         13: [(ME, "Daddy Fat Sax"), (MC, "More Than A Thielen")],
+         14: [(ME, "🙏"), (MC, "Who Are You People")]}
 cfg = load_leagues()[lg]
 slots, flex = cfg["roster"], cfg["flex_eligible"]
 last_reg = cfg["regular_season_weeks"][1]
