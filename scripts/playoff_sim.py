@@ -51,6 +51,9 @@ SCHED = {9: [(ME, "Who Are You People"), (MC, "Bring the Ruckus"), (GV, "BKs Bal
 # this week's score already known/locked; pass team -> points (schedule pages showed 0.00 for games in
 # progress, so they are not used)
 WK_OVERRIDE = {}
+# optional scenario for this week, e.g. FORCE="Gin and Jews:W,Gaza Vybz:L"
+import os
+FORCE = dict(x.rsplit(":", 1) for x in os.environ.get("FORCE", "").split(",") if x)
 cfg = load_leagues()[lg]
 slots, flex = cfg["roster"], cfg["flex_eligible"]
 last_reg = cfg["regular_season_weeks"][1]
@@ -197,6 +200,15 @@ for w in range(week, last_reg + 1):
     PF += sc
     fixed = [(idx[a], idx[b]) for a, b in SCHED.get(w, [])]
     rest = [i for i in range(len(teams)) if all(i not in f for f in fixed)]
+    if w == week and FORCE:  # scenario: these teams win this week (swap scores so the winner is higher)
+        for a, b in fixed:
+            ta, tb = teams[a], teams[b]
+            win = a if FORCE.get(ta) == "W" or FORCE.get(tb) == "L" else b if FORCE.get(tb) == "W" or FORCE.get(ta) == "L" else None
+            if win is not None:
+                lose = b if win == a else a
+                hi, lo = np.maximum(sc[:, a], sc[:, b]), np.minimum(sc[:, a], sc[:, b])
+                PF[:, win] += hi - sc[:, win]; PF[:, lose] += lo - sc[:, lose]
+                sc[:, win], sc[:, lose] = hi, lo
     for k in range(N):
         perm = rng.permutation(rest)
         for a, b in fixed + [(perm[j], perm[j + 1]) for j in range(0, len(perm), 2)]:
@@ -244,7 +256,7 @@ bench = list(roster[(roster.Team == ME) & (roster.Slot == "BN")].Player)
 nob = sim_team(list(roster[roster.Team == ME].Player), drop=bench)
 depth = pd.DataFrame([{"Week": w, "With bench": round(S[ME][:, i].mean(), 1), "Without bench": round(nob[:, i].mean(), 1),
                        "Bench worth (pts)": round(S[ME][:, i].mean() - nob[:, i].mean(), 1)} for i, w in enumerate(WEEKS)])
-fp = out / f"playoff_sim_{lg}_{season}_wk{week}.xlsx"
+fp = out / (f"playoff_sim_{lg}_{season}_wk{week}" + ("_scenario" if FORCE else "") + ".xlsx")
 with pd.ExcelWriter(fp) as xw:
     res.to_excel(xw, sheet_name="Playoff Odds", index=False)
     mine.to_excel(xw, sheet_name=f"{ME} schedule", index=False)
