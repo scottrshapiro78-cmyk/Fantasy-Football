@@ -40,14 +40,16 @@ ME = "Gin and Jews"
 MC = "I can't find McConkeys"
 # known pairings (pasted schedules). Weeks 12-14 repeat weeks 1-3 (confirmed by both pasted schedules).
 GV = "Gaza Vybz"
-SCHED = {9: [(ME, "Who Are You People"), (MC, "Bring the Ruckus"), (GV, "BKs Ballers")],
-         10: [(ME, "BKs Ballers"), (MC, "TY Dolla $ign"), (GV, "The Broken Ankles")],
-         11: [(ME, "The Broken Ankles"), (MC, "Degenerates"), (GV, "Daddy Fat Sax")],
-         12: [(ME, GV), (MC, "Daddy Fat Sax")],
-         13: [(ME, "Daddy Fat Sax"), (MC, "More Than A Thielen"), (GV, "🙏")],
-         14: [(ME, "🙏"), (MC, "Who Are You People"), (GV, "Bring the Ruckus")]}
-# this week's score already known/locked (Gaza Vybz left its lineup empty: 0.00 with no players in SNF/MNF)
-WK_OVERRIDE = {GV: 0.0}
+BA = "The Broken Ankles"
+SCHED = {9: [(ME, "Who Are You People"), (MC, "Bring the Ruckus"), (GV, "BKs Ballers"), (BA, "Daddy Fat Sax")],
+         10: [(ME, "BKs Ballers"), (MC, "TY Dolla $ign"), (GV, BA)],
+         11: [(ME, BA), (MC, "Degenerates"), (GV, "Daddy Fat Sax")],
+         12: [(ME, GV), (MC, "Daddy Fat Sax"), (BA, "🙏")],
+         13: [(ME, "Daddy Fat Sax"), (MC, "More Than A Thielen"), (GV, "🙏"), (BA, "Bring the Ruckus")],
+         14: [(ME, "🙏"), (MC, "Who Are You People"), (GV, "Bring the Ruckus"), (BA, "TY Dolla $ign")]}
+# this week's score already known/locked; pass team -> points (schedule pages showed 0.00 for games in
+# progress, so they are not used)
+WK_OVERRIDE = {}
 cfg = load_leagues()[lg]
 slots, flex = cfg["roster"], cfg["flex_eligible"]
 last_reg = cfg["regular_season_weeks"][1]
