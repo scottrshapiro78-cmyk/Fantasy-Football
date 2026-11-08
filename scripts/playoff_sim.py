@@ -39,12 +39,15 @@ MATCH = {"QB": 1.0, "RB": 0.45, "WR": 0.35, "TE": 0.55, "K": 0.0, "DEF": 0.5}
 ME = "Gin and Jews"
 MC = "I can't find McConkeys"
 # known pairings (pasted schedules). Weeks 12-14 repeat weeks 1-3 (confirmed by both pasted schedules).
-SCHED = {9: [(ME, "Who Are You People"), (MC, "Bring the Ruckus")],
-         10: [(ME, "BKs Ballers"), (MC, "TY Dolla $ign")],
-         11: [(ME, "The Broken Ankles"), (MC, "Degenerates")],
-         12: [(ME, "Gaza Vybz"), (MC, "Daddy Fat Sax")],
-         13: [(ME, "Daddy Fat Sax"), (MC, "More Than A Thielen")],
-         14: [(ME, "🙏"), (MC, "Who Are You People")]}
+GV = "Gaza Vybz"
+SCHED = {9: [(ME, "Who Are You People"), (MC, "Bring the Ruckus"), (GV, "BKs Ballers")],
+         10: [(ME, "BKs Ballers"), (MC, "TY Dolla $ign"), (GV, "The Broken Ankles")],
+         11: [(ME, "The Broken Ankles"), (MC, "Degenerates"), (GV, "Daddy Fat Sax")],
+         12: [(ME, GV), (MC, "Daddy Fat Sax")],
+         13: [(ME, "Daddy Fat Sax"), (MC, "More Than A Thielen"), (GV, "🙏")],
+         14: [(ME, "🙏"), (MC, "Who Are You People"), (GV, "Bring the Ruckus")]}
+# this week's score already known/locked (Gaza Vybz left its lineup empty: 0.00 with no players in SNF/MNF)
+WK_OVERRIDE = {GV: 0.0}
 cfg = load_leagues()[lg]
 slots, flex = cfg["roster"], cfg["flex_eligible"]
 last_reg = cfg["regular_season_weeks"][1]
@@ -183,7 +186,8 @@ PF = np.tile(st.PF.to_numpy(float), (N, 1))
 mywin = {}
 for w in range(week, last_reg + 1):
     if w == week:
-        mean = np.tile(np.array([wk9[t] for t in teams]), (N, 1)); sd = SD * 0.85
+        mean = np.tile(np.array([WK_OVERRIDE.get(t, wk9[t]) for t in teams]), (N, 1))
+        sd = np.array([0.0 if t in WK_OVERRIDE else SD * 0.85 for t in teams])
     else:
         mean = np.stack([S[t][:, WEEKS.index(w)] for t in teams], axis=1); sd = SD
     sc = rng.normal(mean, sd)
@@ -214,7 +218,7 @@ for k in range(N):
 made = rank <= n_po
 res = pd.DataFrame({
     "Team": teams, "Record": [f"{a}-{b}" for a, b in zip(st.W, st.L)], "PF": st.PF,
-    f"Wk {week}": [round(wk9[t], 1) for t in teams],
+    f"Wk {week}": [round(WK_OVERRIDE.get(t, wk9[t]), 1) for t in teams],
     f"Avg wk {week + 1}-{last_reg} (w/ injuries)": [round(S[t][:, :last_reg - week].mean(), 1) for t in teams],
     "Avg wk 15-17 (w/ injuries)": [round(S[t][:, -3:].mean(), 1) for t in teams],
     "Proj Wins": Wn.mean(axis=0).round(1),
