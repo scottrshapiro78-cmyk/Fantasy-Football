@@ -245,3 +245,11 @@ Dropping them made RB/WR/TE ROS error slightly worse (e.g. Burbs WR 2.99 -> 3.00
 and QB slightly better (3.43 -> 3.40-3.41). Not adopted: players who leave games hurt keep underperforming
 often enough that those games carry signal. McConkey 2026: ROS 9.3 PPG (WR49) as is; ~11.7 (about WR30)
 if weeks 4 and 6 were ignored.
+
+## Preseason weight after 9 games (tested Nov 2026, prompted by Kenneth Walker III)
+2021-2025, Burbs, players with 6+ of first 9 games, error in rest-of-season PPG by preseason weight.
+Best overall: QB 40%, RB 40%, WR 30%, TE 40% (what the fitted model already uses: RB k=6 -> 40% at 9 games).
+20% would be worse at every position (RB 3.18 vs 3.09, QB 3.38 vs 3.30, TE 2.77 vs 2.68).
+Breakouts (first 9 weeks 5+ PPG above preseason): RB avg 11.7 pre -> 19.3 first half -> 15.2 rest (best weight 50-60%;
+20% overprojects them by +2.5 PPG); WR 11.0 -> 17.7 -> 14.3 (best 60%); QB 16.2 -> 22.3 -> 20.6 (best 30%);
+TE 7.8 -> 14.0 -> 13.0 (best 20%, only 13 cases). Not changed: current weights are at or near the best.
