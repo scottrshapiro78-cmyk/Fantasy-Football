@@ -250,7 +250,7 @@ res = pd.DataFrame({
 mine = pd.DataFrame([{"Week": w, "Opponent": SCHED[w][0][1],
                       "You": round(wk9[ME] if w == week else S[ME][:, WEEKS.index(w)].mean(), 1),
                       "Them": round(wk9[SCHED[w][0][1]] if w == week else S[SCHED[w][0][1]][:, WEEKS.index(w)].mean(), 1),
-                      "Win %": round(mywin[w].mean() * 100)} for w in sorted(SCHED)])
+                      "Win %": round(mywin[w].mean() * 100)} for w in sorted(SCHED) if w >= week])
 # what the bench is worth: same sim without the bench players
 bench = list(roster[(roster.Team == ME) & (roster.Slot == "BN")].Player)
 nob = sim_team(list(roster[roster.Team == ME].Player), drop=bench)
