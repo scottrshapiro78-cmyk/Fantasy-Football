@@ -53,8 +53,42 @@ def _weekly(season: int) -> pl.DataFrame:
     return pl.concat([w, d], how="vertical_relaxed")
 
 
+def _healthy_dnp(season: int, thru: int, w: pl.DataFrame) -> pl.DataFrame:
+    """Games a player sat out while healthy: on his team's active roster, not on the injury report at all,
+    team played, but no stats. Counted as zero usage for the role trend (e.g. a backup who stops
+    playing once the starters are back)."""
+    r = (data.rosters_weekly([season]).filter(pl.col("week") <= thru, pl.col("game_type") == "REG", pl.col("status") == "ACT",
+                                               pl.col("position").is_in(HEALTHY_DNP_POS), pl.col("gsis_id").is_not_null())
+         .select(pl.col("gsis_id").alias("player_id"), pl.col("week").cast(pl.Int32), "team"))
+    inj = (data.injuries([season]).filter(pl.col("week") <= thru, pl.col("report_status").is_not_null())
+           .select(pl.col("gsis_id").alias("player_id"), pl.col("week").cast(pl.Int32)))
+    played = w.select("team", "week").unique()
+    first = w.group_by("player_id").agg(pl.col("week").min().alias("first"))
+    return (r.join(played, on=["team", "week"]).join(w.select("player_id", "week"), on=["player_id", "week"], how="anti")
+             .join(inj, on=["player_id", "week"], how="anti").join(first, on="player_id")
+             .filter(pl.col("week") > pl.col("first"))
+             .select("player_id", "week", pl.lit(0.0).alias("xfp")))
+
+
+HEALTHY_DNP = True  # backtest 2021-25 (weeks 6/9/12): RBs affected (n=28/22) MAE 3.13 -> 2.87 burbs, 3.37 -> 2.97 cbs;
+HEALTHY_DNP_POS = ["RB"]  # TEs mixed (small n), QB/WR have no role weight, so RBs only
+
+
 def to_date(season: int, thru: int) -> pl.DataFrame:
     w = _weekly(season).filter(pl.col("week") <= thru)
+    so = _to_date(w)
+    if not HEALTHY_DNP:
+        return so
+    z = pl.concat([w.select("player_id", "week", "xfp"), _healthy_dnp(season, thru, w)], how="vertical_relaxed")
+    tr = z.group_by("player_id").agg(
+        pl.col("xfp").sort_by("week").tail(3).mean().alias("xfp_last3"),
+        pl.col("xfp").sort_by("week").tail(3).median().alias("xfp_med_last3"),
+        pl.col("xfp").sort_by("week").head(pl.len() - 3).median().alias("xfp_med_before"))
+    return (so.drop("xfp_last3", "xfp_med_last3", "xfp_med_before", "role_trend").join(tr, on="player_id", how="left")
+              .with_columns((pl.col("xfp_last3") - pl.col("xfp_pg")).fill_null(0).alias("role_trend")))
+
+
+def _to_date(w: pl.DataFrame) -> pl.DataFrame:
     return (w.group_by("player_id").agg(
         pl.len().alias("n"), pl.col("team").sort_by("week").last().alias("team_now"),
         *[pl.col(f"fpts_{lg}").mean().alias(f"ppg_{lg}_sofar") for lg in LEAGUES],
@@ -331,6 +365,11 @@ def role_flags(season: int, thru: int) -> pl.DataFrame:
                           .then((pl.col("car") + pl.col("tgt")) / (pl.col("t_car") + pl.col("t_tgt")))
                           .otherwise(pl.col("tgt") / pl.col("t_tgt")).alias("share"))
           .join(sn, on=["player_id", "week"], how="left"))
+    if HEALTHY_DNP:  # sat out while healthy = no snaps, no work
+        z = _healthy_dnp(season, thru, _weekly(season).filter(pl.col("week") <= thru)).join(
+            w.group_by("player_id").agg(pl.col("position").last()), on="player_id")
+        w = pl.concat([w, z.select("player_id", "week", "position", pl.lit(0.0).alias("share"), pl.lit(0.0).alias("snap"))],
+                      how="diagonal_relaxed")
 
     def split(c):
         return [pl.col(c).sort_by("week").tail(3).median().alias(f"{c}_l3"),
@@ -474,3 +513,4 @@ def sleeper_injuries() -> pl.DataFrame | None:
     ids = (pl.read_parquet(DATA / "processed" / "player_seasons.parquet")
              .select("player_id", pl.col("sleeper_id").cast(pl.Utf8)).drop_nulls().unique("sleeper_id"))
     return pl.DataFrame(rows).join(ids, on="sleeper_id").select("player_id", "sl_status")
+

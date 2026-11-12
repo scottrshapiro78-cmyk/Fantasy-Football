@@ -253,3 +253,17 @@ Best overall: QB 40%, RB 40%, WR 30%, TE 40% (what the fitted model already uses
 Breakouts (first 9 weeks 5+ PPG above preseason): RB avg 11.7 pre -> 19.3 first half -> 15.2 rest (best weight 50-60%;
 20% overprojects them by +2.5 PPG); WR 11.0 -> 17.7 -> 14.3 (best 60%); QB 16.2 -> 22.3 -> 20.6 (best 30%);
 TE 7.8 -> 14.0 -> 13.0 (best 20%, only 13 cases). Not changed: current weights are at or near the best.
+
+## Teammates returning from injury (Nov 12 2026, after week 9)
+
+Prompted by SEA: Emanuel Wilson's "role up" came from Charbonnet and Price being out.
+
+- **Tested, not adopted:** when a same-position teammate with a real role (15%+ of RB work, 12%+ WR targets,
+  10%+ TE) missed any of a player's last 3 games and is back, project from only the games they played together
+  and ignore the role trend. 2021-25, after weeks 6/9/12, 855 cases: MAE worse at every position
+  (RB 2.92 -> 3.29 burbs, WR 3.24 -> 3.42). Softer version (only drop a positive role trend): RB worse, TE slightly
+  better on small n. Backups tend to keep part of the work they earned.
+- **Adopted (RBs):** games a player sat out while healthy (on the active roster, not on the injury report, team
+  played, no stats) now count as zero usage in the role trend and the Role flag. Before, "last 3 games" meant his
+  own last 3 games played, so a backup who stopped playing kept a stale role. Affected RBs: MAE 3.13 -> 2.87 burbs,
+  3.37 -> 2.97 cbs (n=28/22). Wilson: ROS 7.9 -> 5.8 burbs, flag Role up -> Role down.
