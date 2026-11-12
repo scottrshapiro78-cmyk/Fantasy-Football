@@ -29,6 +29,7 @@ POS = ["QB", "RB", "WR", "TE", "K", "DEF"]
 MATCH = {"QB": 1.0, "RB": 0.45, "WR": 0.35, "TE": 0.55, "K": 0.0, "DEF": 0.5}
 VEGAS = {"QB": 0.0, "RB": 0.075, "WR": 0.0, "TE": 0.075, "K": 0.13, "DEF": -0.25}  # DEF uses the opponent's implied pts
 QUESTIONABLE_PLAY = 0.85
+DNP_PLAY = 0.65  # questionable and did not practice Wednesday (rough figure, not fitted)
 CONCUSSION_PLAY = 0.55  # in protocol midweek: roughly half clear it in time (rough figure, not fitted)
 TIER_SHAPE = {"QB": (24, 5), "RB": (40, 7), "WR": (50, 8), "TE": (20, 5), "K": (16, 3), "DEF": (16, 3)}
 
@@ -70,7 +71,7 @@ GUIDE.update({
     "Matchup Adj": "Points added (+) or taken away (-) by this opponent: how that defense has done this season against his position (run D for RBs, pass D for QB/WR/TE). For a team defense: how many points that offense gives up to defenses.",
     "Team Implied Pts": "Points Vegas expects his team to score this week (from the over/under and spread). For a team defense: points the opponent is expected to score.",
     "Vegas Adj": "Points added or taken away because his team's implied total is higher or lower than its usual this season (fitted: matters for RB, TE, K and defenses; not for QB/WR once the matchup is counted).",
-    "Play Chance": "Chance he plays this week: 0% if Out / Doubtful / IR, 85% if Questionable, 55% if in the concussion protocol, low for practice-squad or players with no games yet.",
+    "Play Chance": "Chance he plays this week: 0% if Out / Doubtful / IR, 85% if Questionable (65% if he missed Wednesday practice), 55% if in the concussion protocol, low for practice-squad or players with no games yet.",
     "Teammate Out Adj": "Points added because his team's top WR may sit this week (weighted by the chance he sits). When a team's top WR missed a game (2016-2025), the other WRs scored about 2 points more than usual and the top TE about 1 point more. If the top WR is ruled out, this becomes the full +2.0 / +0.9.",
     "Last 3 PPG": "Average points in his last 3 games.",
     "Pts Over Repl": "Week projection minus a replacement-level starter at his position (the last starter in a 12-team league). Ranks the Overall tab across positions.",
@@ -100,6 +101,7 @@ for lg in ("burbs", "cbs"):
               .when(pl.col("status") == "practice").then(0.05)
               .when(pl.col("status") == "no_games").then(0.15)
               .when(news.str.to_lowercase().str.contains("concussion")).then(CONCUSSION_PLAY)
+              .when(news.str.starts_with("Questionable") & news.str.contains("DNP")).then(DNP_PLAY)
               .when(news.str.starts_with("Questionable")).then(QUESTIONABLE_PLAY)
               .otherwise(1.0))
     d = d.with_columns((m * pl.col("eff").fill_null(0)).alias("match_adj"), (v * impd.fill_null(0)).alias("vegas_adj"),
@@ -200,7 +202,7 @@ for lg in ("burbs", "cbs"):
         "  Honest caveat: matchups and lines explain only a small part of one week's score (week-to-week noise is large);",
         "  they mattered most for defenses. Use them as tiebreakers between similar players, not to bench a stud.",
         "Teammate out: if a team's top WR may sit, other WRs get up to +2.0 and the top TE +0.9 (history 2016-2025), scaled by the chance he sits.",
-        "Injuries: from the latest injury report you pasted. Out / Doubtful / IR = 0; Questionable = 85% chance to play; concussion protocol = 55%.",
+        "Injuries: from the latest injury report you pasted. Out / Doubtful / IR = 0; Questionable = 85% chance to play (65% if he did not practice Wednesday); concussion protocol = 55%.",
         "  Paste Friday's or Saturday's report and these refresh with final designations.",
         "Overall tab is ranked by points over the last starter at the position in a 12-team league (for trades of value across positions,",
         "  use the ROS file instead). FLEX tab ranks RB/WR/TE together by Wk Proj.",
