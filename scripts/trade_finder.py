@@ -2,7 +2,9 @@
 
 PYTHONPATH=src python3 scripts/trade_finder.py burbs 9 <rosters csv> "Gin and Jews" "Jaylen Warren,Bhayshul Tuten"
 Value = sum over weeks 10-17 of the team's best legal lineup (rest-of-season PPG, schedule taken out, plus that
-week's opponent; byes = 0; injured players until their return week = 0); playoff weeks 15-17 count 1.5x.
+week's opponent; byes = 0; injured players until their return week = 0); playoff weeks 15-17 count 1.5x
+(PLAYOFF_FOCUS=1: playoff weeks 2x, regular season 0.5x; the other team still values it the normal way).
+Players "ALL" = any 1 or 2 of your QB/RB/WR/TE for any 1 or 2 of theirs.
 A 2-for-1 drops your lowest-value player. Only trades where the partner's lineup also improves are kept.
 """
 import datetime as dt
@@ -22,7 +24,10 @@ from ffmodel.ros import dst_weeks
 lg, week, rpath, ME, keys = sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4], sys.argv[5].split(",")
 season, out, thru = 2026, DATA / "output", week - 1
 WEEKS = list(range(week + 1, 18))
-WT = np.array([1.5 if w >= 15 else 1.0 for w in WEEKS])
+import os
+PO_FOCUS = os.environ.get("PLAYOFF_FOCUS") == "1"  # playoff weeks 2x, regular season 0.5x (still need to get in)
+WT = np.array([(2.0 if w >= 15 else 0.5) if PO_FOCUS else (1.5 if w >= 15 else 1.0) for w in WEEKS])
+WT_THEM = np.array([1.5 if w >= 15 else 1.0 for w in WEEKS])  # how the other team values it
 MATCH = {"QB": 1.0, "RB": 0.45, "WR": 0.35, "TE": 0.55, "K": 0.0, "DEF": 0.5}
 cfg = load_leagues()[lg]
 slots, flex = cfg["roster"], cfg["flex_eligible"]
@@ -83,21 +88,26 @@ def team_value(names):
     return tot
 
 
-def score(t):
-    return float((t * WT).sum())
+def score(t, wt=None):
+    return float((t * (WT if wt is None else wt)).sum())
 
 
 mine = list(roster[roster.Team == ME].Player)
 base_me = score(team_value(mine))
-gives = [[k] for k in keys] + [[k, o] for k in keys for o in mine if o not in keys and VAL.get(o, ("K",))[0] in ("QB", "RB", "WR", "TE")]
+skill = [p for p in mine if VAL.get(p, ("K",))[0] in ("QB", "RB", "WR", "TE")]
+if keys == ["ALL"]:  # any 1 or 2 of my skill players
+    gives = [[a] for a in skill] + [list(c) for c in itertools.combinations(skill, 2)]
+else:
+    gives = [[k] for k in keys] + [[k, o] for k in keys for o in skill if o not in keys]
+GET_SIZES = (1, 2) if keys == ["ALL"] else (2,)
 rows = []
 for t in roster.Team.unique():
     if t == ME:
         continue
     theirs = [p for p in roster[roster.Team == t].Player if p in VAL and VAL[p][0] in ("QB", "RB", "WR", "TE")]
-    base_them = score(team_value(list(roster[roster.Team == t].Player)))
+    base_them = score(team_value(list(roster[roster.Team == t].Player)), WT_THEM)
     for give in gives:
-        for get in itertools.combinations(theirs, 2):
+        for get in (g for k_ in GET_SIZES for g in itertools.combinations(theirs, k_)):
             new_me = [p for p in mine if p not in give] + list(get)
             if len(get) > len(give):  # drop my lowest-value player to make room
                 worst = min((p for p in new_me if p not in get), key=lambda p: score(team_value([p])) if p in VAL else -1)
@@ -106,16 +116,21 @@ for t in roster.Team.unique():
                 worst = ""
             new_them = [p for p in roster[roster.Team == t].Player if p not in get] + give
             d_me = score(team_value(new_me)) - base_me
-            d_them = score(team_value(new_them)) - base_them
+            if len(give) > len(get):  # they drop their lowest-value player
+                tw = min((p for p in new_them if p not in give), key=lambda p: score(team_value([p]), WT_THEM) if p in VAL else -1)
+                new_them = [p for p in new_them if p != tw]
+            d_them = score(team_value(new_them), WT_THEM) - base_them
             if d_me > 0 and d_them > 0:
                 rows.append({"Partner": t, "You give": " + ".join(give), "You get": " + ".join(get), "Drop": worst,
-                             "Your gain (pts, wk 10-17)": round(d_me, 1), "Your gain / wk": round(d_me / WT.sum(), 2),
+                             f"Your gain (weighted, wk {WEEKS[0]}-17)": round(d_me, 1),
+                             f"Your reg season gain/wk (wk {WEEKS[0]}-14)": round((team_value(new_me) - team_value(mine))[:-3].mean(), 2),
                              "Their gain (pts)": round(d_them, 1),
                              "Your playoff wks gain/wk": round((team_value(new_me) - team_value(mine))[-3:].mean(), 2)})
-res = pd.DataFrame(rows).sort_values(["Your gain (pts, wk 10-17)"], ascending=False)
+gcol = f"Your gain (weighted, wk {WEEKS[0]}-17)"
+res = pd.DataFrame(rows).sort_values([gcol], ascending=False)
 # balanced: both gain, rank by the smaller of the two gains (most likely to be accepted)
-res["Min gain"] = res[["Your gain (pts, wk 10-17)", "Their gain (pts)"]].min(axis=1)
-fp = out / f"trades_{lg}_{season}_wk{week}.xlsx"
+res["Min gain"] = res[[gcol, "Their gain (pts)"]].min(axis=1)
+fp = out / (f"trades_{lg}_{season}_wk{week}" + ("_playoffs" if PO_FOCUS else "") + ".xlsx")
 with pd.ExcelWriter(fp) as xw:
     res.head(200).to_excel(xw, sheet_name="Best for you", index=False)
     res.sort_values("Min gain", ascending=False).head(200).to_excel(xw, sheet_name="Most balanced", index=False)
