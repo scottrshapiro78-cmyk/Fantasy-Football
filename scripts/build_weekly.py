@@ -15,7 +15,7 @@ import polars as pl
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
 
-from ffmodel import data, ros
+from ffmodel import data, fillin, ros
 from ffmodel.board import _tiers
 from ffmodel.config import DATA, load_leagues
 from ffmodel.guide import GUIDE, add_guide
@@ -72,7 +72,7 @@ GUIDE.update({
     "Team Implied Pts": "Points Vegas expects his team to score this week (from the over/under and spread). For a team defense: points the opponent is expected to score.",
     "Vegas Adj": "Points added or taken away because his team's implied total is higher or lower than its usual this season (fitted: matters for RB, TE, K and defenses; not for QB/WR once the matchup is counted).",
     "Play Chance": "Chance he plays this week: 0% if Out / Doubtful / IR, 85% if Questionable (65% if he missed Wednesday practice), 55% if in the concussion protocol, low for practice-squad or players with no games yet.",
-    "Teammate Out Adj": "Points added because his team's top WR may sit this week (weighted by the chance he sits). When a team's top WR missed a game (2016-2025), the other WRs scored about 2 points more than usual and the top TE about 1 point more. If the top WR is ruled out, this becomes the full +2.0 / +0.9.",
+    "Teammate Out Adj": "Points added because a teammate may sit this week (weighted by the chance he sits). Backup QB / RB / TE when the starter at his position may sit, and the other WRs when the top WR may sit: his own record in games the starter missed (this season and past seasons), shrunk toward the league average (QB +8.9, RB +5.6, TE +2.0, WR +1.8). The top TE also gets +0.9 when the top WR may sit.",
     "Last 3 PPG": "Average points in his last 3 games.",
     "Pts Over Repl": "Week projection minus a replacement-level starter at his position (the last starter in a 12-team league). Ranks the Overall tab across positions.",
     "Status": "Injury report status (from the latest report you pasted) or roster status.",
@@ -121,7 +121,32 @@ for lg in ("burbs", "cbs"):
     bump = (pl.when(pl.col("player_id") == pl.col("star_id")).then(0.0)
               .when(pl.col("position") == "WR").then(2.0).when((pl.col("position") == "TE") & te1).then(0.9)
               .otherwise(0.0) * pl.col("sit"))
-    d = d.with_columns(bump.alias("absence_adj"))
+    # next man up: when the lead QB / RB / TE may sit, his backup gets that player's own fill-in bump (his
+    # history of games the lead missed, this season and earlier, shrunk to the league average: QB +8.9,
+    # RB +5.6, TE +2.0 burbs). Scaled by the chance the lead sits. Long-term absences are already in ROS PPG,
+    # so only this week's injury report counts. WRs: every other WR gets his own bump (league +1.8) instead
+    # of a flat +2.0 when the top WR may sit.
+    fb, fpr = fillin.bumps(lg, season, thru)
+    d = d.join(fb.select("player_id", pl.col("bump").alias("own_bump"), "n_ev"), on="player_id", how="left")
+    d = d.with_columns(pl.col("own_bump").fill_null(pl.col("position").replace_strict(fpr, default=0.0, return_dtype=pl.Float64)),
+                       pl.col("n_ev").fill_null(0))
+    nm = []
+    for p_ in ["QB", "RB", "TE"]:
+        ps = d.filter(pl.col("position") == p_).sort("base", descending=True)
+        ld = (ps.group_by("team").first().filter(~pl.col("status").is_in(["out_long", "season", "gone"]))
+                .select("team", pl.col("player_id").alias("lead_id"), (1 - pl.col("play")).alias("lead_sit"),
+                        pl.col("player_display_name").alias("lead_name")))
+        nx = (ps.join(ld, on="team").filter(pl.col("player_id") != pl.col("lead_id"), pl.col("play") > 0)
+                .group_by("team").first().select("player_id", "lead_sit", "lead_name"))
+        nm.append(nx)
+    nm = pl.concat(nm)
+    d = d.join(nm, on="player_id", how="left").with_columns(pl.col("lead_sit").fill_null(0))
+    rb_bump = (pl.col("own_bump") * pl.col("lead_sit")).fill_null(0)
+    bump = (pl.when(pl.col("player_id") == pl.col("star_id")).then(0.0)
+              .when(pl.col("position") == "WR").then(pl.col("own_bump"))
+              .when((pl.col("position") == "TE") & te1).then(0.9)
+              .otherwise(0.0) * pl.col("sit"))
+    d = d.with_columns((bump + rb_bump).alias("absence_adj"))
     d = d.with_columns(((pl.col("base") + pl.col("match_adj") + pl.col("vegas_adj") + pl.col("absence_adj")).clip(0)
                         * pl.col("play")).alias("wk"))
     # replacement = last starter in the league (flex filled by the best leftover RB/WR/TE)
@@ -202,6 +227,7 @@ for lg in ("burbs", "cbs"):
         "  Honest caveat: matchups and lines explain only a small part of one week's score (week-to-week noise is large);",
         "  they mattered most for defenses. Use them as tiebreakers between similar players, not to bench a stud.",
         "Teammate out: if a team's top WR may sit, other WRs get up to +2.0 and the top TE +0.9 (history 2016-2025), scaled by the chance he sits.",
+        "Next man up: when a starting QB / RB / TE or the top WR may sit, his backups get their own historical fill-in bump (see Teammate Out Adj).",
         "Injuries: from the latest injury report you pasted. Out / Doubtful / IR = 0; Questionable = 85% chance to play (65% if he did not practice Wednesday); concussion protocol = 55%.",
         "  Paste Friday's or Saturday's report and these refresh with final designations.",
         "Overall tab is ranked by points over the last starter at the position in a 12-team league (for trades of value across positions,",

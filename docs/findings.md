@@ -267,3 +267,16 @@ Prompted by SEA: Emanuel Wilson's "role up" came from Charbonnet and Price being
   played, no stats) now count as zero usage in the role trend and the Role flag. Before, "last 3 games" meant his
   own last 3 games played, so a backup who stopped playing kept a stale role. Affected RBs: MAE 3.13 -> 2.87 burbs,
   3.37 -> 2.97 cbs (n=28/22). Wilson: ROS 7.9 -> 5.8 burbs, flag Role up -> Role down.
+
+## Next man up (Nov 15 2026)
+
+Missed Emmett Johnson starting for an inactive Kenneth Walker (KC). Weekly rankings now give backups a bump when
+the starter at their position may sit (scripts/build_weekly.py, src/ffmodel/fillin.py):
+
+- Event = a team game the season's lead QB / RB / WR / TE missed (2012-2026). Delta = the other player's points that
+  game minus his average in games the lead played that season.
+- League average for the next man up (burbs): QB2 +8.9, RB2 +5.6, TE2 +2.0; other WRs when the top WR sits +1.8.
+- Player-specific: his own deltas shrunk to the league average with K events. Backtest 2018-2025, predicting
+  each game from earlier ones only, MAE vs the flat average: QB 6.34 -> 5.99 (K=2), RB 6.75 -> 6.55 (K=3),
+  WR 3.98 -> 3.91 (K=5), TE 4.42 -> 4.40 (K=15, essentially the average).
+- Applied scaled by the chance the starter sits this week; long-term absences are already in ROS PPG.
