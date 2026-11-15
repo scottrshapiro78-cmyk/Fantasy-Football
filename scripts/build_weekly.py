@@ -15,7 +15,7 @@ import polars as pl
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
 
-from ffmodel import data, fillin, ros
+from ffmodel import data, fillin, freshness, ros
 from ffmodel.board import _tiers
 from ffmodel.config import DATA, load_leagues
 from ffmodel.guide import GUIDE, add_guide
@@ -72,7 +72,7 @@ GUIDE.update({
     "Team Implied Pts": "Points Vegas expects his team to score this week (from the over/under and spread). For a team defense: points the opponent is expected to score.",
     "Vegas Adj": "Points added or taken away because his team's implied total is higher or lower than its usual this season (fitted: matters for RB, TE, K and defenses; not for QB/WR once the matchup is counted).",
     "Play Chance": "Chance he plays this week: 0% if Out / Doubtful / IR, 85% if Questionable (65% if he missed Wednesday practice), 55% if in the concussion protocol, low for practice-squad or players with no games yet.",
-    "Teammate Out Adj": "Points added because a teammate may sit this week (weighted by the chance he sits). Backup QB / RB / TE when the starter at his position may sit, and the other WRs when the top WR may sit: his own record in games the starter missed (this season and past seasons), shrunk toward the league average (QB +8.9, RB +5.6, TE +2.0, WR +1.8). The top TE also gets +0.9 when the top WR may sit.",
+    "Teammate Out Adj": "Points added because a teammate may sit this week (weighted by the chance he sits). Backup QB / RB / TE when the starter at his position may sit, and the other WRs when the top WR may sit: his own record in games the starter missed (this season and past seasons), shrunk toward the league average (QB +8.9, RB +5.6, TE +2.0, WR +1.8). The top TE also gets +0.9 when the top WR may sit. If the starting QB may sit, his RBs / WRs / TEs lose a little for the backup (about 0.7% of their PPG per point of QB quality, 2019-2025).",
     "Last 3 PPG": "Average points in his last 3 games.",
     "Pts Over Repl": "Week projection minus a replacement-level starter at his position (the last starter in a 12-team league). Ranks the Overall tab across positions.",
     "Status": "Injury report status (from the latest report you pasted) or roster status.",
@@ -139,14 +139,25 @@ for lg in ("burbs", "cbs"):
         nx = (ps.join(ld, on="team").filter(pl.col("player_id") != pl.col("lead_id"), pl.col("play") > 0)
                 .group_by("team").first().select("player_id", "lead_sit", "lead_name"))
         nm.append(nx)
+        if p_ == "QB":  # his pass catchers / RBs feel the downgrade (ros.QB_CHANGE), scaled by the chance he sits
+            qq = ros.qb_quality(season, lg)
+            lowq = float(qq["q"].quantile(0.1))
+            qd = (ld.join(qq, left_on="lead_id", right_on="player_id", how="left")
+                    .join(ps.join(ld.select("team", "lead_id"), on="team").filter(pl.col("player_id") != pl.col("lead_id"), pl.col("play") > 0)
+                            .group_by("team").first().select("team", pl.col("player_id").alias("qb2_id")), on="team", how="left")
+                    .join(qq.rename({"q": "q2", "player_id": "qb2_id"}), on="qb2_id", how="left")
+                    .select("team", ((pl.col("q2").fill_null(lowq) - pl.col("q").fill_null(lowq)) * pl.col("lead_sit")).alias("qb_drop")))
     nm = pl.concat(nm)
+    d = d.join(qd, on="team", how="left").with_columns(
+        (pl.col("position").replace_strict(ros.QB_CHANGE, default=0.0, return_dtype=pl.Float64) * pl.col("base")
+         * pl.col("qb_drop").fill_null(0)).alias("qb_wk_adj"))
     d = d.join(nm, on="player_id", how="left").with_columns(pl.col("lead_sit").fill_null(0))
     rb_bump = (pl.col("own_bump") * pl.col("lead_sit")).fill_null(0)
     bump = (pl.when(pl.col("player_id") == pl.col("star_id")).then(0.0)
               .when(pl.col("position") == "WR").then(pl.col("own_bump"))
               .when((pl.col("position") == "TE") & te1).then(0.9)
               .otherwise(0.0) * pl.col("sit"))
-    d = d.with_columns((bump + rb_bump).alias("absence_adj"))
+    d = d.with_columns((bump + rb_bump + pl.col("qb_wk_adj")).alias("absence_adj"))
     d = d.with_columns(((pl.col("base") + pl.col("match_adj") + pl.col("vegas_adj") + pl.col("absence_adj")).clip(0)
                         * pl.col("play")).alias("wk"))
     # replacement = last starter in the league (flex filled by the best leftover RB/WR/TE)
@@ -239,4 +250,7 @@ for lg in ("burbs", "cbs"):
     path = out_dir / f"weekly_{season}_wk{week}_{lg}.xlsx"
     wb.save(path)
     add_guide(path)
+    fr = freshness.checks(season, week)
+    freshness.add_sheet(path, fr)
     print(path, df.height, "byes:", byes)
+    print("DATA CHECK:", freshness.summary(fr))

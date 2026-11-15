@@ -21,7 +21,7 @@ thru = int(args[1]) if len(args) > 1 else 8
 if "--refit" in sys.argv or not (DATA / "processed" / "ros_fit.json").exists():
     ros.fit(thru)
 POS = ["QB", "RB", "WR", "TE", "K", "DEF"]
-MY_TEAM = {"burbs": "Gin and Jews"}  # Scott's team name per league (CBS: add when rosters are pasted)
+MY_TEAM = {"burbs": "Gin and Jews", "cbs": "Gin and Jews"}  # Scott's team name per league
 TIER_SHAPE = {"QB": (20, 5), "RB": (45, 7), "WR": (60, 8), "TE": (20, 5), "K": (14, 3), "DEF": (14, 3)}
 TEAMS = {
     "ARI": "Arizona Cardinals", "ATL": "Atlanta Falcons", "BAL": "Baltimore Ravens", "BUF": "Buffalo Bills",
@@ -140,7 +140,8 @@ for lg in ("burbs", "cbs"):
     wb.save(path)
     add_guide(path)
     # My Team (last tab): Scott's roster from the latest pasted league rosters
-    rost = sorted((DATA / "input").glob(f"{lg}_rosters_{season}wk*.csv"))
+    import re as _re
+    rost = sorted((DATA / "input").glob(f"{lg}_rosters_{season}wk*.csv"), key=lambda f: int(_re.search(r"wk(\d+)", f.name).group(1)))
     if rost:
         from openpyxl import load_workbook
         r = pl.read_csv(rost[-1]).filter(pl.col("Team") == MY_TEAM.get(lg, ""))
@@ -153,4 +154,8 @@ for lg in ("burbs", "cbs"):
             wb2 = load_workbook(path)
             sheet(wb2.create_sheet("My Team"), mine, "H2")
             wb2.save(path)
+    from ffmodel import freshness
+    fr = freshness.checks(season, thru + 1)
+    freshness.add_sheet(path, fr)
     print(path, df.height)
+    print("DATA CHECK:", freshness.summary(fr))

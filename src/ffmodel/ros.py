@@ -288,6 +288,7 @@ def project(season: int, thru: int, league: str, fitp: dict | None = None) -> pl
     ratio = fitp.get("ppg_ratio", {})
     d = d.with_columns((pl.col(col) * pl.col("status").replace_strict(ratio, default=1.0, return_dtype=pl.Float64)).alias(col))
     d = d.filter(pl.col("status") != "gone")
+    d = qb_change(d, season, thru, league, col)
     reg, po = team_games(season, thru + 1, 14, unplayed_before=True), team_games(season, 15, 17)
     play = {**play, "dated": play["active"], "season": 0.0}
     rate = (pl.when(pl.col("position").is_in(["K", "DEF"]) & ~pl.col("status").is_in(["season", "dated"])).then(
@@ -515,3 +516,44 @@ def sleeper_injuries() -> pl.DataFrame | None:
              .select("player_id", pl.col("sleeper_id").cast(pl.Utf8)).drop_nulls().unique("sleeper_id"))
     return pl.DataFrame(rows).join(ids, on="sleeper_id").select("player_id", "sl_status")
 
+
+
+# QB change: per point of the starting QB's preseason projection, a pass catcher / RB gains this share of his
+# own PPG. 2019-2025, players who had 2+ starting QBs in a season (QB quality = preseason projection, so the
+# game itself can't leak in): WR 0.0069 (+-0.0022), TE 0.0072 (+-0.0038), RB 0.0045 (+-0.0026). E.g. a 12-PPG
+# WR whose QB goes from a 20 to a 14 projected-PPG starter: -0.5 PPG. Likely understated (projections are noisy).
+QB_CHANGE = {"RB": 0.0045, "WR": 0.0069, "TE": 0.0072}
+
+
+def qb_quality(season: int, league: str) -> pl.DataFrame:
+    p = projections(season, league).select("player_id", pl.col(f"pred_ppg_{league}").alias("q"))
+    return p
+
+
+def qb_change(d: pl.DataFrame, season: int, thru: int, league: str, col: str) -> pl.DataFrame:
+    """Adjust RB / WR / TE for a different starting QB from here on (trade, injury, benching) vs the QBs
+    they played with so far. Current starter = the team's active QB with the best ROS PPG."""
+    q = qb_quality(season, league)
+    low = float(q["q"].quantile(0.1))
+    w = pl.read_parquet(DATA / "processed" / "player_weeks.parquet").filter(pl.col("season") == season, pl.col("week") <= thru)
+    st = (w.filter(pl.col("position") == "QB").sort("attempts", descending=True, nulls_last=True)
+           .group_by("team", "week").first().select("team", "week", pl.col("player_id").alias("qb")))
+    st = st.join(q, left_on="qb", right_on="player_id", how="left").with_columns(pl.col("q").fill_null(low))
+    had = (w.filter(pl.col("position").is_in(list(QB_CHANGE))).join(st, on=["team", "week"])
+             .group_by("player_id").agg(pl.col("q").mean().alias("q_had")))
+    # starter from here on: best two healthy-enough QBs by ROS PPG; the top one's share of the remaining games
+    # is what he's expected to be available for (a dated injury return splits the games)
+    left = team_games(season, thru + 1, 17, unplayed_before=True)
+    qbs = (d.filter(pl.col("position") == "QB", ~pl.col("status").is_in(["out_long", "season", "gone", "practice"]))
+             .join(q, on="player_id", how="left").with_columns(pl.col("q").fill_null(low))
+             .sort(col, descending=True))
+    top = qbs.group_by("team").agg(pl.col("q").first().alias("q1"), pl.col("q").get(1, null_on_oob=True).alias("q2"),
+                                   pl.col("player_display_name").first().alias("qb_now"),
+                                   (pl.col("missed_reg").first() + pl.col("missed_po").first()).alias("miss1"))
+    top = top.with_columns(pl.col("team").replace_strict(left, default=1, return_dtype=pl.Int64).alias("gl"))
+    sh = (1 - pl.col("miss1") / pl.col("gl").clip(1)).clip(0, 1)
+    now = top.select("team", "qb_now", (sh * pl.col("q1") + (1 - sh) * pl.col("q2").fill_null(low)).alias("q_now"))
+    c = pl.col("position").replace_strict(QB_CHANGE, default=0.0, return_dtype=pl.Float64)
+    d = d.join(had, on="player_id", how="left").join(now, on="team", how="left")
+    adj = (c * pl.col(col) * (pl.col("q_now") - pl.col("q_had"))).fill_null(0)
+    return d.with_columns(adj.alias("qb_adj")).with_columns((pl.col(col) + pl.col("qb_adj")).alias(col))

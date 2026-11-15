@@ -280,3 +280,15 @@ the starter at their position may sit (scripts/build_weekly.py, src/ffmodel/fill
   each game from earlier ones only, MAE vs the flat average: QB 6.34 -> 5.99 (K=2), RB 6.75 -> 6.55 (K=3),
   WR 3.98 -> 3.91 (K=5), TE 4.42 -> 4.40 (K=15, essentially the average).
 - Applied scaled by the chance the starter sits this week; long-term absences are already in ROS PPG.
+
+## QB changes for teammates (Nov 15 2026)
+
+2019-2025, RB/WR/TE with 2+ starting QBs in a season; QB quality = the starter's preseason projection (so the game
+itself can't leak in; a leave-one-out in-season measure gave a spurious negative). Change in a player's points per
+point of QB quality, as a share of his PPG: WR 0.0069 (+-0.0022), TE 0.0072 (+-0.0038), RB 0.0045 (+-0.0026).
+A 12-PPG WR going from a 20- to a 14-projected QB: about -0.5 PPG. Probably understated (noisy quality measure).
+Applied in ROS (current starter vs QBs he's played with, availability-weighted for dated returns) and in the weekly
+file when this week's starter may sit.
+
+Data checks: every ROS / weekly file now has a Data Check tab (stats, NFL rosters/trades, injury report, roles,
+news notes age, live feed, league rosters age) and the scripts print a DATA CHECK line.
