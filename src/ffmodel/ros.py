@@ -109,10 +109,11 @@ def after(season: int, start: int, end: int = 17) -> pl.DataFrame:
                                        *[pl.col(f"fpts_{lg}").mean().alias(f"ppg_{lg}_after") for lg in LEAGUES])
 
 
-def status(season: int, week: int) -> pl.DataFrame:
+def status(season: int, week: int, roster_week: int | None = None) -> pl.DataFrame:
     """Roster status as of `week`: out_long (IR / PUP / suspended), out_week (ruled Out or
     Doubtful on that week's injury report), active, or gone (cut / retired)."""
-    r = data.rosters_weekly([season]).filter(pl.col("week") <= week, pl.col("gsis_id").is_not_null())
+    # roster_week: take the team from a later roster (e.g. next week's, after a trade); default = week
+    r = data.rosters_weekly([season]).filter(pl.col("week") <= (roster_week or week), pl.col("gsis_id").is_not_null())
     r = r.sort("week").group_by("gsis_id").agg(pl.all().last())
     inj = (data.injuries([season]).filter(pl.col("week") == week, pl.col("gsis_id").is_not_null())
            .group_by("gsis_id").agg(pl.col("report_status").last()))
@@ -269,7 +270,7 @@ def project(season: int, thru: int, league: str, fitp: dict | None = None) -> pl
     d = d.with_columns(((kk * pl.col("prior") + pl.col("n") * obs) / (kk + pl.col("n"))
                         + ss * pl.col("sos_left")).alias(col), (ss * pl.col("sos_left")).alias("sched_adj"))
 
-    st = status(season, thru)
+    st = status(season, thru, roster_week=thru + 1)  # current team, incl. trades since last week
     d = d.join(st, on="player_id", how="left").with_columns(
         pl.when(pl.col("position") == "DEF").then(pl.col("player_id"))
           .otherwise(pl.coalesce("roster_team", "team_now", "team")).alias("team"),
