@@ -18,9 +18,9 @@ the biggest misses each week are the main source of new ideas.
 - Discounting a player's role when a teammate returns (worse MAE)
 - Expert-rank blend in season (re-test set for Jan 2027 with a full season of weekly ranks)
 - Vacated work for WRs (no gain)
+- Less weight on the preseason number for breakout players (Nov 15 2026, scripts/study_breakout.py). 2021-25, 6+ games, workload 1.5x the preseason number and 10+ pts: 87 RBs, 63 WRs, 58 TEs. The current model was within 0.3-0.7 pts of unbiased (RB MAE 3.80); halving the preseason weight overshot by 0.9 (MAE 4.08); workload in place of the preseason number overshot by 2.8 (MAE 4.72). Same pattern at WR and TE and in 4 of 5 seasons for RBs. Breakouts fade more than their workload suggests.
 
 ## To test (rough order of expected value)
-0. Breakout players (Scott, Nov 15: Tuten 15.9 so far, projected 11.8): when a player's workload is far above what his preseason projection assumed for 6+ games, put less weight on the preseason number and more on his workload-based expected points. Test on 2021-25 players whose usage beat the preseason number by 50%+.
 1. Play chance by injury type and position (hamstring vs ankle; QBs play 51% when Questionable vs WR 66%)
 2. Weekly projection range (floor / ceiling) per player from his own volatility, for start/sit in must-win weeks
 3. Role change for WRs traded mid-season (targets share on the new team after 1-2 games)
