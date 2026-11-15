@@ -14,6 +14,7 @@ the biggest misses each week are the main source of new ideas.
 - Questionable play chances by last practice (2018-25, 2,933 cases)
 - IR with no timeline: 0.3 of value after the 4-game minimum (2021-25, n=63)
 - Injury return dates from ESPN's injury page on every run (Nov 15 2026); fill-in QBs valued only until the regular starter is due back
+- RB depth-chart moves and short fill-ins (Nov 15 2026): RBs who lost the lead job while healthy x0.85 (n=21, miss 2.24 -> 1.88); new lead backs get a note only (n=52, model already unbiased: 10.1 vs 10.0); the next RB / TE on the depth chart gets his own fill-in bump for the 1-2 games a lead is out, spread into ROS PPG
 - WR depth-chart moves (scripts/study_new_starter.py, 2021-25): new starters +0.75 (model ran 0.9 low, n=119); WRs dropped from the starters x0.85 (model ran 1.3 high, n=47, miss 3.16 -> 2.9)
 
 ## Tested and rejected

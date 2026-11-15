@@ -86,7 +86,7 @@ cfg = load_leagues()
 for lg in ("burbs", "cbs"):
     col = f"pred_ppg_{lg}"
     d = ros.project(season, thru, lg)
-    d = d.with_columns((pl.col(col) - pl.col("sched_adj")).alias("base"))
+    d = d.with_columns((pl.col(col) - pl.col("sched_adj") - pl.col("fill_adj").fill_null(0)).alias("base"))  # fill-in bump is applied in full below
     # this week's matchup
     w = pl.read_parquet(DATA / "processed" / "player_weeks.parquet").filter(pl.col("season") == season, pl.col("week") <= thru)
     eff = defense_effects(w, f"fpts_{lg}").select("position", pl.col("opponent_team").alias("opp"), pl.col(f"def_fpts_{lg}").alias("eff"))
