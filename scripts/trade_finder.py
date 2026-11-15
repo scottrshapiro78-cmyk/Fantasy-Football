@@ -47,7 +47,7 @@ def first_week(r):
     s, news = str(r["Status"]), str(r["Injury News"])
     if s == "Out for season":
         return 99
-    if s in ("Practice squad", "No games yet"):
+    if s in ("Practice squad", "No games yet", "Backup QB"):
         return 99
     if s in ("Out", "Injured Reserve", "Doubtful", "IR / PUP / suspended"):
         m = re.search(r"est\. return (\w{3}) (\d+)", news)
@@ -72,6 +72,8 @@ for name, r in rs.iterrows():
     for w in WEEKS:
         o = opp.get((w, r["Team"]))
         v.append(0.0 if (o is None or w < fw) else max(0.0, base + MATCH.get(r["Pos"], 0) * E.get((r["Pos"], o[0]), 0.0)))
+    if isinstance(r["Injury News"], str) and "NFL roster" in r["Injury News"]:
+        v = [x * 0.3 for x in v]  # injured reserve, no reported timeline: such players played 28% of games from the 4-game minimum on (2021-25, n=63)
     VAL[name] = (r["Pos"], np.array(v))
 
 

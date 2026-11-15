@@ -28,9 +28,12 @@ thru = week - 1
 POS = ["QB", "RB", "WR", "TE", "K", "DEF"]
 MATCH = {"QB": 1.0, "RB": 0.45, "WR": 0.35, "TE": 0.55, "K": 0.0, "DEF": 0.5}
 VEGAS = {"QB": 0.0, "RB": 0.075, "WR": 0.0, "TE": 0.075, "K": 0.13, "DEF": -0.25}  # DEF uses the opponent's implied pts
-QUESTIONABLE_PLAY = 0.85
-DNP_PLAY = 0.65  # questionable and did not practice Wednesday (rough figure, not fitted)
-CONCUSSION_PLAY = 0.55  # in protocol midweek: roughly half clear it in time (rough figure, not fitted)
+# Share of Questionable QB/RB/WR/TE (6+ games that season) who played, final injury reports 2018-2025
+# (2,933 cases, 64% overall; steady 60-69% every season). Split by last practice of the week.
+QUESTIONABLE_PLAY = 0.75  # full practice or no practice note (556 cases)
+LIMITED_PLAY = 0.65  # limited last practice (1,924)
+DNP_PLAY = 0.45  # did not practice (453)
+CONCUSSION_PLAY = 0.50  # questionable with a concussion, not a full practice (53 cases: 43%; full practice 74%)
 TIER_SHAPE = {"QB": (24, 5), "RB": (40, 7), "WR": (50, 8), "TE": (20, 5), "K": (16, 3), "DEF": (16, 3)}
 
 TEAMS = {
@@ -100,8 +103,10 @@ for lg in ("burbs", "cbs"):
     play = (pl.when(pl.col("status").is_in(["out_week", "out_long", "season", "dated", "gone"])).then(0.0)
               .when(pl.col("status") == "practice").then(0.05)
               .when(pl.col("status") == "no_games").then(0.15)
-              .when(news.str.to_lowercase().str.contains("concussion")).then(CONCUSSION_PLAY)
+              .when(news.str.starts_with("Questionable") & news.str.to_lowercase().str.contains("concussion")
+                    & news.str.contains("DNP|limited")).then(CONCUSSION_PLAY)
               .when(news.str.starts_with("Questionable") & news.str.contains("DNP")).then(DNP_PLAY)
+              .when(news.str.starts_with("Questionable") & news.str.contains("limited")).then(LIMITED_PLAY)
               .when(news.str.starts_with("Questionable")).then(QUESTIONABLE_PLAY)
               .otherwise(1.0))
     d = d.with_columns((m * pl.col("eff").fill_null(0)).alias("match_adj"), (v * impd.fill_null(0)).alias("vegas_adj"),
@@ -131,17 +136,22 @@ for lg in ("burbs", "cbs"):
     d = d.with_columns(pl.col("own_bump").fill_null(pl.col("position").replace_strict(fpr, default=0.0, return_dtype=pl.Float64)),
                        pl.col("n_ev").fill_null(0))
     nm = []
+    tgp = d.filter(pl.col("position") != "DEF").group_by("team").agg(pl.col("n").max().alias("team_g"))
     for p_ in ["QB", "RB", "TE"]:
         ps = d.filter(pl.col("position") == p_)
         if p_ == "QB":  # depth chart order: starter, then backups by depth rank
             ps = ps.sort([pl.col("status") == "backup", pl.col("dc_rank").fill_null(99), pl.col("base")], descending=[False, False, True])
         else:
             ps = ps.sort("base", descending=True)
-        ld = (ps.group_by("team").first().filter(~pl.col("status").is_in(["out_long", "season", "gone"]))
+        # lead_share: share of the team's games the lead has played. The stand-in's own average already holds
+        # the games the lead missed, so the bump only applies to the part that is new.
+        ld = (ps.group_by("team", maintain_order=True).first().filter(~pl.col("status").is_in(["out_long", "season", "gone"]))
+                .join(tgp, on="team", how="left")
                 .select("team", pl.col("player_id").alias("lead_id"), (1 - pl.col("play")).alias("lead_sit"),
-                        pl.col("player_display_name").alias("lead_name")))
+                        pl.col("player_display_name").alias("lead_name"),
+                        (pl.col("n") / pl.col("team_g").clip(1)).clip(0, 1).fill_null(1.0).alias("lead_share")))
         nx = (ps.join(ld, on="team").filter(pl.col("player_id") != pl.col("lead_id"), pl.col("play") > 0)
-                .group_by("team").first().select("player_id", "lead_sit", "lead_name"))
+                .group_by("team", maintain_order=True).first().select("player_id", "lead_sit", "lead_name", "lead_share"))
         nm.append(nx)
         if p_ == "QB":  # his pass catchers / RBs feel the downgrade (ros.QB_CHANGE), scaled by the chance he sits
             qq = ros.qb_quality(season, lg)
@@ -156,7 +166,11 @@ for lg in ("burbs", "cbs"):
         (pl.col("position").replace_strict(ros.QB_CHANGE, default=0.0, return_dtype=pl.Float64) * pl.col("base")
          * pl.col("qb_drop").fill_null(0)).alias("qb_wk_adj"))
     d = d.join(nm, on="player_id", how="left").with_columns(pl.col("lead_sit").fill_null(0))
-    rb_bump = (pl.col("own_bump") * pl.col("lead_sit")).fill_null(0)
+    # QBs: the fill-in figure is a scoring level (a backup scores about nothing otherwise), so a stand-in is
+    # worth the higher of his base and his fill-in level, never the two added together.
+    qb_lift = (pl.col("own_bump") - pl.col("base")).clip(0)
+    rb_bump = (pl.when(pl.col("position") == "QB").then(qb_lift).otherwise(pl.col("own_bump") * pl.col("lead_share").fill_null(1.0))
+               * pl.col("lead_sit")).fill_null(0)
     bump = (pl.when(pl.col("player_id") == pl.col("star_id")).then(0.0)
               .when(pl.col("position") == "WR").then(pl.col("own_bump"))
               .when((pl.col("position") == "TE") & te1).then(0.9)
@@ -165,7 +179,7 @@ for lg in ("burbs", "cbs"):
     # backup QB: plays only if the starter sits -> chance = starter's sit chance, scoring at his fill-in level
     bq = (pl.col("status") == "backup") & (pl.col("position") == "QB")
     d = d.with_columns(pl.when(bq).then(pl.col("lead_sit").fill_null(0.0)).otherwise(pl.col("play")).alias("play"),
-                       pl.when(bq).then(pl.col("own_bump")).otherwise(pl.col("absence_adj")).alias("absence_adj"))
+                       pl.when(bq).then(qb_lift).otherwise(pl.col("absence_adj")).alias("absence_adj"))
     d = d.with_columns(((pl.col("base") + pl.col("match_adj") + pl.col("vegas_adj") + pl.col("absence_adj")).clip(0)
                         * pl.col("play")).alias("wk"))
     # replacement = last starter in the league (flex filled by the best leftover RB/WR/TE)
@@ -248,8 +262,8 @@ for lg in ("burbs", "cbs"):
         "  they mattered most for defenses. Use them as tiebreakers between similar players, not to bench a stud.",
         "Teammate out: if a team's top WR may sit, other WRs get up to +2.0 and the top TE +0.9 (history 2016-2025), scaled by the chance he sits.",
         "Next man up: when a starting QB / RB / TE or the top WR may sit, his backups get their own historical fill-in bump (see Teammate Out Adj).",
-        "Injuries: from the latest injury report you pasted. Out / Doubtful / IR = 0; Questionable = 85% chance to play (65% if he did not practice Wednesday); concussion protocol = 55%.",
-        "  Paste Friday's or Saturday's report and these refresh with final designations.",
+        "Injuries: the NFL's official report plus news notes. Out / Doubtful / IR = 0. Questionable = 75% chance to play after a full practice,",
+        "  65% after a limited one, 45% if he did not practice, 50% for a concussion without a full practice (what happened to 2,933 Questionable players, 2018-2025).",
         "Overall tab is ranked by points over the last starter at the position in a 12-team league (for trades of value across positions,",
         "  use the ROS file instead). FLEX tab ranks RB/WR/TE together by Wk Proj.",
         f"Rerun: PYTHONPATH=src python3 scripts/build_weekly.py {season} {week}",
@@ -261,5 +275,16 @@ for lg in ("burbs", "cbs"):
     add_guide(path)
     fr = freshness.checks(season, week)
     freshness.add_sheet(path, fr)
+    # snapshot for the accuracy scorecard (scripts/scorecard.py); frozen once Sunday's games have kicked off
+    import datetime as _dt
+    snap = DATA / "tracking" / f"weekly_{season}_wk{week}_{lg}.csv"
+    snap.parent.mkdir(exist_ok=True)
+    sundays = [g for g in games["gameday"].unique().to_list() if _dt.date.fromisoformat(g).weekday() == 6]
+    lock = _dt.datetime.fromisoformat((min(sundays) if sundays else games["gameday"].min()) + "T17:30:00+00:00")
+    if not snap.exists() or _dt.datetime.now(_dt.timezone.utc) < lock:
+        df.select([pl.col(k).alias(v) for k, v in {"Pos": "pos", "Player": "player", "Team": "team", "Wk Proj": "proj",
+                   "Status": "status", "Play Chance": "play", "Base PPG": "base", "PPG So Far": "sofar", "Last 3 PPG": "last3",
+                   "Matchup Adj": "match", "Vegas Adj": "vegas", "Teammate Out Adj": "mate", "Injury News": "news",
+                   "nflverse ID": "player_id"}.items()]).write_csv(snap)
     print(path, df.height, "byes:", byes)
     print("DATA CHECK:", freshness.summary(fr))

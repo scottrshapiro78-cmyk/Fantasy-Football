@@ -110,18 +110,24 @@ def player_table(names):
         news = r[p.columns.get_loc("Injury News") + 1]
         if s == "Out for season":
             first.append(99)
-        elif s in ("Practice squad", "No games yet"):
+        elif s in ("Practice squad", "No games yet", "Backup QB"):
             first.append(99 if r.Pos != "DEF" else week + 1)
         elif s in ("Out", "Injured Reserve", "Doubtful", "IR / PUP / suspended"):
             rw = ret_week(r.Team, news if isinstance(news, str) else "")
             first.append(rw if rw else week + 4)
         else:
             first.append(week + 1)
+    # on injured reserve with no reported timeline (date is only the 4-game minimum). 2021-25, 63 fantasy-relevant
+    # players put on IR in weeks 5-11: played 15% of games in the first eligible week, 28% of all games from then on
+    for j, r in enumerate(p.itertuples()):
+        news = r[p.columns.get_loc("Injury News") + 1]
+        if isinstance(news, str) and "NFL roster" in news:
+            V[:, j] *= 0.3
     return p.reset_index(drop=True), V, np.array(first)
 
 
 owned = set(roster.Player)
-fa = rs[~rs.Player.isin(owned)]
+fa = rs[~rs.Player.isin(owned) & rs.Status.isna()]  # healthy free agents only: an injured star is not a fill-in
 waiver = {q: fa[fa.Pos == q]["ROS PPG"].nlargest(3).iloc[-1] for q in ["QB", "RB", "WR", "TE", "K", "DEF"]}
 rng = np.random.default_rng(11)
 

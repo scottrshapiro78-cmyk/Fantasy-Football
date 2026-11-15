@@ -309,3 +309,37 @@ departed player's PPG split by recent work share helps only for *fresh* absences
 games) and only partly: RB beta ~0.3 (MAE 3.67 -> 3.40, n=33), TE ~0.4 (3.93 -> 3.2, n=13); WRs ~0.07 and worse
 MAE (n=82), so WRs get none. Old absences are already in role trend. Now applied with RB 0.3 / TE 0.4 / WR 0,
 using current statuses (a player coming back from IR isn't counted as gone).
+
+## Full audit, Nov 15 2026 (after week 9)
+
+Gaps found and fixed:
+
+- **Players on injured reserve treated as healthy.** A "not on the injury list = healthy" rule overrode the NFL
+  roster, so Puka Nacua (IR) was projected at full strength. The roster's IR status now stands unless a news
+  note says otherwise; a fresh IR stint with no timeline is dated to the 4-game minimum. Such players
+  historically played 15% of games in the first eligible week and 28% of all games from then on (2021-25,
+  63 fantasy-relevant players put on IR in weeks 5-11), so the playoff sim and trade finder count them at 0.3.
+- **Official injury report was only used when pasted.** This week's NFL report is now merged on every run
+  (Out / Doubtful / Questionable, plus last practice), and short-term notes are cleared once the team's final
+  report no longer lists the player.
+- **Questionable was too optimistic.** The weekly file used 85%. Final reports 2018-2025 (2,933 Questionable
+  QB/RB/WR/TE with 6+ games that season): 64% played, 60-69% every season. By last practice: full 75%,
+  limited 65%, none 44%; concussion without a full practice 43%. The week 9 scorecard showed the same thing
+  (8 players at "85%", 3 played). Now 75 / 65 / 45 / 50.
+- **Concussion rule fired on any mention of the word**, including cleared players. Now only for Questionable.
+- **Fill-in bumps double counted.** A stand-in QB got his base plus his fill-in level (Drew Lock 22.8); QBs now
+  take the higher of the two. For RB/TE the bump is scaled by the share of games the starter has played,
+  because the stand-in's own average already holds the games the starter missed.
+- **Season-model weights were fitted before the healthy-scratch and QB-attempt rules existed**, and on a single
+  cut-off week, where they jumped around (TE role weight 0.5 at week 8, 0 at week 9). The fit now pools the
+  cut-off week with the weeks either side (about 3x the sample).
+- **Traded players kept their old team's remaining schedule.** Now the new team's.
+- **Playoff sim's waiver fill-in level counted injured free agents** (QB replacement 17.5 PPG because Hurts
+  and Dart were "available"). Healthy free agents only: QB 14.5.
+
+Still rough or unverified: backup QB plays 10% of remaining games (not fitted); no role adjustment for a WR
+traded mid-season; Burbs playoff format (6 teams, top 2 byes assumed); K and DEF scoring settings.
+
+Week 9 scorecard (top players by position, those who played; average miss in points, Burbs): model 5.29,
+model without matchup/Vegas adjustments 5.33, season average 5.65, last-3 average 6.27. The matchup and
+Vegas adjustments add very little in one week of data; the edge over naive numbers comes from the base.
