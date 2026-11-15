@@ -325,6 +325,7 @@ def project(season: int, thru: int, league: str, fitp: dict | None = None) -> pl
     d = d.with_columns(
         ((pl.col("games_left_reg") - pl.col("missed_reg")).clip(0) * pl.col("play_rate")).alias("exp_reg"),
         ((pl.col("games_left_po") - pl.col("missed_po")).clip(0) * pl.col("play_rate")).alias("exp_po"))
+    d = short_fill_ins(d, season, thru, league, col)
     # fill-in starter: only the games the regular starter misses, then the backup rate
     fi = pl.col("fill_reg").is_not_null()
     return d.with_columns(
@@ -760,13 +761,18 @@ OUT_ST = ["out_long", "out_week", "season", "gone", "practice", "dated"]
 #    x0.85 cut the miss from 3.16 to about 2.9, better in 4 of 5 seasons.
 WR_NEW_STARTER_BUMP = 0.75
 WR_DEMOTED_MULT = 0.85
+# RBs, same study: new lead backs (n=52) needed nothing: model 10.1 vs 10.0 actual, the role trend already
+# catches them, so they get a note only. RBs who lost the lead job while healthy (n=21, small): model ran 1.2
+# high; x0.85 took the miss from 2.24 to 1.88 and removed the bias.
+RB_DEMOTED_MULT = 0.85
 
 
 def wr_depth_moves(d: pl.DataFrame, season: int, thru: int, col: str) -> pl.DataFrame:
     dc = data.depth_charts([season])[0]
     if "dt" not in dc.columns:
         return d.with_columns(pl.lit("").alias("depth_note"))
-    dc = dc.filter(pl.col("pos_abb") == "WR", pl.col("gsis_id").is_not_null()).with_columns(pl.col("dt").str.slice(0, 10).alias("day"))
+    nst = pl.col("pos_abb").replace_strict({"WR": 3, "RB": 1}, return_dtype=pl.Int32)
+    dc = dc.filter(pl.col("pos_abb").is_in(["WR", "RB"]), pl.col("gsis_id").is_not_null()).with_columns(pl.col("dt").str.slice(0, 10).alias("day"))
     sch = data.schedules([season]).filter(pl.col("game_type") == "REG", pl.col("week") <= thru).group_by("week").agg(pl.col("gameday").min())
     days = sorted(dc["day"].unique().to_list())
     import datetime as dt
@@ -775,20 +781,61 @@ def wr_depth_moves(d: pl.DataFrame, season: int, thru: int, col: str) -> pl.Data
         prev = [x for x in days if x <= (dt.date.fromisoformat(gd) - dt.timedelta(days=2)).isoformat()]
         if prev:
             s_ = dc.filter(pl.col("day") == prev[-1])
-            wk.append(s_.filter(pl.col("dt") == s_["dt"].max(), pl.col("pos_rank") <= 3).select(pl.lit(w).alias("week"), "gsis_id").unique())
+            wk.append(s_.filter(pl.col("dt") == s_["dt"].max(), pl.col("pos_rank") <= nst).select(pl.lit(w).alias("week"), "gsis_id").unique())
     if not wk:
         return d.with_columns(pl.lit("").alias("depth_note"))
     share = pl.concat(wk).group_by("gsis_id").agg((pl.col("week").n_unique() / thru).alias("st_share"))
-    now = dc.filter(pl.col("dt") == dc["dt"].max(), pl.col("pos_rank") <= 3).select("gsis_id", pl.col("team").alias("st_team")).unique("gsis_id")
+    now = dc.filter(pl.col("dt") == dc["dt"].max(), pl.col("pos_rank") <= nst).select("gsis_id", pl.col("team").alias("st_team")).unique("gsis_id")
     d = (d.join(share, left_on="player_id", right_on="gsis_id", how="left").join(now, left_on="player_id", right_on="gsis_id", how="left")
           .with_columns(pl.col("st_share").fill_null(0.0)))
     wr, ok = pl.col("position") == "WR", pl.col("status").is_in(["active", "no_games"])
+    rb = pl.col("position") == "RB"
     new = wr & ok & pl.col("st_team").is_not_null() & (pl.col("st_share") <= 1 / 3)
     dem = wr & ok & pl.col("st_team").is_null() & (pl.col("st_share") > 2 / 3)
+    rnew = rb & ok & pl.col("st_team").is_not_null() & (pl.col("st_share") <= 1 / 3)
+    rdem = rb & ok & pl.col("st_team").is_null() & (pl.col("st_share") > 2 / 3)
     return d.with_columns(
-        pl.when(new).then(pl.col(col) + WR_NEW_STARTER_BUMP).when(dem).then(pl.col(col) * WR_DEMOTED_MULT).otherwise(pl.col(col)).alias(col),
+        pl.when(new).then(pl.col(col) + WR_NEW_STARTER_BUMP).when(dem).then(pl.col(col) * WR_DEMOTED_MULT)
+          .when(rdem).then(pl.col(col) * RB_DEMOTED_MULT).otherwise(pl.col(col)).alias(col),
         pl.when(new).then(pl.lit("New starter on depth chart")).when(dem).then(pl.lit("Dropped from starters on depth chart"))
+          .when(rnew).then(pl.lit("New lead back on depth chart")).when(rdem).then(pl.lit("No longer lead back on depth chart"))
           .otherwise(pl.lit("")).alias("depth_note")).drop("st_share", "st_team")
+
+
+def short_fill_ins(d: pl.DataFrame, season: int, thru: int, league: str, col: str) -> pl.DataFrame:
+    """Lead RB / TE out for a week or two (dated return, fewer than 3 games; longer absences are handled by
+    vacated work): the next man on the depth chart gets his own fill-in bump (fillin.bumps: his history of
+    games the lead missed, shrunk to the league average, RB about +5.7) for those games only. ROS PPG is a
+    per-game average, so the bump is spread over his remaining games; `fill_adj` holds the amount so the
+    weekly file, which applies the full bump in the week itself, can take it back out."""
+    from . import fillin
+    fb, pr = fillin.bumps(league, season, thru)
+    left = pl.col("games_left_reg") + pl.col("games_left_po")
+    outs = []
+    for p_ in ("RB", "TE"):
+        ps = d.filter(pl.col("position") == p_, pl.col("status") != "gone")
+        lead = (ps.sort([pl.col("dc_rank").fill_null(99), pl.col(col)], descending=[False, True])
+                  .group_by("team", maintain_order=True).first()
+                  .filter(pl.col("status").is_in(["dated", "out_week"]),
+                          (pl.col("missed_reg") + pl.col("missed_po")).is_between(1, 2))
+                  .select("team", pl.col("player_id").alias("lead_id"), pl.col("player_display_name").alias("lead_name"),
+                          (pl.col("missed_reg") + pl.col("missed_po")).alias("lead_miss"), pl.col("n").alias("lead_n"),
+                          pl.col("news").str.extract(r"est\. return (\w{3} \d+)").alias("lead_ret")))
+        nxt = (ps.join(lead, on="team").filter(pl.col("player_id") != pl.col("lead_id"), pl.col("status").is_in(["active", "no_games"]))
+                 .sort([pl.col("dc_rank").fill_null(99), pl.col(col)], descending=[False, True])
+                 .group_by("team", maintain_order=True).first()
+                 .join(fb.select("player_id", "bump"), on="player_id", how="left")
+                 .with_columns(pl.col("bump").fill_null(pr.get(p_, 0.0)))
+                 .with_columns((pl.col("bump") * pl.col("lead_miss") / left.clip(1)).alias("fill_adj"))
+                 .select("player_id", "fill_adj", "lead_name", "lead_ret"))
+        outs.append(nxt)
+    d = d.join(pl.concat(outs), on="player_id", how="left").with_columns(pl.col("fill_adj").fill_null(0.0))
+    return d.with_columns(
+        (pl.col(col) + pl.col("fill_adj")).alias(col),
+        pl.when(pl.col("lead_name").is_not_null())
+          .then(pl.concat_str([pl.col("depth_note"), pl.lit(" Filling in while "), pl.col("lead_name"), pl.lit(" is out (back "),
+                               pl.col("lead_ret").fill_null("soon"), pl.lit(")")]).str.strip_chars())
+          .otherwise(pl.col("depth_note")).alias("depth_note")).drop("lead_name", "lead_ret")
 
 
 def fill_in_starters(d: pl.DataFrame, season: int, col: str) -> pl.DataFrame:

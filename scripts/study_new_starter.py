@@ -92,3 +92,17 @@ m2 = ~stn & (sh > 2 / 3)
 print("\nLOST THE JOB (WR): projection x factor")
 for fa in (1.0, 0.9, 0.8, 0.7, 0.6):
     print(f"x{fa}: MAE {np.mean(np.abs(y - pred * fa)[m2]):.2f} bias {np.mean((pred * fa - y)[m2]):+.2f}", {int(x): round(float(np.mean(np.abs(y - pred * fa)[m2 & (se == x)])), 2) for x in sorted(set(se)) if (m2 & (se == x)).sum()})
+
+print("\nRB: lost the lead job (RB1 on the depth chart in 2/3 of weeks, not now, healthy): projection x factor")
+p = "RB"
+d = h.filter(pl.col("position") == p, pl.col("n_after") >= 3, pl.col(f"pred_ppg_{lg}").is_not_null(), pl.col("status").fill_null("active") == "active")
+k, u, r, s = f["k"][lg][p], f["u"][lg][p], f["r"][lg][p], f["s"][lg][p]
+pri, n = d[f"pred_ppg_{lg}"].to_numpy(), d["n"].to_numpy()
+obs = d[f"ppg_{lg}_sofar"].fill_null(0).to_numpy() + u * d["luck_pg"].fill_null(0).to_numpy() + r * d["role_trend"].fill_null(0).to_numpy() - s * d[f"sos_faced_{lg}"].fill_null(0).to_numpy()
+pred = (k * pri + n * obs) / (k + n) + s * d[f"sos_left_{lg}"].fill_null(0).to_numpy()
+y = d[f"ppg_{lg}_after"].to_numpy(); stn, sh, se = d["st_now"].to_numpy(), d["st_share"].to_numpy(), d["season"].to_numpy()
+m2 = ~stn & (sh > 2 / 3)
+for fa in (1.0, 0.9, 0.85, 0.8, 0.7):
+    print(f"x{fa}: n={int(m2.sum())} MAE {np.mean(np.abs(y - pred * fa)[m2]):.2f} bias {np.mean((pred * fa - y)[m2]):+.2f}", {int(x): (int((m2 & (se == x)).sum()), round(float(np.mean(np.abs(y - pred * fa)[m2 & (se == x)])), 2)) for x in sorted(set(se)) if (m2 & (se == x)).sum()})
+m1 = stn & (sh <= 1 / 3)
+print("RB new lead back: n", int(m1.sum()), "model MAE", round(float(np.mean(np.abs(y - pred)[m1])), 2), "bias", round(float(np.mean((pred - y)[m1])), 2), "| model avg", round(float(pred[m1].mean()), 1), "actual avg", round(float(y[m1].mean()), 1))
