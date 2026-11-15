@@ -9,6 +9,8 @@ burbs:
   teams: 12
   regular_season_weeks: [1, 14]
   playoff_weeks: [15, 17]
+  playoff_teams: 6
+  playoff_reseed: false  # Yahoo settings, confirmed by Scott 15 Nov 2026
   roster: {QB: 1, RB: 2, WR: 3, TE: 1, FLEX: 1, K: 1, DEF: 1, BN: 5, IR: 1}
   flex_eligible: [RB, WR, TE]
   scoring:
@@ -41,6 +43,8 @@ cbs:
   teams: 12
   regular_season_weeks: [1, 14]
   playoff_weeks: [15, 17]
+  playoff_teams: 6
+  playoff_reseed: true  # Yahoo settings, confirmed by Scott 15 Nov 2026
   roster: {QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, K: 1, DEF: 1, BN: 5, IR: 2}
   flex_eligible: [RB, WR, TE]
   scoring:

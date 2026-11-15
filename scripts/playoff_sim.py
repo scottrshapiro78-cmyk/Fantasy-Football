@@ -232,7 +232,11 @@ for k in range(N):
     sd_ = order[k]
     g = lambda w, a, b: a if P[w][k, a] > P[w][k, b] else b
     w36, w45 = g(15, sd_[2], sd_[5]), g(15, sd_[3], sd_[4])
-    f1, f2 = g(16, sd_[0], w45), g(16, sd_[1], w36)
+    if cfg.get("playoff_reseed"):  # 1 seed plays the lowest seed left
+        r1 = sorted([w36, w45], key=lambda t: list(sd_).index(t))
+        f1, f2 = g(16, sd_[0], r1[1]), g(16, sd_[1], r1[0])
+    else:
+        f1, f2 = g(16, sd_[0], w45), g(16, sd_[1], w36)
     final[k, f1] = final[k, f2] = True
     champ[k, g(17, f1, f2)] = True
 made = rank <= n_po
