@@ -225,7 +225,7 @@ for lg in ("burbs", "cbs"):
         pl.col("role_flag").fill_null("").alias("Role"),
         r1(f"ppg_{lg}_sofar").alias("PPG So Far"), r1("l3").alias("Last 3 PPG"), pl.col("n").alias("Games Played"),
         r1("por").alias("Pts Over Repl"), pl.col("news").fill_null("").alias("Injury News"),
-        pl.when(pl.col("rookie")).then(pl.lit("Rookie")).otherwise(pl.lit("")).alias("Note"),
+        pl.concat_str([pl.when(pl.col("rookie")).then(pl.lit("Rookie. ")).otherwise(pl.lit("")), pl.col("depth_note").fill_null("")]).str.strip_chars(". ").alias("Note"),
         pl.col("player_id").alias("nflverse ID"))
     # keep the sheets readable: players who could plausibly start
     df = df.filter((pl.col("Wk Proj") >= 1.0) | (pl.col("Pos Rk") <= 40))

@@ -119,6 +119,14 @@ def player_table(names):
             first.append(rw if rw else week + 4)
         else:
             first.append(week + 1)
+    # fill-in starting QB: no value from the week the regular starter is due back
+    for j, r in enumerate(p.itertuples()):
+        news = r[p.columns.get_loc("Injury News") + 1]
+        if isinstance(news, str) and news.startswith("Fill-in starter"):
+            rw = ret_week(r.Team, news) or 99
+            for i, w in enumerate(WEEKS):
+                if w >= rw:
+                    V[i, j] = 0.0
     # on injured reserve with no reported timeline (date is only the 4-game minimum). 2021-25, 63 fantasy-relevant
     # players put on IR in weeks 5-11: played 15% of games in the first eligible week, 28% of all games from then on
     for j, r in enumerate(p.itertuples()):

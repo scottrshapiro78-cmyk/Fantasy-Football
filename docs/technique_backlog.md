@@ -13,11 +13,14 @@ the biggest misses each week are the main source of new ideas.
 - Vacated work after a fresh long-term injury, RB 0.3 / TE 0.4
 - Questionable play chances by last practice (2018-25, 2,933 cases)
 - IR with no timeline: 0.3 of value after the 4-game minimum (2021-25, n=63)
+- Injury return dates from ESPN's injury page on every run (Nov 15 2026); fill-in QBs valued only until the regular starter is due back
+- WR depth-chart moves (scripts/study_new_starter.py, 2021-25): new starters +0.75 (model ran 0.9 low, n=119); WRs dropped from the starters x0.85 (model ran 1.3 high, n=47, miss 3.16 -> 2.9)
 
 ## Tested and rejected
 - Discounting a player's role when a teammate returns (worse MAE)
 - Expert-rank blend in season (re-test set for Jan 2027 with a full season of weekly ranks)
 - Vacated work for WRs (no gain)
+- Projecting every new WR starter at a starter's level (floor of 6-9 PPG): miss rose from 3.05 to 3.26-3.68. New starters split: a quarter finish under 4.3 PPG, a quarter over 10.7
 - Less weight on the preseason number for breakout players (Nov 15 2026, scripts/study_breakout.py). 2021-25, 6+ games, workload 1.5x the preseason number and 10+ pts: 87 RBs, 63 WRs, 58 TEs. The current model was within 0.3-0.7 pts of unbiased (RB MAE 3.80); halving the preseason weight overshot by 0.9 (MAE 4.08); workload in place of the preseason number overshot by 2.8 (MAE 4.72). Same pattern at WR and TE and in 4 of 5 seasons for RBs. Breakouts fade more than their workload suggests.
 
 ## To test (rough order of expected value)

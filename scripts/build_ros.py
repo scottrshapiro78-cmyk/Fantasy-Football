@@ -96,7 +96,7 @@ for lg in ("burbs", "cbs"):
         pl.col("games_left_po").alias("Playoff Games (wk 15-17)"), r1("exp_games").alias("Exp Games Left"),
         (pl.col(col) * pl.col("exp_games")).round(1).alias("ROS Pts"), r1("repl_ppg").alias("Repl PPG"),
         r1("vorp").alias("ROS VORP"),
-        pl.when(pl.col("rookie")).then(pl.lit("Rookie")).otherwise(pl.lit("")).alias("Note"),
+        pl.concat_str([pl.when(pl.col("rookie")).then(pl.lit("Rookie. ")).otherwise(pl.lit("")), pl.col("depth_note").fill_null("")]).str.strip_chars(". ").alias("Note"),
         pl.col("player_id").alias("nflverse ID"))
     path = out_dir / f"ros_{season}_wk{thru + 1}_{lg}.xlsx"
     wb = Workbook()

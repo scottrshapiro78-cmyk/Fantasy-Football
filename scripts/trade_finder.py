@@ -72,6 +72,12 @@ for name, r in rs.iterrows():
     for w in WEEKS:
         o = opp.get((w, r["Team"]))
         v.append(0.0 if (o is None or w < fw) else max(0.0, base + MATCH.get(r["Pos"], 0) * E.get((r["Pos"], o[0]), 0.0)))
+    if isinstance(r["Injury News"], str) and r["Injury News"].startswith("Fill-in starter"):
+        m_ = re.search(r"est\. return (\w{3}) (\d+)", r["Injury News"])
+        if m_:  # no value from the week the regular starter is due back
+            mon_ = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].index(m_.group(1)) + 1
+            d_ = dt.date(season + (1 if mon_ <= 3 else 0), mon_, int(m_.group(2)))
+            v = [0.0 if (opp.get((w, r["Team"])) and dt.date.fromisoformat(opp[(w, r["Team"])][1]) >= d_) else x for w, x in zip(WEEKS, v)]
     if isinstance(r["Injury News"], str) and "NFL roster" in r["Injury News"]:
         v = [x * 0.3 for x in v]  # injured reserve, no reported timeline: such players played 28% of games from the 4-game minimum on (2021-25, n=63)
     VAL[name] = (r["Pos"], np.array(v))

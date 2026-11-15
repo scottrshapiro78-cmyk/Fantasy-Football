@@ -54,7 +54,9 @@ def checks(season: int, week: int) -> list[dict]:
     if nf.exists():
         age = (dt.datetime.now() - dt.datetime.fromtimestamp(os.path.getmtime(nf))).days
         add("Injury / news notes", age <= 3, f"last updated {age} day(s) ago")
-    from .ros import sleeper_injuries
+    from .ros import injury_feed, sleeper_injuries
+    _f, _desc = injury_feed(season)
+    add("Injury return dates", _f is not None and "32 of 32" in _desc or _desc == "ESPN live feed", _desc)
     add("Live injury feed", sleeper_injuries() is not None,
         "Sleeper feed reachable" if sleeper_injuries() is not None else "live feed blocked here; using the official report + your pastes")
     for lg in ("burbs", "cbs"):

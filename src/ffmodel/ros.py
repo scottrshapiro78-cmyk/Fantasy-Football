@@ -301,6 +301,8 @@ def project(season: int, thru: int, league: str, fitp: dict | None = None) -> pl
     d = d.with_columns(pl.lit(0).alias("missed_reg"), pl.lit(0).alias("missed_po"), pl.lit("").alias("news"))
     d = apply_news(d, season, thru)
     d = apply_depth(d, season, col)
+    d = fill_in_starters(d, season, col)
+    d = wr_depth_moves(d, season, thru, col)
     ratio = fitp.get("ppg_ratio", {})
     d = d.with_columns((pl.col(col) * pl.col("status").replace_strict(ratio, default=1.0, return_dtype=pl.Float64)).alias(col))
     d = d.filter(pl.col("status") != "gone")
@@ -320,9 +322,18 @@ def project(season: int, thru: int, league: str, fitp: dict | None = None) -> pl
         pl.col("team").replace_strict(reg, default=0, return_dtype=pl.Int64).alias("games_left_reg"),
         pl.col("team").replace_strict(po, default=0, return_dtype=pl.Int64).alias("games_left_po"),
         rate.alias("play_rate"))
-    return d.with_columns(
+    d = d.with_columns(
         ((pl.col("games_left_reg") - pl.col("missed_reg")).clip(0) * pl.col("play_rate")).alias("exp_reg"),
         ((pl.col("games_left_po") - pl.col("missed_po")).clip(0) * pl.col("play_rate")).alias("exp_po"))
+    # fill-in starter: only the games the regular starter misses, then the backup rate
+    fi = pl.col("fill_reg").is_not_null()
+    return d.with_columns(
+        pl.when(fi).then(pl.min_horizontal("exp_reg", pl.col("fill_reg") * pl.col("play_rate")
+                                           + (pl.col("games_left_reg") - pl.col("fill_reg")).clip(0) * play["backup"]))
+          .otherwise(pl.col("exp_reg")).alias("exp_reg"),
+        pl.when(fi).then(pl.min_horizontal("exp_po", pl.col("fill_po") * pl.col("play_rate")
+                                           + (pl.col("games_left_po") - pl.col("fill_po")).clip(0) * play["backup"]))
+          .otherwise(pl.col("exp_po")).alias("exp_po"))
 
 
 def _remaining_opps(season: int, thru: int, end: int = 17) -> pl.DataFrame:
@@ -499,6 +510,18 @@ def apply_news(d: pl.DataFrame, season: int, thru: int) -> pl.DataFrame:
     if not path.exists():
         return d
     news = pl.read_csv(path, separator="\t", quote_char=None).with_columns(pl.col("Note").fill_null(""))
+    # dated injury feed (return dates for the whole league). It replaces swept notes for the same player;
+    # only what Scott told us directly (note mentions Scott) outranks it.
+    feed, _ = injury_feed(season)
+    if feed is not None:
+        feed = feed.filter(pl.col("Pos").is_in(["QB", "RB", "WR", "TE", "K", "PK"]),
+                           ~pl.col("Note").str.contains("coach's decision|emergency third"))
+        fk = set(feed["Player"].map_elements(_norm, return_dtype=pl.Utf8).to_list())
+        keep = news.filter(pl.col("Note").str.contains("Scott") | ~pl.col("Player").map_elements(_norm, return_dtype=pl.Utf8).is_in(list(fk)))
+        kk = set(keep["Player"].map_elements(_norm, return_dtype=pl.Utf8).to_list())
+        add = feed.filter(~pl.col("Player").map_elements(_norm, return_dtype=pl.Utf8).is_in(list(kk)))
+        news = pl.concat([keep.select("Player", "Pos", "Return", "Status", "Note"), add.select("Player", "Pos", "Return", "Status", "Note")])
+        news = news.unique("Player", keep="first", maintain_order=True)
     months = {m: i for i, m in enumerate(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], 1)}
 
     def ret(x):
@@ -607,6 +630,50 @@ def apply_news(d: pl.DataFrame, season: int, thru: int) -> pl.DataFrame:
     return d.drop("key", "Status", "ret", "Note", "Return", "next_game", "m_reg", "m_po")
 
 
+ESPN_INJ_URL = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/injuries"
+FEED_MAX_AGE_DAYS = 4
+
+
+def injury_feed(season: int) -> tuple[pl.DataFrame | None, str]:
+    """League-wide injury list WITH expected return dates (ESPN's injuries page): Player, Pos, Return ("Nov 29"),
+    Status, Note. The official report says who is out this week but not for how long; this does.
+    Tried in order: ESPN's API directly (needs site.api.espn.com allowed in the environment's network settings),
+    then data/input/injury_feed_<season>.tsv, which the scheduled news sweep refreshes by reading the same page.
+    Returns (rows or None, description of the source and its age)."""
+    import datetime as dt
+    import json
+    import urllib.request
+    mon = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    try:
+        with urllib.request.urlopen(urllib.request.Request(ESPN_INJ_URL, headers={"User-Agent": "Mozilla/5.0"}), timeout=30) as r:
+            js = json.load(r)
+        rows = []
+        for t in js.get("injuries", []):
+            for i in t.get("injuries", []):
+                a, det = i.get("athlete", {}), i.get("details", {}) or {}
+                rd = det.get("returnDate")
+                if not rd:
+                    continue
+                d_ = dt.date.fromisoformat(rd[:10])
+                rows.append({"Player": a.get("displayName"), "Pos": (a.get("position") or {}).get("abbreviation"),
+                             "Return": f"{mon[d_.month - 1]} {d_.day}", "Status": i.get("status") or "Out",
+                             "Note": ((i.get("shortComment") or "")[:150]).replace("\t", " ") + " (ESPN)"})
+        if rows:
+            return pl.DataFrame(rows), "ESPN live feed"
+    except Exception:
+        pass
+    path = DATA / "input" / f"injury_feed_{season}.tsv"
+    if not path.exists():
+        return None, "no injury feed (ESPN blocked and no saved copy)"
+    f = pl.read_csv(path, separator="\t", quote_char=None)
+    age = (dt.date.today() - dt.date.fromisoformat(f["Fetched"].max())).days
+    teams = f["Team"].n_unique()
+    desc = f"ESPN injuries page, saved copy {age} day(s) old, {teams} of 32 teams"
+    if age > FEED_MAX_AGE_DAYS:
+        return None, desc + " (too old, ignored)"
+    return f.select("Player", "Pos", "Return", "Status", pl.col("Note").fill_null("") + " (ESPN)"), desc
+
+
 SLEEPER_URL = "https://api.sleeper.app/v1/players/nfl"
 
 
@@ -682,6 +749,72 @@ def depth(season: int) -> pl.DataFrame:
 
 
 OUT_ST = ["out_long", "out_week", "season", "gone", "practice", "dated"]
+
+
+# WR depth-chart moves (scripts/study_new_starter.py, 2021-25, cut-off weeks 8-10, burbs):
+#  - newly a starter (top 3 on the depth chart now, a starter in at most a third of the weeks so far), n=119:
+#    the model ran 0.9 pts low on average. They split: a quarter finished under 4.3 PPG, a quarter over 10.7, so
+#    a floor (e.g. "starters score 8") made the average miss worse (3.05 -> 3.40). A small flat bump removes most
+#    of the bias without hurting the miss (3.03 at +0.5).
+#  - lost the job (a starter in two thirds of the weeks, not now, healthy), n=47: the model ran 1.3 high;
+#    x0.85 cut the miss from 3.16 to about 2.9, better in 4 of 5 seasons.
+WR_NEW_STARTER_BUMP = 0.75
+WR_DEMOTED_MULT = 0.85
+
+
+def wr_depth_moves(d: pl.DataFrame, season: int, thru: int, col: str) -> pl.DataFrame:
+    dc = data.depth_charts([season])[0]
+    if "dt" not in dc.columns:
+        return d.with_columns(pl.lit("").alias("depth_note"))
+    dc = dc.filter(pl.col("pos_abb") == "WR", pl.col("gsis_id").is_not_null()).with_columns(pl.col("dt").str.slice(0, 10).alias("day"))
+    sch = data.schedules([season]).filter(pl.col("game_type") == "REG", pl.col("week") <= thru).group_by("week").agg(pl.col("gameday").min())
+    days = sorted(dc["day"].unique().to_list())
+    import datetime as dt
+    wk = []
+    for w, gd in sch.iter_rows():
+        prev = [x for x in days if x <= (dt.date.fromisoformat(gd) - dt.timedelta(days=2)).isoformat()]
+        if prev:
+            s_ = dc.filter(pl.col("day") == prev[-1])
+            wk.append(s_.filter(pl.col("dt") == s_["dt"].max(), pl.col("pos_rank") <= 3).select(pl.lit(w).alias("week"), "gsis_id").unique())
+    if not wk:
+        return d.with_columns(pl.lit("").alias("depth_note"))
+    share = pl.concat(wk).group_by("gsis_id").agg((pl.col("week").n_unique() / thru).alias("st_share"))
+    now = dc.filter(pl.col("dt") == dc["dt"].max(), pl.col("pos_rank") <= 3).select("gsis_id", pl.col("team").alias("st_team")).unique("gsis_id")
+    d = (d.join(share, left_on="player_id", right_on="gsis_id", how="left").join(now, left_on="player_id", right_on="gsis_id", how="left")
+          .with_columns(pl.col("st_share").fill_null(0.0)))
+    wr, ok = pl.col("position") == "WR", pl.col("status").is_in(["active", "no_games"])
+    new = wr & ok & pl.col("st_team").is_not_null() & (pl.col("st_share") <= 1 / 3)
+    dem = wr & ok & pl.col("st_team").is_null() & (pl.col("st_share") > 2 / 3)
+    return d.with_columns(
+        pl.when(new).then(pl.col(col) + WR_NEW_STARTER_BUMP).when(dem).then(pl.col(col) * WR_DEMOTED_MULT).otherwise(pl.col(col)).alias(col),
+        pl.when(new).then(pl.lit("New starter on depth chart")).when(dem).then(pl.lit("Dropped from starters on depth chart"))
+          .otherwise(pl.lit("")).alias("depth_note")).drop("st_share", "st_team")
+
+
+def fill_in_starters(d: pl.DataFrame, season: int, col: str) -> pl.DataFrame:
+    """A QB who is starting only while the regular starter is hurt keeps the job just until that return.
+    Regular starter = the QB listed first on the team's depth chart on the most days this season. If he is out
+    with a return date and is still on the team, the current
+    starter gets fill_reg / fill_po (games he covers) and a note. A benching (regular starter healthy) or a
+    season-ending injury is left alone."""
+    dc = data.depth_charts([season])[0].filter(pl.col("pos_abb") == "QB", pl.col("pos_rank") == 1, pl.col("gsis_id").is_not_null())
+    inc = (dc.group_by("team", "gsis_id").agg(pl.col("dt").n_unique().alias("days"))
+             .sort("days", descending=True).group_by("team", maintain_order=True).first()
+             .select("team", pl.col("gsis_id").alias("inc_id")))
+    q = d.filter(pl.col("position") == "QB")
+    incq = (q.join(inc, left_on=["team", "player_id"], right_on=["team", "inc_id"])
+             .filter(pl.col("status").is_in(["dated", "out_week"]), pl.col("missed_reg") + pl.col("missed_po") > 0)
+             .select("team", pl.col("player_display_name").alias("inc_name"), pl.col(col).alias("inc_ppg"),
+                     pl.col("missed_reg").alias("fill_reg"), pl.col("missed_po").alias("fill_po"),
+                     pl.col("news").str.extract(r"est\. return (\w{3} \d+)").alias("inc_ret")))
+    cur = (q.filter(pl.col("status") == "active").join(incq, on="team")
+            .select("player_id", "inc_name", "fill_reg", "fill_po", "inc_ret"))
+    d = d.join(cur, on="player_id", how="left")
+    return d.with_columns(
+        pl.when(pl.col("inc_name").is_not_null())
+          .then(pl.concat_str([pl.lit("Fill-in starter, until "), pl.col("inc_name"), pl.lit(" returns, est. return "),
+                               pl.col("inc_ret").fill_null("unknown")]))
+          .otherwise(pl.col("news")).alias("news")).drop("inc_name", "inc_ret")
 
 
 def apply_depth(d: pl.DataFrame, season: int, col: str | None = None) -> pl.DataFrame:
