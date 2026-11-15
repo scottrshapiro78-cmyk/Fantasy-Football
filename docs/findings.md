@@ -292,3 +292,12 @@ file when this week's starter may sit.
 
 Data checks: every ROS / weekly file now has a Data Check tab (stats, NFL rosters/trades, injury report, roles,
 news notes age, live feed, league rosters age) and the scripts print a DATA CHECK line.
+
+## Starters from the depth chart (Nov 15 2026)
+
+Missed Carson Beck starting for ARI (the model picked the QB with the best ROS PPG, Minshew). Now:
+- QB starter = latest ESPN depth chart (daily snapshot, nflverse) QB1 who isn't out; other QBs are "backup"
+  (10% of remaining games in ROS, rough; in the weekly file they play only as often as the starter sits).
+- A depth-chart starter the model has no data on is added at a low-end QB estimate and labeled.
+- QB games under 10 pass attempts (relief / mop-up) no longer count toward a QB's season-to-date numbers.
+- The Data Check tab shows the depth chart's timestamp (flag if 36+ hours old).

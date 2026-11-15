@@ -132,7 +132,11 @@ for lg in ("burbs", "cbs"):
                        pl.col("n_ev").fill_null(0))
     nm = []
     for p_ in ["QB", "RB", "TE"]:
-        ps = d.filter(pl.col("position") == p_).sort("base", descending=True)
+        ps = d.filter(pl.col("position") == p_)
+        if p_ == "QB":  # depth chart order: starter, then backups by depth rank
+            ps = ps.sort([pl.col("status") == "backup", pl.col("dc_rank").fill_null(99), pl.col("base")], descending=[False, False, True])
+        else:
+            ps = ps.sort("base", descending=True)
         ld = (ps.group_by("team").first().filter(~pl.col("status").is_in(["out_long", "season", "gone"]))
                 .select("team", pl.col("player_id").alias("lead_id"), (1 - pl.col("play")).alias("lead_sit"),
                         pl.col("player_display_name").alias("lead_name")))
@@ -158,6 +162,10 @@ for lg in ("burbs", "cbs"):
               .when((pl.col("position") == "TE") & te1).then(0.9)
               .otherwise(0.0) * pl.col("sit"))
     d = d.with_columns((bump + rb_bump + pl.col("qb_wk_adj")).alias("absence_adj"))
+    # backup QB: plays only if the starter sits -> chance = starter's sit chance, scoring at his fill-in level
+    bq = (pl.col("status") == "backup") & (pl.col("position") == "QB")
+    d = d.with_columns(pl.when(bq).then(pl.col("lead_sit").fill_null(0.0)).otherwise(pl.col("play")).alias("play"),
+                       pl.when(bq).then(pl.col("own_bump")).otherwise(pl.col("absence_adj")).alias("absence_adj"))
     d = d.with_columns(((pl.col("base") + pl.col("match_adj") + pl.col("vegas_adj") + pl.col("absence_adj")).clip(0)
                         * pl.col("play")).alias("wk"))
     # replacement = last starter in the league (flex filled by the best leftover RB/WR/TE)
@@ -190,6 +198,7 @@ for lg in ("burbs", "cbs"):
         pl.when(pl.col("status") == "season").then(pl.lit("Out for season"))
           .when(pl.col("news").fill_null("") != "").then(pl.col("news").str.split(",").list.first())
           .when(pl.col("status") == "practice").then(pl.lit("Practice squad"))
+          .when(pl.col("status") == "backup").then(pl.lit("Backup QB (depth chart)"))
           .when(pl.col("status") == "no_games").then(pl.lit("No games yet"))
           .when(pl.col("status") == "out_long").then(pl.lit("IR / PUP / suspended"))
           .when(pl.col("status") == "out_week").then(pl.lit("Out"))

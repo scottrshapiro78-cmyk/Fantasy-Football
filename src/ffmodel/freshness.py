@@ -46,6 +46,10 @@ def checks(season: int, week: int) -> list[dict]:
     sn = int(data.snap_counts([season])["week"].max() or 0)
     op = int(data.opportunity([season])["week"].cast(pl.Int32).max() or 0)
     add("Roles (snaps, usage)", min(sn, op) >= last_done, f"snap counts through week {sn}, usage through week {op}")
+    dc = data.depth_charts([season])[0]
+    asof = dt.datetime.fromisoformat(str(dc["dt"].max()).replace("Z", "+00:00"))
+    hrs = (dt.datetime.now(dt.timezone.utc) - asof).total_seconds() / 3600
+    add("Depth charts (starters)", hrs <= 36, f"ESPN depth chart as of {asof:%a %b %d %H:%M} UTC ({hrs:.0f}h old)")
     nf = DATA / "input" / f"news_{season}.tsv"
     if nf.exists():
         age = (dt.datetime.now() - dt.datetime.fromtimestamp(os.path.getmtime(nf))).days

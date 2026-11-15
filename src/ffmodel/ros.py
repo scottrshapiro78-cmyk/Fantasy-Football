@@ -76,6 +76,10 @@ HEALTHY_DNP_POS = ["RB"]  # TEs mixed (small n), QB/WR have no role weight, so R
 
 def to_date(season: int, thru: int) -> pl.DataFrame:
     w = _weekly(season).filter(pl.col("week") <= thru)
+    # QB relief / mop-up appearances (under 10 passes) aren't representative games
+    pw = pl.read_parquet(DATA / "processed" / "player_weeks.parquet").filter(
+        pl.col("season") == season, pl.col("position") == "QB", pl.col("attempts").fill_null(0) < 10)
+    w = w.join(pw.select("player_id", pl.col("week").cast(pl.Int32)), on=["player_id", "week"], how="anti")
     so = _to_date(w)
     if not HEALTHY_DNP:
         return so
@@ -285,12 +289,13 @@ def project(season: int, thru: int, league: str, fitp: dict | None = None) -> pl
             pl.coalesce("manual", "status").alias("status")).drop("manual")
     d = d.with_columns(pl.lit(0).alias("missed_reg"), pl.lit(0).alias("missed_po"), pl.lit("").alias("news"))
     d = apply_news(d, season, thru)
+    d = apply_depth(d, season, col)
     ratio = fitp.get("ppg_ratio", {})
     d = d.with_columns((pl.col(col) * pl.col("status").replace_strict(ratio, default=1.0, return_dtype=pl.Float64)).alias(col))
     d = d.filter(pl.col("status") != "gone")
     d = qb_change(d, season, thru, league, col)
     reg, po = team_games(season, thru + 1, 14, unplayed_before=True), team_games(season, 15, 17)
-    play = {**play, "dated": play["active"], "season": 0.0}
+    play = {**play, "dated": play["active"], "season": 0.0, "backup": 0.1}  # backup QB: rough, not fitted
     rate = (pl.when(pl.col("position").is_in(["K", "DEF"]) & ~pl.col("status").is_in(["season", "dated"])).then(
                 pl.when(pl.col("status") == "active").then(0.97).otherwise(play["out_long"]))
             .otherwise(pl.col("status").replace_strict(play, default=play["active"], return_dtype=pl.Float64)))
@@ -546,7 +551,7 @@ def qb_change(d: pl.DataFrame, season: int, thru: int, league: str, col: str) ->
     left = team_games(season, thru + 1, 17, unplayed_before=True)
     qbs = (d.filter(pl.col("position") == "QB", ~pl.col("status").is_in(["out_long", "season", "gone", "practice"]))
              .join(q, on="player_id", how="left").with_columns(pl.col("q").fill_null(low))
-             .sort(col, descending=True))
+             .sort([pl.col("status") == "backup", pl.col("dc_rank").fill_null(99), pl.col(col)], descending=[False, False, True]))
     top = qbs.group_by("team").agg(pl.col("q").first().alias("q1"), pl.col("q").get(1, null_on_oob=True).alias("q2"),
                                    pl.col("player_display_name").first().alias("qb_now"),
                                    (pl.col("missed_reg").first() + pl.col("missed_po").first()).alias("miss1"))
@@ -557,3 +562,49 @@ def qb_change(d: pl.DataFrame, season: int, thru: int, league: str, col: str) ->
     d = d.join(had, on="player_id", how="left").join(now, on="team", how="left")
     adj = (c * pl.col(col) * (pl.col("q_now") - pl.col("q_had"))).fill_null(0)
     return d.with_columns(adj.alias("qb_adj")).with_columns((pl.col(col) + pl.col("qb_adj")).alias(col))
+
+
+def depth(season: int) -> pl.DataFrame:
+    """Latest ESPN depth chart (daily snapshots): player_id, depth team, position, rank (1 = starter), as-of."""
+    d = data.depth_charts([season])[0]
+    d = d.filter(pl.col("dt") == d["dt"].max(), pl.col("pos_abb").is_in(["QB", "RB", "TE"]), pl.col("gsis_id").is_not_null())
+    return (d.group_by("gsis_id").agg(pl.col("team").first().alias("dc_team"), pl.col("pos_abb").first().alias("dc_pos"),
+                                      pl.col("pos_rank").min().alias("dc_rank"), pl.col("dt").first().alias("dc_asof"))
+             .rename({"gsis_id": "player_id"}))
+
+
+OUT_ST = ["out_long", "out_week", "season", "gone", "practice", "dated"]
+
+
+def apply_depth(d: pl.DataFrame, season: int, col: str | None = None) -> pl.DataFrame:
+    """QBs: the depth-chart starter plays (even with no games yet, e.g. a rookie just named starter); other
+    QBs are backups (status 'backup', ~10% of games) unless every QB ahead of them is out. A depth-chart
+    starter the model has never seen (no projection, no games) is added at a low-end projection."""
+    dc = depth(season)
+    if col:
+        nm = data.depth_charts([season])[0]
+        nm = nm.filter(pl.col("dt") == nm["dt"].max()).group_by("gsis_id").agg(pl.col("player_name").first())
+        miss = (dc.filter(pl.col("dc_rank") == 1, pl.col("dc_pos") == "QB").join(d.select("player_id"), on="player_id", how="anti")
+                  .join(nm, left_on="player_id", right_on="gsis_id", how="left"))
+        if miss.height:
+            low = float(d.filter(pl.col("position") == "QB", pl.col("status") == "active", pl.col("n") >= 4)[col].quantile(0.1))
+            add = miss.select("player_id", pl.col("player_name").alias("player_display_name"), pl.lit("QB").alias("position"),
+                              pl.col("dc_team").alias("team"), pl.lit(low).alias(col), pl.lit("active").alias("status"),
+                              pl.lit(0).cast(pl.UInt32).alias("n"), pl.lit(0).alias("missed_reg"), pl.lit(0).alias("missed_po"),
+                              pl.lit(0.0).alias("sched_adj"), pl.lit(low).alias("prior"), pl.lit(0.0).alias("role_trend"),
+                              pl.lit(0.0).alias("luck_pg"), pl.lit(False).alias("rookie"),
+                              pl.lit("New starter per depth chart: no stats or projection yet (low-end QB estimate)").alias("news"))
+            d = pl.concat([d, add], how="diagonal_relaxed")
+    d = d.join(dc.select("player_id", "dc_rank"), on="player_id", how="left")
+    qb = d.filter(pl.col("position") == "QB", pl.col("dc_rank").is_not_null())
+    healthy_top = (qb.filter(~pl.col("status").is_in(OUT_ST)).sort("dc_rank").group_by("team").first()
+                     .select("team", pl.col("player_id").alias("qb_start_id")))
+    d = d.join(healthy_top, on="team", how="left")
+    isqb = pl.col("position") == "QB"
+    return d.with_columns(
+        pl.when(isqb & (pl.col("player_id") == pl.col("qb_start_id")) & pl.col("status").is_in(["no_games", "active"]))
+          .then(pl.lit("active"))
+          .when(isqb & pl.col("qb_start_id").is_not_null() & (pl.col("player_id") != pl.col("qb_start_id"))
+                & ~pl.col("status").is_in(OUT_ST))
+          .then(pl.lit("backup"))
+          .otherwise(pl.col("status")).alias("status")).drop("qb_start_id")
