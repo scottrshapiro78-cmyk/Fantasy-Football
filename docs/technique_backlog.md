@@ -20,6 +20,7 @@ the biggest misses each week are the main source of new ideas.
 - Vacated work for WRs (no gain)
 
 ## To test (rough order of expected value)
+0. Breakout players (Scott, Nov 15: Tuten 15.9 so far, projected 11.8): when a player's workload is far above what his preseason projection assumed for 6+ games, put less weight on the preseason number and more on his workload-based expected points. Test on 2021-25 players whose usage beat the preseason number by 50%+.
 1. Play chance by injury type and position (hamstring vs ankle; QBs play 51% when Questionable vs WR 66%)
 2. Weekly projection range (floor / ceiling) per player from his own volatility, for start/sit in must-win weeks
 3. Role change for WRs traded mid-season (targets share on the new team after 1-2 games)
