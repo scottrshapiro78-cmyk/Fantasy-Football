@@ -301,3 +301,11 @@ Missed Carson Beck starting for ARI (the model picked the QB with the best ROS P
 - A depth-chart starter the model has no data on is added at a low-end QB estimate and labeled.
 - QB games under 10 pass attempts (relief / mop-up) no longer count toward a QB's season-to-date numbers.
 - The Data Check tab shows the depth chart's timestamp (flag if 36+ hours old).
+
+## Work vacated by a long-term injury (Nov 15 2026)
+
+ros.vacated() existed but was never wired into the projection. Backtest 2021-25 (after weeks 6/9/12): adding the
+departed player's PPG split by recent work share helps only for *fresh* absences (he played 2 of the team's last 3
+games) and only partly: RB beta ~0.3 (MAE 3.67 -> 3.40, n=33), TE ~0.4 (3.93 -> 3.2, n=13); WRs ~0.07 and worse
+MAE (n=82), so WRs get none. Old absences are already in role trend. Now applied with RB 0.3 / TE 0.4 / WR 0,
+using current statuses (a player coming back from IR isn't counted as gone).

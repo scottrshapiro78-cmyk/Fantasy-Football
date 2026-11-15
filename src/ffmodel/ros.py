@@ -294,6 +294,12 @@ def project(season: int, thru: int, league: str, fitp: dict | None = None) -> pl
     d = d.with_columns((pl.col(col) * pl.col("status").replace_strict(ratio, default=1.0, return_dtype=pl.Float64)).alias(col))
     d = d.filter(pl.col("status") != "gone")
     d = qb_change(d, season, thru, league, col)
+    # work left by a teammate who just went down long-term (fresh absence, so recent roles don't show it yet)
+    outs = d.filter(pl.col("status").is_in(["out_long", "season", "gone"]) | (pl.col("missed_reg") >= 3))["player_id"].to_list()
+    v = vacated(season, thru, league, out_ids=outs)
+    d = d.join(v, on="player_id", how="left").with_columns(
+        (pl.col("inherit").fill_null(0) * pl.col("position").replace_strict(VAC_BETA, default=0.0, return_dtype=pl.Float64))
+        .alias("vac_adj")).with_columns((pl.col(col) + pl.col("vac_adj")).alias(col))
     reg, po = team_games(season, thru + 1, 14, unplayed_before=True), team_games(season, 15, 17)
     play = {**play, "dated": play["active"], "season": 0.0, "backup": 0.1}  # backup QB: rough, not fitted
     rate = (pl.when(pl.col("position").is_in(["K", "DEF"]) & ~pl.col("status").is_in(["season", "dated"])).then(
@@ -396,7 +402,13 @@ def role_flags(season: int, thru: int) -> pl.DataFrame:
                     (pl.col("share_l3") * 100).round(0).alias("share_l3"), (pl.col("share_pre") * 100).round(0).alias("share_pre"))
 
 
-def vacated(season: int, thru: int, league: str) -> pl.DataFrame:
+# Share of the vacated PPG a teammate actually picks up over the rest of the season. Backtest 2021-25 (after
+# weeks 6/9/12, fresh long-term absences): RB 0.28-0.30 (MAE 3.67 -> 3.40, n=33), TE 0.25-0.5 (3.93 -> 3.2, n=13),
+# WR ~0.07 and adding it made WR projections worse (n=82), so WRs get none: the targets spread out thin.
+VAC_BETA = {"RB": 0.3, "TE": 0.4, "WR": 0.0}
+
+
+def vacated(season: int, thru: int, league: str, recent_min: int = 2, out_ids: list | None = None) -> pl.DataFrame:
     """Work freed up by injured / released teammates, handed to whoever is getting the work now.
 
     For each team and position: points per game so far of teammates now on IR / PUP / suspended
@@ -415,7 +427,17 @@ def vacated(season: int, thru: int, league: str) -> pl.DataFrame:
             pl.col(f"fpts_{league}").mean().alias("ppg"), pl.col("share").tail(3).mean().alias("share_l3"))
          .join(status(season, thru).select("player_id", "status"), on="player_id", how="left")
          .with_columns(pl.col("status").fill_null("active")))
-    gone = (p.filter(pl.col("status").is_in(["out_long", "gone"]), pl.col("g") >= 2)
+    if out_ids is not None:  # current statuses (after injury news): long-term out = in out_ids
+        p = p.with_columns(pl.when(pl.col("player_id").is_in(out_ids)).then(pl.lit("out_long"))
+                             .when(pl.col("status").is_in(["out_long", "gone"])).then(pl.lit("active"))
+                             .otherwise(pl.col("status")).alias("status"))
+    # only fresh absences: he played in at least 2 of his team's last 3 games, so his teammates' recent
+    # roles (role trend) don't already reflect the missing work
+    tl3 = w.select("team", "week").unique().sort("week").group_by("team").agg(pl.col("week").tail(3).alias("l3"))
+    recent = (w.join(tl3, on="team").filter(pl.col("week").is_in(pl.col("l3"))).group_by("player_id").len()
+                .rename({"len": "g_l3"}))
+    p = p.join(recent, on="player_id", how="left").with_columns(pl.col("g_l3").fill_null(0))
+    gone = (p.filter(pl.col("status").is_in(["out_long", "gone"]), pl.col("g") >= 2, pl.col("g_l3") >= recent_min)
               .group_by("team", "position").agg(pl.col("ppg").sum().alias("vac_ppg")))
     act = p.filter(pl.col("status").is_in(["active", "out_week"]))
     tot = act.group_by("team", "position").agg(pl.col("share_l3").sum().alias("tot_share"))
