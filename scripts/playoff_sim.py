@@ -224,7 +224,7 @@ for w in range(week, last_reg + 1):
         mywin[w] = (sc[:, a] > sc[:, b])
 rank = (-(Wn * 10000 + PF)).argsort(axis=1).argsort(axis=1) + 1
 mi = idx[ME]
-# playoffs (6 teams): wk 15 3v6, 4v5 (1-2 bye); wk 16 1 v lowest seed left, 2 v other; wk 17 final
+# playoffs (6 teams, no reseeding, per Burbs settings): wk 15 3v6, 4v5 (1-2 bye); wk 16 1 v 4/5 winner, 2 v 3/6 winner; wk 17 final
 order = (-(Wn * 10000 + PF)).argsort(axis=1)  # seeds -> team index
 P = {w: rng.normal(np.stack([S[t][:, WEEKS.index(w)] for t in teams], axis=1), SD) for w in (15, 16, 17)}
 final = np.zeros((N, len(teams)), bool); champ = np.zeros((N, len(teams)), bool)
@@ -232,8 +232,7 @@ for k in range(N):
     sd_ = order[k]
     g = lambda w, a, b: a if P[w][k, a] > P[w][k, b] else b
     w36, w45 = g(15, sd_[2], sd_[5]), g(15, sd_[3], sd_[4])
-    r1 = sorted([w36, w45], key=lambda t: list(sd_).index(t))
-    f1, f2 = g(16, sd_[0], r1[1]), g(16, sd_[1], r1[0])
+    f1, f2 = g(16, sd_[0], w45), g(16, sd_[1], w36)
     final[k, f1] = final[k, f2] = True
     champ[k, g(17, f1, f2)] = True
 made = rank <= n_po
