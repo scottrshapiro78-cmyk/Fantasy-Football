@@ -51,6 +51,8 @@ SCHED = {9: [(ME, "Who Are You People"), (MC, "Bring the Ruckus"), (GV, "BKs Bal
 # this week's score already known/locked; pass team -> points (schedule pages showed 0.00 for games in
 # progress, so they are not used)
 WK_OVERRIDE = {}
+if lg != "burbs":
+    SCHED = {}  # no schedule pasted for this league: opponents are drawn at random each week
 # optional scenario for this week, e.g. FORCE="Gin and Jews:W,Gaza Vybz:L"
 import os
 FORCE = dict(x.rsplit(":", 1) for x in os.environ.get("FORCE", "").split(",") if x)
@@ -275,6 +277,6 @@ print(fp)
 print(res.to_string(index=False))
 print(mine.to_string(index=False))
 print(depth.to_string(index=False))
-w9 = mywin[week]
+w9 = mywin.get(week, np.ones(N, bool))
 print(f"playoffs if win wk{week} {(rank[w9, mi] <= n_po).mean():.0%}, if loss {(rank[~w9, mi] <= n_po).mean():.0%}")
 print("waiver", waiver)
