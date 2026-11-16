@@ -62,6 +62,8 @@ last_reg = cfg["regular_season_weeks"][1]
 WEEKS = list(range(week + 1, 18))
 
 roster = pd.read_csv(rpath).fillna("")
+# WK_ROSTER: rosters as they stood for this week's games (when testing a trade that starts next week)
+roster_wk = pd.read_csv(os.environ["WK_ROSTER"]).fillna("") if os.environ.get("WK_ROSTER") else roster
 st = pd.read_csv(spath)
 teams = list(st.Team)
 rs = pd.read_excel(out / f"ros_{season}_wk{week}_{lg}.xlsx", sheet_name="Overall")
@@ -188,7 +190,7 @@ def sim_team(names, drop=()):
 
 wk9 = {}
 for t in teams:
-    g = roster[(roster.Team == t) & (roster.Slot != "IR")].merge(wk[["Player", "Pos", "pts", "actual"]], on="Player")
+    g = roster_wk[(roster_wk.Team == t) & (roster_wk.Slot != "IR")].merge(wk[["Player", "Pos", "pts", "actual"]], on="Player")
     lock = g[(g.Slot != "BN") & g.actual.notna()]
     pool = g[g.actual.isna()].sort_values("pts", ascending=False)
     left = dict(slots)
