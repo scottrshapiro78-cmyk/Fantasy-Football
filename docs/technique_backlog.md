@@ -57,3 +57,14 @@ missed by -2.3 PPG (n=17); WRs on top-third line-turnover teams -1.3 vs -0.4 on 
 NOT TESTED: offensive line coach and play-caller changes. No reliable history source reachable (Wikipedia season
 pages fetched for 2020-26 did not return the staff boxes). Needs a team-by-season list (season,team,new_oc,new_ol_coach)
 in data/input/coach_changes.csv; the script picks it up automatically.
+
+## Tested Nov 16 2026: player-specific in-season injury odds (scripts/study_injury_conditional.py)
+10,384 at-risk player-weeks, weeks 9-17, 2018-25 (played week w-1; event = misses week w). Flat rate 7.8%.
+In-sample groups: clean (no tag, no missed games) QB 6.0 / RB 6.9 / WR 6.0 / TE 7.2%; played through an injury tag
+6.8 / 9.2 / 12.0 / 13.1%; just back from a missed game 11.1 / 11.5 / 14.4 / 18.5%. Age, heavy workload and last
+season's missed games: no reliable effect (heavy-workload players miss slightly LESS).
+Out of sample (fit 2018-23, score 2024-25): Brier flat vs model QB .0731/.0721, RB .0490/.0488, WR .0548/.0548,
+TE .0818/.0818. Rest-of-season share of weeks 10-17 missed: MAE flat vs model QB .215/.196, RB .161/.158,
+WR .169/.161, TE .189/.192; only QBs separate (missed time earlier: 34% vs 12%, mostly job security).
+REJECTED for the sim: signals are short-lived (next week or two) and the weekly rankings already use the current
+injury report; no reliable rest-of-season gain. Keep the flat position rate.
