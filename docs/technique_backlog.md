@@ -20,12 +20,15 @@ the biggest misses each week are the main source of new ideas.
 ## Tested and rejected
 - Discounting a player's role when a teammate returns (worse MAE)
 - Expert-rank blend in season (re-test set for Jan 2027 with a full season of weekly ranks)
+- Preseason: team-down correction from last season's team scoring or last season's Vegas implied points (Nov 15 2026, scripts/study_preseason.py, 2021-25 out of sample, drafted pool n=694): miss 2.76 -> 2.78, no gain at any position
+- Preseason: player-specific boom/bust ranges from age, experience, team change, games missed, TD luck: predicted width had zero correlation with the actual miss (-0.11 to 0.02). A one-size 80% range per position (about +/- 4 to 5 PPG) is as good
 - Vacated work for WRs (no gain)
 - Projecting every new WR starter at a starter's level (floor of 6-9 PPG): miss rose from 3.05 to 3.26-3.68. New starters split: a quarter finish under 4.3 PPG, a quarter over 10.7
 - Less weight on the preseason number for breakout players (Nov 15 2026, scripts/study_breakout.py). 2021-25, 6+ games, workload 1.5x the preseason number and 10+ pts: 87 RBs, 63 WRs, 58 TEs. The current model was within 0.3-0.7 pts of unbiased (RB MAE 3.80); halving the preseason weight overshot by 0.9 (MAE 4.08); workload in place of the preseason number overshot by 2.8 (MAE 4.72). Same pattern at WR and TE and in 4 of 5 seasons for RBs. Breakouts fade more than their workload suggests.
 
 ## To test (rough order of expected value)
 0. Expert comparison (Scott's paid rest-of-season rankings, first snapshot Nov 15 2026, scripts/compare_expert.py; the paid list itself is kept out of the repo). Rank agreement 0.83-0.91 by position. Three patterns where the model sits apart, each to test: (a) WRs stepping in for long-term injured starters: the model gives WRs no vacated work; (b) temporary starters valued as if they keep the job (a QB filling in while the starter is week to week); (c) "Out" on the report defaults to a one-week absence when news says longer. Score the expert This Week column against the model's weekly snapshot each week Scott pastes it; a blend is adopted only if it beats the model alone over 4+ weeks.
+0b. Preseason Vegas team totals for QBs (August 2027). Best case using the season's own game lines (not knowable in August): QB miss 2.68 -> 2.36 (-12%), RB 2.92 -> 2.87, WR and TE nothing, all positions 2.76 -> 2.69. Preseason win totals / team point totals would capture part of that. Needs the August sportsbook team totals (Scott to paste, or a source the network allows); apply to QBs only, about +0.3 to 0.5 PPG per implied point above average.
 1. Play chance by injury type and position (hamstring vs ankle; QBs play 51% when Questionable vs WR 66%)
 2. Weekly projection range (floor / ceiling) per player from his own volatility, for start/sit in must-win weeks
 3. Role change for WRs traded mid-season (targets share on the new team after 1-2 games)
