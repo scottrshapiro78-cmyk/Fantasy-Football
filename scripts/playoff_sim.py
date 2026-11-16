@@ -138,6 +138,20 @@ def player_table(names):
     return p.reset_index(drop=True), V, np.array(first)
 
 
+# Handcuffs: when a team's lead RB is out, the next RB on that NFL team scores at his fill-in level (his own
+# tested next-man-up bump from fillin.py, scaled by the share of games the lead has played, as in the weekly
+# rankings). Only matters in the sim when one fantasy team owns both. HANDCUFF=0 turns it off.
+HANDCUFF = {}
+if os.environ.get("HANDCUFF", "1") == "1":
+    from ffmodel import fillin
+    _fb, _fpr = fillin.bumps(lg, season, thru)
+    _fb = dict(zip(_fb["player_id"].to_list(), _fb["bump"].to_list()))
+    _rb = rs[(rs.Pos == "RB") & ~rs.Status.isin(["Out for season", "Practice squad", "No games yet"])].sort_values("ROS PPG", ascending=False)
+    for _tm, _g in _rb.groupby("Team"):
+        if len(_g) >= 2:
+            _lead, _nxt = _g.iloc[0], _g.iloc[1]
+            _share = min(1.0, float(_lead["Games Played"] or 0) / max(thru, 1)) if pd.notna(_lead["Games Played"]) else 1.0
+            HANDCUFF[_nxt.Player] = (_lead.Player, max(0.0, _fb.get(_nxt["nflverse ID"], _fpr.get("RB", 0.0)) * _share))
 owned = set(roster.Player)
 fa = rs[~rs.Player.isin(owned) & rs.Status.isna()]  # healthy free agents only: an injured star is not a fill-in
 waiver = {q: fa[fa.Pos == q]["ROS PPG"].nlargest(3).iloc[-1] for q in ["QB", "RB", "WR", "TE", "K", "DEF"]}
@@ -148,6 +162,7 @@ def sim_team(names, drop=()):
     p, V, first = player_table([n for n in names if n not in drop])
     nP, nW = len(p), len(WEEKS)
     pos = p.Pos.to_numpy()
+    names_ = list(p.Player)
     avail = np.ones((N, nW, nP), dtype=bool)
     for j in range(nP):
         start = first[j] - (week + 1)
@@ -171,7 +186,11 @@ def sim_team(names, drop=()):
         avail[:, i, :] &= ~(out_until > i)
     tot = np.zeros((N, nW))
     for i in range(nW):
-        vals = np.where(avail[:, i, :], V[i][None, :], -np.inf)
+        Vi = np.tile(V[i][None, :], (N, 1))
+        for jh, nm in enumerate(names_):
+            if nm in HANDCUFF and HANDCUFF[nm][0] in names_ and V[i][jh] > 0:
+                Vi[~avail[:, i, names_.index(HANDCUFF[nm][0])], jh] += HANDCUFF[nm][1]
+        vals = np.where(avail[:, i, :], Vi, -np.inf)
         lineup = np.zeros(N)
         extras = []
         for q, k in [("QB", slots["QB"]), ("RB", slots["RB"]), ("WR", slots["WR"]), ("TE", slots["TE"]), ("K", slots["K"]), ("DEF", slots["DEF"])]:
