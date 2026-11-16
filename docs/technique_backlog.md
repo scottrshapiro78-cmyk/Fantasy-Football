@@ -46,3 +46,14 @@ the biggest misses each week are the main source of new ideas.
   role change, or noise. Three or more misses of the same kind in a month = new backlog item.
 - First run of each month: test the top untested item and search for new published methods.
 - January: full-season review, re-test everything marked rejected with the extra season.
+
+## Tested Nov 15 2026: known-in-August team changes (scripts/study_team_changes.py)
+2021-2026 out of sample (2026 = 8 games), drafted pool, burbs scoring. Flags: new head coach (47 team-seasons),
+new week-1 QB (62), QB back from injury (20), offensive line turnover (share of last year's line snaps gone; avg 28%).
+Average miss with a correction fitted on earlier seasons: model 2.80; +new_hc 2.80; +new_qb 2.81; +qb_back 2.80;
++ol_turn 2.79; all together 2.83; Vegas best case 2.71; Vegas + all flags 2.75. REJECTED: none beats the model, and
+adding them to Vegas makes Vegas worse. Raw patterns seen but not reliable out of sample: QBs starting for a new team
+missed by -2.3 PPG (n=17); WRs on top-third line-turnover teams -1.3 vs -0.4 on bottom third.
+NOT TESTED: offensive line coach and play-caller changes. No reliable history source reachable (Wikipedia season
+pages fetched for 2020-26 did not return the staff boxes). Needs a team-by-season list (season,team,new_oc,new_ol_coach)
+in data/input/coach_changes.csv; the script picks it up automatically.
