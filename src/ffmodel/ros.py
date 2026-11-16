@@ -35,7 +35,11 @@ S_GRID = [0.0, 0.25, 0.5, 0.75, 1.0, 1.25]
 def _weekly(season: int) -> pl.DataFrame:
     """Player-week fantasy points (both leagues) incl. kickers and defenses, plus usage luck."""
     w = pl.read_parquet(DATA / "processed" / "player_weeks.parquet").filter(pl.col("season") == season)
-    o = data.opportunity([season]).filter(pl.col("player_id").is_not_null()).select(
+    o_all = data.opportunity([season])
+    # team-weeks whose usage data is published; the newest week arrives a day or two after the box scores,
+    # and until then a missing row means "not published yet", not "no touches"
+    have = o_all.select(pl.col("posteam").alias("team"), pl.col("week").cast(pl.Int32)).unique().with_columns(pl.lit(True).alias("_pub"))
+    o = o_all.filter(pl.col("player_id").is_not_null()).select(
         "player_id", pl.col("week").cast(pl.Int32),
         (pl.col("total_fantasy_points_exp").cast(pl.Float64) - pl.col("total_fantasy_points").cast(pl.Float64))
         .alias("luck_gap"), pl.col("total_fantasy_points_exp").cast(pl.Float64).alias("xfp"))
@@ -43,9 +47,10 @@ def _weekly(season: int) -> pl.DataFrame:
                   "fpts_burbs", "fpts_cbs")
           .join(o.group_by("player_id", "week").agg(pl.col("luck_gap").sum(), pl.col("xfp").sum()),
                 on=["player_id", "week"], how="left")
-          # a game played with no touches is zero usage, not missing
-          .with_columns(pl.when(pl.col("position").is_in(["QB", "RB", "WR", "TE"]))
-                          .then(pl.col("xfp").fill_null(0)).otherwise(pl.col("xfp")).alias("xfp")))
+          .join(have, on=["team", "week"], how="left")
+          # a game played with no touches is zero usage, not missing (only once that game's usage data is out)
+          .with_columns(pl.when(pl.col("position").is_in(["QB", "RB", "WR", "TE"]) & pl.col("_pub").fill_null(False))
+                          .then(pl.col("xfp").fill_null(0)).otherwise(pl.col("xfp")).alias("xfp")).drop("_pub"))
     d = (dst_weeks().filter(pl.col("season") == season)
          .select(pl.col("team").alias("player_id"), (pl.col("team") + " DEF").alias("player_display_name"),
                  pl.lit("DEF").alias("position"), "team", pl.col("week").cast(pl.Int32), "fpts_burbs", "fpts_cbs",
@@ -83,7 +88,7 @@ def to_date(season: int, thru: int) -> pl.DataFrame:
     so = _to_date(w)
     if not HEALTHY_DNP:
         return so
-    z = pl.concat([w.select("player_id", "week", "xfp"), _healthy_dnp(season, thru, w)], how="vertical_relaxed")
+    z = pl.concat([w.filter(pl.col("xfp").is_not_null()).select("player_id", "week", "xfp"), _healthy_dnp(season, thru, w)], how="vertical_relaxed")
     tr = z.group_by("player_id").agg(
         pl.col("xfp").sort_by("week").tail(3).mean().alias("xfp_last3"),
         pl.col("xfp").sort_by("week").tail(3).median().alias("xfp_med_last3"),
@@ -420,8 +425,9 @@ def role_flags(season: int, thru: int) -> pl.DataFrame:
                       how="diagonal_relaxed")
 
     def split(c):
-        return [pl.col(c).sort_by("week").tail(3).median().alias(f"{c}_l3"),
-                pl.col(c).sort_by("week").head(pl.len() - 3).median().alias(f"{c}_pre")]
+        ok = pl.col(c).is_not_null()  # skip weeks whose snap counts are not published yet
+        v = pl.col(c).filter(ok).sort_by(pl.col("week").filter(ok))
+        return [v.tail(3).median().alias(f"{c}_l3"), v.head(v.len() - 3).median().alias(f"{c}_pre")]
     g = (w.group_by("player_id").agg(pl.col("position").last(), pl.len().alias("g"), *split("snap"), *split("share"))
           .filter(pl.col("g") >= 4)
           .with_columns((pl.col("snap_l3") - pl.col("snap_pre")).alias("d_snap"),
