@@ -4,7 +4,7 @@ RB,Jahmyr Gibbs,DET,22.0,"",100,22.4,28.2,27.5,-0.32,-0.11,0.0,"",00-0039139
 WR,CeeDee Lamb,DAL,21.1,"",100,20.8,22.2,22.2,0.35,0.0,0.0,"",00-0036358
 RB,Christian McCaffrey,SF,20.8,"",100,21.2,23.7,30.3,-0.2,-0.14,0.0,"",00-0033280
 RB,Chuba Hubbard,CAR,19.0,"",100,19.2,20.1,24.2,-0.17,0.03,0.0,"",00-0036555
-RB,Emmett Johnson,KC,18.7,"",100,9.9,12.1,24.2,-0.21,0.3,8.67,"",00-0041013
+RB,Emmett Johnson,KC,18.7,"",100,9.9,12.1,24.2,-0.21,0.3,8.62,"",00-0041013
 RB,James Cook,BUF,18.0,"",100,17.7,18.9,18.8,0.04,0.23,0.0,"",00-0037248
 RB,Javonte Williams,DAL,17.7,"",100,17.3,16.7,12.3,0.01,0.33,0.0,"",00-0036997
 RB,Tony Pollard,TEN,17.4,"",100,16.5,15.6,29.7,0.45,0.39,0.0,"",00-0035261
@@ -76,11 +76,11 @@ RB,Kenny Gainwell,TB,9.8,"",100,10.3,8.6,11.5,-0.23,-0.1,-0.14,"",00-0036919
 TE,Mike Gesicki,CIN,9.8,"",100,8.8,10.3,7.5,0.73,0.24,0.0,"",00-0034829
 WR,Mike Evans,SF,9.6,Questionable,75,13.2,14.8,17.1,-0.39,-0.0,0.0,"Questionable, est. return Nov 22 (Head coach Kyle Shanahan said Monday that the 49ers are ""hoping to"" have Evans (Achilles) back at practice this week, Nick Wagoner of ESPN.com reports (ESPN))",00-0031408
 WR,Tre Tucker,LV,9.6,"",100,9.7,11.1,3.8,-0.11,-0.0,0.0,"",00-0038563
-DEF,New York Jets,NYJ,7.8,"",100,5.7,4.3,-0.7,1.72,0.41,0.0,"",NYJ
+DEF,New York Jets,NYJ,7.9,"",100,5.7,4.3,-0.7,1.72,0.41,0.0,"",NYJ
 DEF,Jacksonville Jaguars,JAX,7.8,"",100,7.5,9.6,12.7,0.45,-0.13,0.0,"",JAX
 DEF,Detroit Lions,DET,7.8,"",100,6.2,6.4,10.3,0.57,0.98,0.0,"",DET
 WR,Courtland Sutton,DEN,9.4,"",100,9.1,7.1,10.8,0.32,0.0,0.0,"",00-0034348
-DEF,Chicago Bears,CHI,7.8,"",100,6.3,8.2,9.0,0.57,0.91,0.0,"",CHI
+DEF,Chicago Bears,CHI,7.7,"",100,6.3,8.2,9.0,0.57,0.91,0.0,"",CHI
 K,Brandon Aubrey,DAL,10.2,"",100,9.6,9.4,11.3,0.0,0.57,0.0,"",00-0037692
 WR,Jakobi Meyers,JAX,9.4,"",100,9.5,9.1,7.1,-0.11,0.0,0.0,"",00-0034960
 RB,Kaelon Black,SF,9.4,"",100,9.7,6.1,11.7,-0.2,-0.14,0.0,"",00-0041052
@@ -108,7 +108,7 @@ K,Chris Boswell,PIT,9.4,"",100,9.4,9.7,8.3,0.0,0.03,0.0,"",00-0031136
 TE,Darren Waller,CAR,8.6,"",100,8.6,9.0,9.8,-0.04,0.03,0.0,"",00-0031610
 K,Spencer Shrader,IND,9.4,"",100,10.0,11.3,8.3,0.0,-0.62,0.0,"",00-0039576
 TE,Juwan Johnson,NO,8.6,"",100,8.7,9.3,6.0,0.12,-0.25,0.0,"",00-0036040
-RB,David Montgomery,HOU,8.5,Questionable,75,8.2,9.1,4.1,0.31,0.37,2.46,"Questionable, est. return Nov 15 (groin, final wk10 report (Full Fri))",00-0035685
+RB,David Montgomery,HOU,8.5,Questionable,75,8.2,9.1,4.1,0.31,0.37,2.41,"Questionable, est. return Nov 15 (groin, final wk10 report (Full Fri))",00-0035685
 TE,Michael Mayer,LV,8.5,"",100,8.0,8.6,6.3,0.33,-0.4,0.55,"",00-0039066
 RB,Tyler Allgeier,ARI,8.4,"",100,9.1,9.2,14.7,-0.19,-0.51,0.0,"",00-0037263
 K,Cameron Dicker,LAC,9.2,"",100,9.0,8.1,11.7,0.0,0.18,0.0,"",00-0037224
@@ -141,7 +141,7 @@ WR,Kalif Raymond,CHI,7.9,"",100,7.2,8.8,5.7,0.14,0.0,0.54,"",00-0032464
 WR,Devaughn Vele,NO,7.9,"",100,8.0,10.3,7.8,-0.09,-0.0,0.0,"",00-0039424
 RB,Ollie Gordon II,MIA,7.9,"",100,8.0,12.0,9.9,0.12,-0.21,0.0,"",00-0040198
 RB,Travis Etienne,NO,7.9,Questionable,75,10.7,9.3,7.5,0.05,-0.25,0.0,"Questionable, est. return Nov 15 (hamstring, final wk10 report (Full Fri))",00-0036973
-DEF,Cincinnati Bengals,CIN,6.1,"",100,6.5,7.1,3.7,-0.13,-0.29,0.0,"",CIN
+DEF,Cincinnati Bengals,CIN,6.1,"",100,6.6,7.1,3.7,-0.13,-0.29,0.0,"",CIN
 K,Matt Gay,LV,8.5,"",100,9.2,9.8,8.3,0.0,-0.69,0.0,"",00-0035269
 DEF,Baltimore Ravens,BAL,6.0,"",100,6.1,3.1,0.3,0.18,-0.23,0.0,"",BAL
 WR,Keon Coleman,BUF,7.7,"",100,8.0,8.2,2.7,-0.31,0.0,0.0,"",00-0039901
@@ -158,7 +158,7 @@ WR,Elic Ayomanor,TEN,7.2,"",100,6.6,5.9,8.9,0.16,0.0,0.45,"",00-0040170
 K,Chad Ryland,ARI,8.0,"",100,8.9,9.2,6.7,0.0,-0.89,0.0,"",00-0038567
 DEF,Dallas Cowboys,DAL,5.5,"",100,4.9,2.6,4.0,0.3,0.28,0.0,"",DAL
 TE,T.J. Hockenson,MIN,7.1,Questionable,75,9.6,10.7,12.2,-0.11,-0.03,0.0,"Questionable, est. return Nov 22 (Coach Kevin O'Connell said Monday that the Vikings expect Hockenson (wrist/chest) to make progress ahead of Sunday's game against the 49ers, Alec Lewi (ESPN))",00-0035229
-RB,Devin Singletary,NYG,7.1,"",100,6.6,6.8,7.2,-0.14,-0.01,0.63,"",00-0035250
+RB,Devin Singletary,NYG,7.1,"",100,6.6,6.8,7.2,-0.14,-0.01,0.61,"",00-0035250
 WR,Brian Thomas Jr.,JAX,7.1,"",100,7.2,5.0,4.7,-0.11,0.0,0.0,"",00-0039893
 DEF,Tampa Bay Buccaneers,TB,5.4,"",100,7.2,10.0,18.3,-1.2,-0.67,0.0,"",TB
 WR,Malachi Fields,NYG,7.0,"",100,7.0,7.0,9.5,0.07,-0.0,0.0,"",00-0041042
@@ -181,7 +181,7 @@ RB,Keaton Mitchell,LAC,6.7,"",100,6.5,7.4,5.5,0.08,0.1,0.0,"",00-0038454
 WR,Isaiah Williams,NYJ,6.6,"",100,6.5,7.2,7.3,0.18,-0.0,-0.04,"",00-0039451
 RB,Justice Hill,BAL,6.6,Questionable,75,8.9,7.2,12.1,0.12,-0.21,0.0,"Questionable, est. return Nov 5",00-0034975
 DEF,Las Vegas Raiders,LV,4.9,"",100,5.8,4.7,3.7,-0.93,-0.03,0.0,"",LV
-DEF,New Orleans Saints,NO,4.8,"",100,6.2,4.2,5.0,0.22,-1.53,0.0,"",NO
+DEF,New Orleans Saints,NO,4.9,"",100,6.2,4.2,5.0,0.22,-1.53,0.0,"",NO
 RB,Jeremiyah Love,ARI,6.5,Questionable,75,9.4,8.9,3.7,-0.19,-0.51,0.0,"Questionable, est. return Nov 8 (new ankle injury)",00-0041027
 RB,Chris Rodriguez Jr.,JAX,6.5,"",100,6.4,6.1,8.2,0.0,0.1,0.0,"",00-0038611
 K,Jake Elliott,PHI,7.2,"",100,7.6,5.0,4.0,0.0,-0.35,0.0,"",00-0033787
@@ -220,8 +220,8 @@ WR,Isaac TeSlaa,DET,5.2,"",100,5.0,5.2,4.6,-0.22,-0.0,0.45,"",00-0040669
 WR,Devin Duvernay,ARI,5.2,"",100,4.3,3.7,6.2,-0.09,-0.0,1.01,"",00-0036331
 TE,Marlin Klein,HOU,5.2,"",100,4.7,2.6,2.6,0.1,0.37,0.0,"",00-0041472
 WR,KaVontae Turpin,DAL,5.2,Questionable,75,6.5,6.2,4.0,0.35,0.0,0.0,"Questionable, est. return Nov 8",00-0037801
-TE,James Mitchell,DAL,5.2,"",100,3.3,6.0,6.0,-0.16,0.33,1.66,"",00-0037282
 DEF,Arizona Cardinals,ARI,3.5,"",100,5.4,2.0,2.0,-1.4,-0.57,0.0,"",ARI
+TE,James Mitchell,DAL,5.2,"",100,3.3,6.0,6.0,-0.16,0.33,1.66,"",00-0037282
 TE,Greg Dulcich,MIA,5.2,"",100,5.7,6.6,3.9,-0.3,-0.21,0.0,"",00-0037252
 DEF,New York Giants,NYG,3.5,"",100,5.9,6.3,7.0,-1.63,-0.83,0.0,"",NYG
 WR,Demarcus Robinson,SF,5.1,"",100,5.5,8.2,8.2,-0.39,-0.0,0.0,"",00-0032775
@@ -231,8 +231,8 @@ TE,Noah Gray,KC,4.9,"",100,4.3,4.6,4.4,0.35,0.3,0.0,"",00-0036637
 WR,John Metchie III,CAR,4.8,"",100,4.9,4.9,3.9,-0.07,0.0,0.0,"",00-0037614
 RB,Ray Davis,BUF,4.9,"",100,4.6,3.3,1.9,0.04,0.23,0.0,"",00-0039875
 WR,Calvin Ridley,TEN,4.8,"",100,4.3,2.5,2.4,0.16,0.0,0.38,"",00-0034837
-DEF,Indianapolis Colts,IND,3.1,"",100,5.3,3.2,3.7,-1.05,-1.22,0.0,"",IND
 TE,Noah Fant,NO,4.7,"",100,4.9,5.0,1.8,0.12,-0.25,0.0,"",00-0035644
+DEF,Indianapolis Colts,IND,3.1,"",100,5.3,3.2,3.7,-1.05,-1.22,0.0,"",IND
 WR,Ja'Kobi Lane,BAL,4.7,"",100,4.8,4.5,3.8,-0.11,-0.0,0.0,"",00-0040870
 WR,Marvin Harrison Jr.,HOU,4.7,Questionable,75,6.3,5.4,6.0,-0.05,0.0,0.0,"Questionable, est. return Nov 19 (Harrison (hamstring) was estimated as a non-participant on Monday's practice report. (ESPN))",00-0039849
 WR,Troy Franklin,DEN,4.6,"",100,4.3,2.4,2.5,0.32,0.0,0.0,"",00-0039868
@@ -245,7 +245,7 @@ WR,Van Jefferson,WAS,4.4,"",100,4.2,8.4,8.4,0.17,0.0,0.0,"",00-0036415
 TE,Dawson Knox,BUF,4.3,"",100,4.0,3.2,3.7,0.08,0.23,0.0,"",00-0035689
 TE,Gavin Bartholomew,MIN,4.3,"",100,4.0,6.2,7.9,-0.11,-0.03,0.5,"",00-0040215
 WR,Jalen Nailor,LV,4.2,"",100,4.3,4.1,5.9,-0.11,-0.0,0.0,"",00-0037291
-DEF,Tennessee Titans,TEN,2.6,"",100,5.5,5.4,2.3,-1.19,-1.77,0.0,"",TEN
+DEF,Tennessee Titans,TEN,2.5,"",100,5.5,5.4,2.3,-1.19,-1.77,0.0,"",TEN
 DEF,Miami Dolphins,MIA,2.5,"",100,5.3,3.7,7.7,-1.4,-1.41,0.0,"",MIA
 WR,Chris Moore,BAL,4.2,"",100,4.3,6.9,5.5,-0.11,-0.0,0.0,"",00-0032398
 TE,Elijah Higgins,ARI,4.1,"",100,4.4,5.0,3.6,0.28,-0.51,0.0,"",00-0039041
@@ -384,17 +384,17 @@ K,Harrison Mevis,BAL,0.2,Practice squad,5,4.7,6.4,9.0,0.0,-0.36,0.0,"",00-003949
 K,Tyler Loop,BAL,0.0,Doubtful,0,8.8,8.6,5.0,0.0,-0.36,0.0,"Doubtful, est. return Nov 5 (groin)",00-0040074
 QB,Kyle McCord,MIA,7.4,Fill-in starter,100,7.8,12.8,12.8,-0.46,-0.0,0.0,"Fill-in starter, until Malik Willis returns, est. return Dec 13",00-0040014
 QB,Carson Beck,ARI,6.0,"",100,6.3,0.4,0.4,-0.26,-0.0,0.0,"",00-0041561
-QB,Cade Klubnik,NYJ,2.1,Backup QB (depth chart),25,8.3,6.1,6.1,-0.35,-0.0,0.61,"",00-0041056
+QB,Cade Klubnik,NYJ,2.1,Backup QB (depth chart),25,8.3,6.1,6.1,-0.35,-0.0,0.58,"",00-0041056
 QB,Jake Browning,LAC,0.3,Practice squad,5,4.9,,,0.33,0.0,0.0,"",00-0035100
-QB,Cooper Rush,TB,0.2,Practice squad,5,2.6,2.6,2.6,0.85,-0.0,1.29,"",00-0033662
+QB,Cooper Rush,TB,0.2,Practice squad,5,2.6,2.6,2.6,0.85,-0.0,1.28,"",00-0033662
 QB,Nick Mullens,JAX,0.2,Practice squad,5,3.7,,-0.3,0.5,0.0,0.0,"",00-0033319
 QB,Brady Cook,MIA,0.2,Practice squad,5,3.7,,,-0.46,-0.0,0.0,"",00-0040398
 QB,Brett Rypien,LV,0.1,Practice squad,5,2.4,,,0.01,-0.0,0.0,"",00-0034955
-QB,Marcus Mariota,WAS,0.0,Backup QB (depth chart),0,13.1,14.6,11.5,0.66,0.0,0.0,"",00-0032268
-QB,Jameis Winston,NYG,0.0,Backup QB (depth chart),0,12.7,11.8,4.8,-0.45,-0.0,0.0,"",00-0031503
-QB,Russell Wilson,NYG,0.0,Backup QB (depth chart),0,11.4,,,-0.45,-0.0,0.0,"",00-0029263
-QB,Gardner Minshew,ARI,0.0,Out for season,0,8.7,13.3,13.3,-0.26,-0.0,0.0,"Injured Reserve, est. return Feb 15 (Minshew suffered a torn UCL in his right throwing elbow last Sunday at Seattle and is slated to undergo season-ending surgery, Adam Schefter of ESPN r (ESPN))",00-0035289
-QB,Malik Willis,MIA,0.0,Injured Reserve,0,13.0,13.1,14.8,-0.46,-0.0,0.0,"Injured Reserve, est. return Dec 13 (Head coach Jeff Hafley said Monday that Willis (groin/core) has not undergone surgery and that the Dolphins are still determining if a procedure is ne (ESPN))",00-0038128
-QB,Mason Rudolph,PIT,0.0,Backup QB (depth chart),0,9.1,,0.4,0.3,0.0,0.0,"",00-0034771
 QB,Trey Lance,LAC,0.0,Injured Reserve,0,7.6,,,0.33,0.0,0.0,"Injured Reserve, est. return Nov 16",00-0037012
-QB,Davis Mills,HOU,0.0,Backup QB (depth chart),0,9.6,,0.1,0.13,0.0,2.16,"",00-0036898
+QB,Jarrett Stidham,DEN,0.0,Backup QB (depth chart),0,6.3,,,0.7,0.0,0.0,"",00-0035264
+QB,Russell Wilson,NYG,0.0,Backup QB (depth chart),0,11.4,,,-0.45,-0.0,0.0,"",00-0029263
+QB,Jaxson Dart,NYG,0.0,Out for season,0,18.6,26.6,13.7,-0.45,-0.0,0.0,"Injured Reserve, est. return Jan 17 (knee surgery)",00-0040691
+QB,Quinn Ewers,JAX,0.0,Backup QB (depth chart),0,9.9,,0.3,0.5,0.0,0.0,"",00-0040234
+QB,Joe Flacco,CIN,0.0,Backup QB (depth chart),0,12.6,,,0.63,0.0,0.55,"",00-0026158
+QB,Kenny Pickett,CAR,0.0,Backup QB (depth chart),0,6.0,,1.8,0.12,0.0,0.0,"",00-0038102
+QB,Lamar Jackson,BAL,0.0,Injured Reserve,0,18.8,19.8,13.1,0.05,-0.0,0.0,"Injured Reserve, est. return Dec 27 (Jackson (thumb) is ""doing well"" and is expected to be out for ""6-to-10 weeks,"" per head coach Jesse Minter. (ESPN))",00-0034796
