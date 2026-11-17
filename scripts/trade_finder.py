@@ -103,6 +103,14 @@ def score(t, wt=None):
 mine = list(roster[roster.Team == ME].Player)
 base_me = score(team_value(mine))
 skill = [p for p in mine if VAL.get(p, ("K",))[0] in ("QB", "RB", "WR", "TE")]
+# Permanent exclusions (Scott): never offer or drop these. Keep list lives in data/input/trade_keep.txt
+# (one name per line; Dowdle and Johnson are elite handcuffs). Injured players (out past the next week) are never
+# offered either (any current Out / IR / Doubtful status): the partner would be paying for nothing, so no real deal exists.
+_kp = DATA / "input" / "trade_keep.txt"
+KEEP = {l.strip() for l in _kp.read_text().splitlines() if l.strip() and not l.startswith("#")} if _kp.exists() else set()
+INJ_OUT = {p for p in skill if str(rs.loc[p]["Status"]) in ("Out", "Injured Reserve", "Doubtful", "IR / PUP / suspended", "Out for season")}
+skill = [p for p in skill if p not in KEEP and p not in INJ_OUT]
+print("excluded from your give side:", sorted(KEEP & set(mine)), "injured:", sorted(INJ_OUT))
 if keys == ["ALL"]:  # any 1 or 2 of my skill players
     gives = [[a] for a in skill] + [list(c) for c in itertools.combinations(skill, 2)]
 else:
@@ -118,7 +126,7 @@ for t in roster.Team.unique():
         for get in (g for k_ in GET_SIZES for g in itertools.combinations(theirs, k_)):
             new_me = [p for p in mine if p not in give] + list(get)
             if len(get) > len(give):  # drop my lowest-value player to make room
-                worst = min((p for p in new_me if p not in get), key=lambda p: score(team_value([p])) if p in VAL else -1)
+                worst = min((p for p in new_me if p not in get and p not in KEEP), key=lambda p: score(team_value([p])) if p in VAL else -1)
                 new_me = [p for p in new_me if p != worst]
             else:
                 worst = ""
