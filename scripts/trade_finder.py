@@ -116,6 +116,10 @@ if keys == ["ALL"]:  # any 1 or 2 of my skill players
 else:
     gives = [[k] for k in keys] + [[k, o] for k in keys for o in skill if o not in keys]
 GET_SIZES = (1, 2) if keys == ["ALL"] else (2,)
+if os.environ.get("GET_SIZES"):  # e.g. GET_SIZES=1 for "my two for their one"
+    GET_SIZES = tuple(int(x) for x in os.environ["GET_SIZES"].split(","))
+if os.environ.get("EXACT") == "1":  # give exactly the listed players, nothing else
+    gives = [list(keys)]
 rows = []
 for t in roster.Team.unique():
     if t == ME:
@@ -136,7 +140,7 @@ for t in roster.Team.unique():
                 tw = min((p for p in new_them if p not in give), key=lambda p: score(team_value([p]), WT_THEM) if p in VAL else -1)
                 new_them = [p for p in new_them if p != tw]
             d_them = score(team_value(new_them), WT_THEM) - base_them
-            if d_me > 0 and d_them > 0:
+            if d_me > 0 and (d_them > 0 or os.environ.get("ONE_SIDED") == "1"):
                 rows.append({"Partner": t, "You give": " + ".join(give), "You get": " + ".join(get), "Drop": worst,
                              f"Your gain (weighted, wk {WEEKS[0]}-17)": round(d_me, 1),
                              f"Your reg season gain/wk (wk {WEEKS[0]}-14)": round((team_value(new_me) - team_value(mine))[:-3].mean(), 2),
