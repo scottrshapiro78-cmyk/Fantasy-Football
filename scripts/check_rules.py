@@ -6,7 +6,7 @@ Rules (add new ones here and in docs/rules.md; weekly_refresh.py and trade_finde
  2. Injured players (Out / IR / Doubtful / Out for season) are never offered in a trade.
  3. Every player Scott gave news on (a note containing "Scott" in data/input/news_2026.tsv) carries that status
     in the rankings (his word outranks the feed until a newer official report).
- 4. Add/drop plans (check_plan) must fit the Yahoo roster: 1 QB 2 RB 3 WR 1 TE 1 FLEX 1 K 1 DEF + 5 BN (+1 IR),
+ 5. No stale injury news (return date long past).\n 4. Add/drop plans (check_plan) must fit the Yahoo roster: 1 QB 2 RB 3 WR 1 TE 1 FLEX 1 K 1 DEF + 5 BN (+1 IR),
     never leave the lineup without a K, DEF, TE or QB, and never drop a keep-list player.
 """
 import sys
@@ -54,6 +54,40 @@ def check_scott_news(week):
     return bad
 
 
+def check_stale(week):
+    """Rule 5: a status with a return date already past (before this week's first game) must not still say Out/Questionable."""
+    import datetime as dt
+    news = pd.read_csv(DATA / "input" / "news_2026.tsv", sep="\t").fillna("")
+    bad = []
+    mons = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    # the week's first game day: Thursday; news rows whose return date is more than 6 days before it are stale
+    import nflreadpy as nfl, polars as pl
+    first = min(nfl.load_schedules([2026]).filter(pl.col("week") == week)["gameday"].to_list())
+    first = dt.date.fromisoformat(first)
+    owned = set(pd.read_csv(DATA / "input" / f"burbs_rosters_2026wk{week}.csv").Player)  # only players someone owns matter
+    for r in news[news.Player.isin(owned)].itertuples():
+        m = str(r.Return).split()
+        if len(m) == 2 and m[0] in mons and r.Status in ("Out", "Questionable", "Doubtful"):
+            d = dt.date(2026 + (1 if mons.index(m[0]) < 2 else 0), mons.index(m[0]) + 1, int(m[1]))
+            if (first - d).days > 6 and "Scott" not in r.Note:
+                bad.append(f"stale news: {r.Player} {r.Status}, return {r.Return} (before {first}), note '{r.Note[:40]}'")
+    return bad
+
+
+def my_roster(week):
+    """Roster ledger: base file + moves in data/input/burbs_my_moves.csv (action,Player,Pos). Single source of truth."""
+    base = pd.read_csv(DATA / "input" / f"burbs_rosters_2026wk{week}.csv").fillna("")
+    cur = [p for p in base[base.Team == "Gin and Jews"].Player]
+    mv = DATA / "input" / "burbs_my_moves.csv"
+    if mv.exists():
+        for r in pd.read_csv(mv).itertuples():
+            if r.action == "drop" and r.Player in cur:
+                cur.remove(r.Player)
+            elif r.action == "add" and r.Player not in cur:
+                cur.append(r.Player)
+    return cur
+
+
 def check_plan(roster, adds, drops, pos, league="burbs"):
     """roster: list of player names; pos: {name: position}. Returns a list of violations."""
     slots = load_leagues()[league]["roster"]
@@ -72,7 +106,7 @@ def check_plan(roster, adds, drops, pos, league="burbs"):
 
 if __name__ == "__main__":
     wk = int(sys.argv[1]) if len(sys.argv) > 1 else 11
-    problems = check_trades(wk) + check_scott_news(wk)
+    problems = check_trades(wk) + check_scott_news(wk) + check_stale(wk)
     for p in problems:
         print("RULE VIOLATION:", p)
     print("rules ok" if not problems else f"{len(problems)} rule violation(s)")

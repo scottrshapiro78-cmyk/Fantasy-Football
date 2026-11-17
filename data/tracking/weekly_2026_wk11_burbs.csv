@@ -1,34 +1,34 @@
 pos,player,team,proj,status,play,base,sofar,last3,match,vegas,mate,news,player_id
-RB,Jahmyr Gibbs,DET,22.0,"",100,22.4,28.2,27.5,-0.32,-0.11,0.0,"",00-0039139
+RB,Jahmyr Gibbs,DET,22.0,"",100,22.4,28.2,27.5,-0.32,-0.13,0.0,"",00-0039139
 WR,Ja'Marr Chase,CIN,22.1,"",100,22.1,21.5,32.2,0.04,0.0,0.0,"",00-0036900
-RB,Christian McCaffrey,SF,20.8,"",100,21.2,23.7,30.3,-0.2,-0.14,0.0,"",00-0033280
+RB,Christian McCaffrey,SF,20.8,"",100,21.2,23.7,30.3,-0.2,-0.17,0.0,"",00-0033280
 WR,CeeDee Lamb,DAL,21.1,"",100,20.8,22.2,22.2,0.35,0.0,0.0,"",00-0036358
-RB,Chuba Hubbard,CAR,19.0,"",100,19.2,20.1,24.2,-0.17,0.03,0.0,"",00-0036555
+RB,Chuba Hubbard,CAR,19.1,"",100,19.2,20.1,24.2,-0.17,0.07,0.0,"",00-0036555
 RB,James Cook,BUF,18.0,"",100,17.7,18.9,18.8,0.04,0.23,0.0,"",00-0037248
 RB,Javonte Williams,DAL,17.7,"",100,17.3,16.7,12.3,0.01,0.33,0.0,"",00-0036997
 RB,Tony Pollard,TEN,17.4,"",100,16.5,15.6,29.7,0.45,0.39,0.0,"",00-0035261
-RB,Bucky Irving,TB,17.1,"",100,17.6,17.7,24.5,-0.23,-0.1,-0.24,"",00-0039361
 RB,D'Andre Swift,CHI,17.0,"",100,16.2,17.1,16.7,0.46,0.38,0.0,"",00-0036275
+RB,Bucky Irving,TB,17.0,"",100,17.6,17.7,24.5,-0.23,-0.15,-0.24,"",00-0039361
 TE,Trey McBride,ARI,17.0,"",100,16.3,17.2,13.8,0.28,-0.51,0.9,"",00-0037744
 WR,Tee Higgins,CIN,17.0,"",100,16.9,19.0,23.1,0.04,0.0,0.0,"",00-0036410
-RB,Jonathan Taylor,IND,15.8,"",100,16.1,16.6,9.5,0.02,-0.36,0.0,"",00-0036223
 WR,George Pickens,DAL,16.2,"",100,15.8,16.4,22.0,0.35,0.0,0.0,"",00-0037247
-RB,Chase Brown,CIN,15.7,"",100,15.6,14.4,18.3,-0.12,0.24,0.0,"",00-0038597
+RB,Jonathan Taylor,IND,15.8,"",100,16.1,16.6,9.5,0.02,-0.36,0.0,"",00-0036223
+RB,Chase Brown,CIN,15.8,"",100,15.6,14.4,18.3,-0.12,0.28,0.0,"",00-0038597
 WR,Nico Collins,HOU,15.8,"",100,15.8,16.6,14.2,-0.05,0.0,0.0,"",00-0036554
 WR,Chris Olave,NO,15.3,"",100,15.3,16.4,11.5,-0.09,-0.0,0.0,"",00-0037239
 QB,Joe Burrow,CIN,23.0,"",100,22.4,25.8,34.1,0.63,0.0,0.0,"",00-0036442
 QB,Josh Allen,BUF,22.9,"",100,23.1,24.8,20.6,-0.2,0.0,0.0,"",00-0034857
-RB,Bhayshul Tuten,JAX,14.2,"",100,14.1,16.4,19.7,0.0,0.1,0.0,"",00-0040719
 WR,Justin Jefferson,MIN,14.6,"",100,14.7,14.0,13.2,-0.1,-0.0,0.0,"",00-0036322
-RB,Jaylen Warren,PIT,14.2,"",100,14.3,16.7,15.7,-0.1,0.01,0.0,"",00-0037228
+RB,Bhayshul Tuten,JAX,14.2,"",100,14.1,16.4,19.7,0.0,0.1,0.0,"",00-0040719
 WR,Zay Flowers,BAL,14.5,"",100,14.6,15.4,5.6,-0.11,-0.0,0.0,"",00-0039064
-RB,Derrick Henry,BAL,14.0,"",100,14.1,16.1,12.9,0.12,-0.21,0.0,"",00-0032764
+RB,Jaylen Warren,PIT,14.2,"",100,14.3,16.7,15.7,-0.1,0.01,0.0,"",00-0037228
+RB,Derrick Henry,BAL,14.0,"",100,14.1,16.1,12.9,0.12,-0.17,0.0,"",00-0032764
 WR,Malik Nabers,NYG,14.3,"",100,14.3,15.2,11.6,0.07,-0.0,0.0,"",00-0039337
 WR,Garrett Wilson,NYJ,14.3,"",100,14.2,14.4,11.5,0.18,-0.0,-0.08,"",00-0037740
 RB,Kenneth Walker III,KC,13.7,Questionable,75,18.2,24.6,19.5,-0.21,0.3,0.0,"Questionable, est. return Nov 17 (groin; Scott 11/17: believes he plays wk11 (unconfirmed, no wk11 practice report yet))",00-0038134
 TE,Isaiah Likely,NYG,13.7,"",100,13.8,17.4,15.7,-0.16,-0.01,0.0,"",00-0037838
-TE,George Kittle,SF,13.4,"",100,13.8,14.2,12.7,-0.19,-0.14,0.0,"",00-0033288
-RB,Breece Hall,NYJ,13.3,"",100,13.5,13.8,11.7,0.02,-0.13,-0.05,"",00-0038120
+TE,George Kittle,SF,13.4,"",100,13.8,14.2,12.7,-0.19,-0.17,0.0,"",00-0033288
+RB,Breece Hall,NYJ,13.3,"",100,13.5,13.8,11.7,0.02,-0.1,-0.05,"",00-0038120
 WR,Amon-Ra St. Brown,DET,13.7,Questionable,75,18.5,20.5,18.3,-0.22,-0.0,0.0,"Questionable, est. return Nov 15 (rib, final wk10 report (Limited Fri))",00-0036963
 WR,Rashee Rice,KC,13.7,"",100,13.8,13.2,13.8,-0.1,0.0,0.0,"",00-0039067
 WR,Tetairoa McMillan,CAR,13.6,"",100,13.7,14.6,11.3,-0.07,0.0,0.0,"",00-0040124
@@ -37,337 +37,336 @@ WR,Deebo Samuel Sr.,SF,13.2,"",100,13.6,16.5,17.3,-0.39,-0.0,0.0,"",00-0035719
 WR,Parker Washington,JAX,13.1,"",100,13.2,15.5,15.6,-0.11,0.0,0.0,"",00-0038606
 WR,Stefon Diggs,WAS,13.1,"",100,12.9,13.8,13.7,0.17,0.0,0.0,"",00-0031588
 WR,Jordyn Tyson,NO,12.7,"",100,12.8,12.0,12.0,-0.09,-0.0,0.0,"",00-0041029
-RB,Emmett Johnson,KC,12.2,"",100,9.9,12.1,24.2,-0.21,0.3,2.17,"",00-0041013
 QB,Patrick Mahomes,KC,20.4,"",100,19.1,19.7,25.8,1.28,0.0,0.0,"",00-0033873
-RB,Omarion Hampton,LAC,11.8,"",100,11.6,9.5,9.4,0.08,0.1,0.0,"",00-0040666
-TE,Travis Kelce,KC,11.6,Sleeper: Questionable,100,11.0,11.6,11.3,0.35,0.3,0.0,Sleeper: Questionable,00-0030506
+RB,Emmett Johnson,KC,12.2,"",100,9.9,12.1,24.2,-0.21,0.3,2.17,"",00-0041013
+RB,Cam Skattebo,NYG,12.2,"",100,12.3,13.9,17.8,-0.14,-0.01,0.0,"",00-0040715
+RB,Omarion Hampton,LAC,11.8,"",100,11.6,9.5,9.4,0.08,0.14,0.0,"",00-0040666
+WR,Emeka Egbuka,TB,12.1,"",100,12.3,11.1,14.0,0.1,-0.0,-0.25,"",00-0040129
 WR,Jameson Williams,DET,12.0,"",100,12.1,12.7,10.3,-0.22,-0.0,0.17,"",00-0037240
 RB,Saquon Barkley,PHI,11.6,"",100,11.7,8.4,11.9,0.08,-0.2,0.0,"",00-0034844
+TE,Travis Kelce,KC,11.6,Sleeper: Questionable,100,11.0,11.6,11.3,0.35,0.3,0.0,Sleeper: Questionable,00-0030506
 RB,Jonah Coleman,DEN,11.4,"",100,11.0,12.8,16.0,0.21,0.2,0.0,"",00-0041496
 RB,Ashton Jeanty,LV,11.4,"",100,11.9,15.0,9.2,-0.15,-0.4,0.0,"",00-0040122
 QB,Dak Prescott,DAL,19.5,"",100,19.0,20.2,24.6,0.48,0.0,0.0,"",00-0033077
 DEF,Houston Texans,HOU,9.4,"",100,7.3,6.3,7.0,1.27,0.82,0.0,"",HOU
-TE,Sam LaPorta,DET,11.1,"",100,11.0,10.6,5.4,-0.04,-0.11,0.22,"",00-0039065
-DEF,Buffalo Bills,BUF,9.4,"",100,6.4,7.2,16.0,0.95,2.0,0.0,"",BUF
 QB,Trevor Lawrence,JAX,19.3,"",100,18.8,19.3,19.9,0.5,0.0,0.0,"",00-0036971
-TE,Colston Loveland,CHI,11.0,"",100,10.4,9.3,13.6,-0.05,0.38,0.22,"",00-0040126
+DEF,Buffalo Bills,BUF,9.3,"",100,6.4,7.2,16.0,0.95,2.0,0.0,"",BUF
 WR,Omar Cooper Jr.,NYJ,11.4,Questionable,75,15.1,15.6,19.5,0.18,-0.0,-0.09,"Questionable, est. return Nov 22 (Jets head coach Aaron Glenn said that Cooper (ankle) will undergo imaging Monday, Eric Allen of the team's official site reports. (ESPN))",00-0041511
+TE,Sam LaPorta,DET,11.1,"",100,11.0,10.6,5.4,-0.04,-0.13,0.22,"",00-0039065
 DEF,Denver Broncos,DEN,9.2,"",100,8.4,7.6,4.7,-0.55,1.38,0.0,"",DEN
+TE,Colston Loveland,CHI,11.0,"",100,10.4,9.3,13.6,-0.05,0.38,0.22,"",00-0040126
 QB,Jayden Daniels,WAS,19.1,"",100,18.4,19.4,16.8,0.66,0.0,0.0,"",00-0039910
-RB,Alvin Kamara,NO,10.7,"",100,10.9,11.3,12.5,0.05,-0.25,0.0,"",00-0033906
-DEF,Kansas City Chiefs,KC,9.0,"",100,6.5,8.2,8.3,0.7,1.75,0.0,"",KC
 WR,Rome Odunze,CHI,11.1,"",100,10.5,9.9,13.2,0.14,0.0,0.45,"",00-0039919
+DEF,Kansas City Chiefs,KC,9.0,"",100,6.5,8.2,8.3,0.7,1.75,0.0,"",KC
+RB,Alvin Kamara,NO,10.7,"",100,10.9,11.3,12.5,0.05,-0.25,0.0,"",00-0033906
 WR,DJ Moore,BUF,10.9,"",100,11.2,11.3,14.2,-0.31,0.0,0.0,"",00-0034827
 QB,Brock Purdy,SF,18.7,"",100,20.6,22.6,23.0,-1.99,-0.0,0.0,"",00-0037834
 QB,C.J. Stroud,HOU,18.6,"",100,18.5,20.5,24.1,0.13,0.0,0.0,"",00-0039163
-RB,Rachaad White,WAS,10.4,"",100,10.2,10.6,9.3,0.01,0.14,0.0,"",00-0037256
 WR,Caleb Douglas,MIA,10.8,"",100,10.7,11.8,10.5,0.11,-0.0,0.0,"",00-0041523
+RB,Rachaad White,WAS,10.4,"",100,10.2,10.6,9.3,0.01,0.17,0.0,"",00-0037256
 DEF,Pittsburgh Steelers,PIT,8.6,"",100,7.1,8.8,9.0,0.68,0.75,0.0,"",PIT
 WR,Makai Lemon,PHI,10.7,"",100,9.0,8.2,14.5,-0.11,-0.0,1.78,"",00-0040867
 QB,Caleb Williams,CHI,18.5,"",100,18.1,18.4,16.3,0.34,0.0,0.0,"",00-0039918
-TE,Dallas Goedert,PHI,10.2,"",100,9.6,10.6,9.0,-0.13,-0.2,0.9,"",00-0034351
 WR,DK Metcalf,PIT,10.6,"",100,10.6,10.4,8.1,-0.02,0.0,0.0,"",00-0035640
 K,Ka'imi Fairbairn,HOU,10.9,"",100,10.2,11.1,11.7,0.0,0.65,0.0,"",00-0032726
-DEF,Los Angeles Chargers,LAC,8.4,"",100,6.7,4.1,2.7,0.63,1.1,0.0,"",LAC
+TE,Dallas Goedert,PHI,10.2,"",100,9.6,10.6,9.0,-0.13,-0.2,0.9,"",00-0034351
+DEF,Los Angeles Chargers,LAC,8.3,"",100,6.7,4.1,2.7,0.63,0.99,0.0,"",LAC
 TE,Tyler Warren,IND,10.1,"",100,10.6,10.8,5.5,-0.15,-0.36,0.0,"",00-0040128
-TE,Dalton Kincaid,BUF,10.0,"",100,9.6,10.3,10.7,0.08,0.23,0.0,"",00-0038933
 WR,Chimere Dike,TEN,10.3,"",100,9.0,8.3,12.7,0.16,0.0,1.12,"",00-0040705
+TE,Dalton Kincaid,BUF,10.0,"",100,9.6,10.3,10.7,0.08,0.23,0.0,"",00-0038933
 WR,Luther Burden III,CHI,10.2,Questionable,75,13.5,15.1,21.0,0.14,0.0,0.0,"Questionable, est. return Nov 15 (Yahoo Q (bye wk10))",00-0040735
-RB,Kenny Gainwell,TB,9.8,"",100,10.3,8.6,11.5,-0.23,-0.1,-0.14,"",00-0036919
-TE,Mike Gesicki,CIN,9.8,"",100,8.8,10.3,7.5,0.73,0.24,0.0,"",00-0034829
-DEF,New York Jets,NYJ,7.9,"",100,5.7,4.3,-0.7,1.72,0.41,0.0,"",NYJ
+TE,Mike Gesicki,CIN,9.8,"",100,8.8,10.3,7.5,0.73,0.28,0.0,"",00-0034829
+RB,Kenny Gainwell,TB,9.7,"",100,10.3,8.6,11.5,-0.23,-0.15,-0.14,"",00-0036919
+DEF,Detroit Lions,DET,7.9,"",100,6.2,6.4,10.3,0.57,1.15,0.0,"",DET
 DEF,Jacksonville Jaguars,JAX,7.8,"",100,7.5,9.6,12.7,0.45,-0.13,0.0,"",JAX
-DEF,Detroit Lions,DET,7.8,"",100,6.2,6.4,10.3,0.57,0.98,0.0,"",DET
-DEF,Chicago Bears,CHI,7.8,"",100,6.3,8.2,9.0,0.57,0.91,0.0,"",CHI
 K,Brandon Aubrey,DAL,10.2,"",100,9.6,9.4,11.3,0.0,0.57,0.0,"",00-0037692
-RB,Kaelon Black,SF,9.4,"",100,9.7,6.1,11.7,-0.2,-0.14,0.0,"",00-0041052
-RB,Kyle Monangai,CHI,9.3,Questionable,75,11.5,14.8,13.0,0.46,0.38,0.0,"Questionable, est. return Nov 22 (Monangai (thumb/toe) said Monday that he's ""on track"" to return to action Sunday against the Saints, Courtney Cronin of ESPN reports. (ESPN))",00-0040236
-TE,Dalton Schultz,HOU,9.2,"",100,8.7,8.8,7.9,0.1,0.37,0.0,"",00-0034383
+DEF,Chicago Bears,CHI,7.7,"",100,6.3,8.2,9.0,0.57,0.91,0.0,"",CHI
+DEF,New York Jets,NYJ,7.7,"",100,5.7,4.3,-0.7,1.72,0.3,0.0,"",NYJ
+RB,Kaelon Black,SF,9.3,"",100,9.7,6.1,11.7,-0.2,-0.17,0.0,"",00-0041052
 WR,Mike Evans,SF,9.6,Questionable,75,13.2,14.8,17.1,-0.39,-0.0,0.0,"Questionable, est. return Nov 22 (Head coach Kyle Shanahan said Monday that the 49ers are ""hoping to"" have Evans (Achilles) back at practice this week, Nick Wagoner of ESPN.com reports (ESPN))",00-0031408
 WR,Tre Tucker,LV,9.6,"",100,9.7,11.1,3.8,-0.11,-0.0,0.0,"",00-0038563
-K,Will Reichard,MIN,9.9,"",100,10.0,11.4,7.3,0.0,-0.06,0.0,"",00-0039404
-RB,Rico Dowdle,PIT,9.1,"",100,9.2,8.3,10.5,-0.1,0.01,0.0,"",00-0036139
+RB,Kyle Monangai,CHI,9.3,Questionable,75,11.5,14.8,13.0,0.46,0.38,0.0,"Questionable, est. return Nov 22 (Monangai (toe/thumb) was seen wearing full pads for the Bears' unofficial practice Tuesday, Adam Jahns of AllCHGO.com reports. (ESPN))",00-0040236
+K,Will Reichard,MIN,9.8,"",100,10.0,11.4,7.3,0.0,-0.12,0.0,"",00-0039404
+TE,Dalton Schultz,HOU,9.2,"",100,8.7,8.8,7.9,0.1,0.37,0.0,"",00-0034383
 K,Cam Little,JAX,9.8,"",100,9.6,10.9,14.0,0.0,0.18,0.0,"",00-0039409
 WR,Courtland Sutton,DEN,9.4,"",100,9.1,7.1,10.8,0.32,0.0,0.0,"",00-0034348
+RB,Rico Dowdle,PIT,9.1,"",100,9.2,8.3,10.5,-0.1,0.01,0.0,"",00-0036139
 WR,Jakobi Meyers,JAX,9.4,"",100,9.5,9.1,7.1,-0.11,0.0,0.0,"",00-0034960
-DEF,Carolina Panthers,CAR,7.3,"",100,6.3,5.3,6.0,0.38,0.56,0.0,"",CAR
 WR,Keenan Allen,SF,9.3,"",100,9.7,10.2,10.5,-0.39,-0.0,0.0,"",00-0030279
 K,Tyler Bass,BUF,9.6,"",100,9.2,10.7,12.0,0.0,0.4,0.0,"",00-0036162
 WR,Ryan Flournoy,DAL,9.3,"",100,9.0,10.4,13.4,0.35,0.0,0.0,"",00-0039410
 QB,Tyler Shough,NO,17.1,"",100,16.4,17.3,14.5,0.79,-0.0,0.0,"",00-0040743
 WR,Malik Washington,MIA,9.3,"",100,9.2,11.4,11.5,0.11,-0.0,0.0,"",00-0039880
 K,Cairo Santos,CHI,9.6,"",100,9.0,9.2,11.7,0.0,0.65,0.0,"",00-0031203
-K,Chase McLaughlin,TB,9.6,"",100,9.7,11.0,11.3,0.0,-0.17,0.0,"",00-0035358
-TE,Pat Freiermuth,PIT,8.8,"",100,9.0,10.1,9.0,-0.24,0.01,0.0,"",00-0036894
-WR,Emeka Egbuka,TB,9.1,Questionable,75,12.3,11.1,14.0,0.1,-0.0,-0.25,"Questionable, est. return Nov 8 (Yahoo: Questionable (Sat))",00-0040129
-K,Evan McPherson,CIN,9.4,"",100,9.0,9.4,8.7,0.0,0.42,0.0,"",00-0036854
+DEF,Carolina Panthers,CAR,7.1,"",100,6.3,5.3,6.0,0.38,0.45,0.0,"",CAR
+RB,Justice Hill,BAL,8.8,"",100,8.9,7.2,12.1,0.12,-0.17,0.0,"",00-0034975
+K,Evan McPherson,CIN,9.5,"",100,9.0,9.4,8.7,0.0,0.48,0.0,"",00-0036854
+K,Chase McLaughlin,TB,9.5,"",100,9.7,11.0,11.3,0.0,-0.26,0.0,"",00-0035358
 K,Chris Boswell,PIT,9.4,"",100,9.4,9.7,8.3,0.0,0.03,0.0,"",00-0031136
-TE,Darren Waller,CAR,8.6,"",100,8.6,9.0,9.8,-0.04,0.03,0.0,"",00-0031610
+TE,Pat Freiermuth,PIT,8.8,"",100,9.0,10.1,9.0,-0.24,0.01,0.0,"",00-0036894
 K,Spencer Shrader,IND,9.4,"",100,10.0,11.3,8.3,0.0,-0.62,0.0,"",00-0039576
-TE,Juwan Johnson,NO,8.6,"",100,8.7,9.3,6.0,0.12,-0.25,0.0,"",00-0036040
 WR,Jalen Coker,CAR,9.0,"",100,9.1,11.0,5.5,-0.07,0.0,0.0,"",00-0039491
+TE,Darren Waller,CAR,8.7,"",100,8.6,9.0,9.8,-0.04,0.07,0.0,"",00-0031610
+K,Cameron Dicker,LAC,9.2,"",100,9.0,8.1,11.7,0.0,0.24,0.0,"",00-0037224
+TE,Juwan Johnson,NO,8.6,"",100,8.7,9.3,6.0,0.12,-0.25,0.0,"",00-0036040
 RB,David Montgomery,HOU,8.5,Questionable,75,8.2,9.1,4.1,0.31,0.37,2.46,"Questionable, est. return Nov 15 (groin, final wk10 report (Full Fri))",00-0035685
-TE,Michael Mayer,LV,8.5,"",100,8.0,8.6,6.3,0.33,-0.4,0.56,"",00-0039066
-RB,Tyler Allgeier,ARI,8.4,"",100,9.1,9.2,14.7,-0.19,-0.51,0.0,"",00-0037263
 WR,Pat Bryant,DEN,8.9,"",100,8.5,9.5,12.6,0.32,0.0,0.0,"",00-0040134
-K,Cameron Dicker,LAC,9.2,"",100,9.0,8.1,11.7,0.0,0.18,0.0,"",00-0037224
 WR,Khalil Shakir,BUF,8.8,"",100,9.1,9.3,9.6,-0.31,0.0,0.0,"",00-0037261
 QB,Jared Goff,DET,16.6,"",100,18.0,18.6,11.6,-1.37,-0.0,0.0,"",00-0033106
 QB,Bo Nix,DEN,16.6,"",100,15.9,14.5,20.4,0.7,0.0,0.0,"",00-0039732
-RB,Braelon Allen,NYJ,8.4,"",100,8.5,11.1,11.4,0.02,-0.13,-0.03,"",00-0039794
+RB,Tyler Allgeier,ARI,8.4,"",100,9.1,9.2,14.7,-0.19,-0.51,0.0,"",00-0037263
 WR,Josh Downs,KC,8.8,"",100,8.9,9.2,11.4,-0.1,0.0,0.0,"",00-0038997
-TE,Brenton Strange,JAX,8.3,"",100,8.3,8.9,6.9,-0.1,0.1,0.0,"",00-0038935
+TE,Michael Mayer,LV,8.5,"",100,8.0,8.6,6.3,0.33,-0.4,0.56,"",00-0039066
 K,Joey Slye,TEN,9.1,"",100,8.4,7.9,10.7,0.0,0.68,0.0,"",00-0035192
-DEF,Philadelphia Eagles,PHI,6.7,"",100,6.7,3.1,2.7,-0.01,-0.06,0.0,"",PHI
+DEF,Minnesota Vikings,MIN,6.7,"",100,8.9,13.0,12.0,-1.59,-0.67,0.0,"",MIN
 K,Harrison Butker,KC,9.1,"",100,8.6,7.8,5.7,0.0,0.52,0.0,"",00-0033303
-K,Jake Bates,DET,9.0,"",100,9.2,9.4,9.0,0.0,-0.19,0.0,"",00-0039172
+DEF,Philadelphia Eagles,PHI,6.7,"",100,6.7,3.1,2.7,-0.01,-0.06,0.0,"",PHI
+RB,Braelon Allen,NYJ,8.4,"",100,8.5,11.1,11.4,0.02,-0.1,-0.03,"",00-0039794
 K,Wil Lutz,DEN,9.0,"",100,8.7,8.2,10.7,0.0,0.34,0.0,"",00-0032569
-DEF,Minnesota Vikings,MIN,6.6,"",100,8.9,13.0,12.0,-1.59,-0.79,0.0,"",MIN
-TE,Chig Okonkwo,WAS,8.2,Sleeper: Questionable,100,7.8,7.3,7.1,0.31,0.14,0.0,Sleeper: Questionable,00-0037809
+K,Jake Bates,DET,9.0,"",100,9.2,9.4,9.0,0.0,-0.22,0.0,"",00-0039172
 QB,Kirk Cousins,MIN,16.5,Fill-in starter,100,16.2,18.8,18.7,0.26,-0.0,0.0,"Fill-in starter, until Kyler Murray returns, est. return Nov 29",00-0029604
-K,Jason Sanders,NYJ,8.9,"",100,9.1,10.2,15.0,0.0,-0.23,0.0,"",00-0034794
-TE,David Njoku,LAC,8.1,"",100,8.0,6.4,6.4,0.01,0.1,0.0,"",00-0033885
-TE,Mark Andrews,BAL,8.1,"",100,8.2,7.5,8.2,0.1,-0.21,0.0,"",00-0034753
+TE,Brenton Strange,JAX,8.3,"",100,8.3,8.9,6.9,-0.1,0.1,0.0,"",00-0038935
+K,Jason Sanders,NYJ,9.0,"",100,9.1,10.2,15.0,0.0,-0.17,0.0,"",00-0034794
+DEF,San Francisco 49ers,SF,6.5,"",100,6.0,6.2,5.0,0.22,0.28,0.0,"",SF
+K,Drew Stevens,WAS,8.9,"",100,8.6,8.6,10.3,0.0,0.29,0.0,"",00-0041182
+TE,Chig Okonkwo,WAS,8.3,Sleeper: Questionable,100,7.8,7.3,7.1,0.31,0.17,0.0,Sleeper: Questionable,00-0037809
 QB,Bryce Young,CAR,16.4,"",100,16.2,17.2,12.9,0.12,0.0,0.0,"",00-0039150
-K,Drew Stevens,WAS,8.8,"",100,8.6,8.6,10.3,0.0,0.23,0.0,"",00-0041182
-DEF,San Francisco 49ers,SF,6.4,"",100,6.0,6.2,5.0,0.22,0.17,0.0,"",SF
+TE,David Njoku,LAC,8.1,"",100,8.0,6.4,6.4,0.01,0.14,0.0,"",00-0033885
 K,Dominic Zvada,NYG,8.8,"",100,8.8,9.1,7.7,0.0,-0.01,0.0,"",00-0041145
-RB,Ollie Gordon II,MIA,7.9,"",100,8.0,12.0,9.9,0.12,-0.21,0.0,"",00-0040198
+TE,Mark Andrews,BAL,8.1,"",100,8.2,7.5,8.2,0.1,-0.17,0.0,"",00-0034753
 WR,Carnell Tate,TEN,8.3,Questionable,75,10.9,11.0,10.2,0.16,0.0,0.0,"Questionable, est. return Nov 22 (Titans head coach Robert Saleh said Monday that he's hopeful that Tate (shoulder) will return to action in Week 11 versus the Cowboys, Jim Wyatt of th (ESPN))",00-0041438
 WR,Xavier Hutchinson,HOU,8.3,Sleeper: Questionable,100,8.4,9.8,14.6,-0.05,0.0,0.0,Sleeper: Questionable,00-0038618
-RB,Travis Etienne,NO,7.9,Questionable,75,10.7,9.3,7.5,0.05,-0.25,0.0,"Questionable, est. return Nov 15 (hamstring, final wk10 report (Full Fri))",00-0036973
 WR,Antonio Williams,WAS,8.3,"",100,8.1,8.1,9.4,0.17,0.0,0.0,"",00-0041040
-DEF,Cincinnati Bengals,CIN,6.1,"",100,6.5,7.1,3.7,-0.13,-0.29,0.0,"",CIN
+RB,Ollie Gordon II,MIA,7.9,"",100,8.0,12.0,9.9,0.12,-0.21,0.0,"",00-0040198
+RB,Travis Etienne,NO,7.9,Questionable,75,10.7,9.3,7.5,0.05,-0.25,0.0,"Questionable, est. return Nov 15 (hamstring, final wk10 report (Full Fri))",00-0036973
 K,Matt Gay,LV,8.5,"",100,9.2,9.8,8.3,0.0,-0.69,0.0,"",00-0035269
-DEF,Baltimore Ravens,BAL,6.0,"",100,6.1,3.1,0.3,0.18,-0.23,0.0,"",BAL
+DEF,Cincinnati Bengals,CIN,6.0,"",100,6.6,7.1,3.7,-0.13,-0.4,0.0,"",CIN
+K,Ryan Fitzgerald,CAR,8.4,"",100,8.3,8.2,8.0,0.0,0.12,0.0,"",00-0040279
 WR,Dohnte Meyers,CIN,8.1,"",100,8.0,10.0,12.3,0.04,0.0,0.0,"",00-0040785
 WR,Germie Bernard,PIT,8.1,"",100,8.1,8.5,4.9,-0.02,0.0,0.0,"",00-0041489
 WR,Marquise Brown,PHI,8.0,"",100,4.7,3.1,3.8,-0.11,-0.0,3.42,"",00-0035662
-K,Ryan Fitzgerald,CAR,8.4,"",100,8.3,8.2,8.0,0.0,0.06,0.0,"",00-0040279
-RB,Kimani Vidal,LAC,7.6,"",100,7.4,7.4,6.1,0.08,0.1,0.0,"",00-0039391
+DEF,Baltimore Ravens,BAL,5.9,"",100,6.1,3.1,0.3,0.18,-0.35,0.0,"",BAL
+RB,Kimani Vidal,LAC,7.6,"",100,7.4,7.4,6.1,0.08,0.14,0.0,"",00-0039391
 K,Graham Gano,NYG,8.3,Sleeper: Questionable,100,8.3,,,0.0,-0.01,0.0,Sleeper: Questionable,00-0026858
 WR,Kalif Raymond,CHI,7.9,"",100,7.2,8.8,5.7,0.14,0.0,0.54,"",00-0032464
-TE,Cade Otton,TB,7.5,"",100,6.8,5.5,2.6,0.69,-0.1,0.08,"",00-0038129
 WR,Devaughn Vele,NO,7.9,"",100,8.0,10.3,7.8,-0.09,-0.0,0.0,"",00-0039424
 K,Chad Ryland,ARI,8.0,"",100,8.9,9.2,6.7,0.0,-0.89,0.0,"",00-0038567
 WR,Keon Coleman,BUF,7.7,"",100,8.0,8.2,2.7,-0.31,0.0,0.0,"",00-0039901
 WR,Xavier Worthy,KC,7.6,"",100,7.7,7.4,5.0,-0.1,0.0,0.0,"",00-0039894
 DEF,Dallas Cowboys,DAL,5.5,"",100,4.9,2.6,4.0,0.3,0.28,0.0,"",DAL
-TE,T.J. Hockenson,MIN,7.1,Questionable,75,9.6,10.7,12.2,-0.11,-0.03,0.0,"Questionable, est. return Nov 22 (Coach Kevin O'Connell said Monday that the Vikings expect Hockenson (wrist/chest) to make progress ahead of Sunday's game against the 49ers, Alec Lewi (ESPN))",00-0035229
-RB,Devin Singletary,NYG,7.1,"",100,6.6,6.8,7.2,-0.14,-0.01,0.63,"",00-0035250
-WR,Chris Godwin Jr.,TB,7.5,"",100,7.3,6.4,3.8,0.1,-0.0,0.07,"",00-0033921
-DEF,Tampa Bay Buccaneers,TB,5.4,"",100,7.3,10.0,18.3,-1.2,-0.67,0.0,"",TB
-K,Eddy Pineiro,SF,7.8,"",100,8.0,6.2,5.7,0.0,-0.24,0.0,"",00-0034173
-WR,Wan'Dale Robinson,TEN,7.4,Questionable,75,9.6,9.0,8.1,0.16,0.0,0.17,"Questionable, est. return Nov 22 (Robinson is questionable to return to Sunday's game against the Jaguars due to an ankle injury. (ESPN))",00-0038117
-RB,Aaron Jones,MIN,7.0,"",100,7.1,10.6,7.2,-0.11,-0.03,0.0,"",00-0033293
-RB,Austin Ekeler,WAS,7.0,"",100,6.8,5.0,6.7,0.01,0.14,0.0,"",00-0033699
+DEF,Tampa Bay Buccaneers,TB,5.4,"",100,7.2,10.0,18.3,-1.2,-0.62,0.0,"",TB
+TE,Cade Otton,TB,7.2,"",100,6.8,5.5,2.6,0.69,-0.15,-0.15,"",00-0038129
+K,Eddy Pineiro,SF,7.7,"",100,8.0,6.2,5.7,0.0,-0.3,0.0,"",00-0034173
+TE,T.J. Hockenson,MIN,7.1,Questionable,75,9.6,10.7,12.2,-0.11,-0.07,0.0,"Questionable, est. return Nov 22 (Coach Kevin O'Connell said Monday that the Vikings expect Hockenson (wrist/chest) to make progress ahead of Sunday's game against the 49ers, Alec Lewi (ESPN))",00-0035229
 QB,Aaron Rodgers,PIT,15.2,"",100,14.9,14.8,11.2,0.3,0.0,0.0,"",00-0023459
+RB,Austin Ekeler,WAS,7.0,"",100,6.8,5.0,6.7,0.01,0.17,0.0,"",00-0033699
 WR,Jaylen Waddle,DEN,7.3,Questionable,75,9.4,9.1,9.0,0.32,0.0,0.0,"Questionable, est. return Nov 22 (Waddle (concussion) has been ruled out for the remainder of Sunday's game against the Panthers, Parker Gabriel of The Denver Post reports. (ESPN))",00-0036613
+WR,Chris Godwin Jr.,TB,7.3,"",100,7.3,6.4,3.8,0.1,-0.0,-0.15,"",00-0033921
 WR,Darius Cooper,PHI,7.3,"",100,5.3,6.5,3.7,-0.11,-0.0,2.14,"",00-0040024
-RB,Mike Washington Jr.,LV,6.9,"",100,7.4,4.1,3.9,-0.15,-0.4,0.0,"",00-0040878
+RB,Aaron Jones,MIN,6.9,"",100,7.1,10.6,7.2,-0.11,-0.07,0.0,"",00-0033293
+K,Riley Patterson,BAL,7.6,"",100,7.9,5.7,5.0,0.0,-0.3,0.0,"",00-0036816
 K,Daniel Carlson,NO,7.6,"",100,8.0,6.6,6.0,0.0,-0.44,0.0,"",00-0034161
-TE,Mason Taylor,NYJ,6.8,"",100,7.1,7.5,4.3,-0.09,-0.13,-0.04,"",00-0040736
 WR,Elic Ayomanor,TEN,7.2,"",100,6.6,5.9,8.9,0.16,0.0,0.45,"",00-0040170
-K,Riley Patterson,BAL,7.5,"",100,7.9,5.7,5.0,0.0,-0.36,0.0,"",00-0036816
+RB,Mike Washington Jr.,LV,6.9,"",100,7.4,4.1,3.9,-0.15,-0.4,0.0,"",00-0040878
+TE,Mason Taylor,NYJ,6.8,"",100,7.1,7.5,4.3,-0.09,-0.1,-0.04,"",00-0040736
+RB,Samaje Perine,CIN,6.8,"",100,6.6,6.7,7.3,-0.12,0.28,0.0,"",00-0033526
 RB,Audric Estime,NO,6.8,"",100,7.0,8.2,8.2,0.05,-0.25,0.0,"",00-0039373
-RB,Samaje Perine,CIN,6.7,"",100,6.6,6.7,7.3,-0.12,0.24,0.0,"",00-0033526
-RB,Keaton Mitchell,LAC,6.7,"",100,6.5,7.4,5.5,0.08,0.1,0.0,"",00-0038454
+RB,Keaton Mitchell,LAC,6.7,"",100,6.5,7.4,5.5,0.08,0.14,0.0,"",00-0038454
 WR,Brian Thomas Jr.,JAX,7.1,"",100,7.2,5.0,4.7,-0.11,0.0,0.0,"",00-0039893
-RB,Justice Hill,BAL,6.6,Questionable,75,8.9,7.2,12.1,0.12,-0.21,0.0,"Questionable, est. return Nov 5",00-0034975
 WR,Malachi Fields,NYG,7.0,"",100,7.0,7.0,9.5,0.07,-0.0,0.0,"",00-0041042
 DEF,Las Vegas Raiders,LV,4.9,"",100,5.8,4.7,3.7,-0.93,-0.03,0.0,"",LV
-DEF,New Orleans Saints,NO,4.8,"",100,6.2,4.2,5.0,0.22,-1.53,0.0,"",NO
+DEF,New Orleans Saints,NO,4.9,"",100,6.2,4.2,5.0,0.22,-1.53,0.0,"",NO
 WR,Myles Price,MIN,6.9,"",100,7.0,8.1,9.6,-0.1,-0.0,0.0,"",00-0040506
-RB,Jeremiyah Love,ARI,6.5,Questionable,75,9.4,8.9,3.7,-0.19,-0.51,0.0,"Questionable, est. return Nov 8 (new ankle injury)",00-0041027
-RB,Chris Rodriguez Jr.,JAX,6.5,"",100,6.4,6.1,8.2,0.0,0.1,0.0,"",00-0038611
 WR,Ladd McConkey,LAC,6.9,Questionable,75,9.4,8.6,5.1,-0.2,0.0,0.0,"Questionable, est. return Nov 22 (questionable (ESPN))",00-0039915
 WR,Kayshon Boutte,HOU,6.9,"",100,7.0,7.0,10.7,-0.05,0.0,0.0,"",00-0038608
 K,Jake Elliott,PHI,7.2,"",100,7.6,5.0,4.0,0.0,-0.35,0.0,"",00-0033787
-TE,Tommy Tremble,CAR,6.4,"",100,6.4,7.3,8.0,-0.04,0.03,0.0,"",00-0037005
+RB,Chris Rodriguez Jr.,JAX,6.5,"",100,6.4,6.1,8.2,0.0,0.1,0.0,"",00-0038611
+RB,Devin Singletary,NYG,6.5,"",100,6.6,6.8,7.2,-0.14,-0.01,0.0,"",00-0035250
 WR,Treylon Burks,WAS,6.8,"",100,6.6,7.4,8.8,0.17,0.0,0.0,"",00-0037742
 WR,Quentin Johnston,LAC,6.8,"",100,7.0,5.9,7.5,-0.2,0.0,0.0,"",00-0038544
+TE,Tommy Tremble,CAR,6.4,"",100,6.4,7.3,8.0,-0.04,0.07,0.0,"",00-0037005
 RB,J.K. Dobbins,DEN,6.3,"",100,5.9,6.9,4.3,0.21,0.2,0.0,"",00-0036158
 WR,Isaiah Williams,NYJ,6.6,"",100,6.5,7.2,7.3,0.18,-0.0,-0.04,"",00-0039451
-TE,Gunnar Helm,TEN,6.1,"",100,5.5,5.4,8.8,-0.02,0.39,0.22,"",00-0040584
 QB,Fernando Mendoza,LV,14.3,"",100,14.3,13.9,8.1,0.01,-0.0,0.0,"",00-0041562
-RB,Jordan Mason,MIN,6.0,"",100,6.1,6.6,4.7,-0.11,-0.03,0.0,"",00-0037525
 WR,Zavion Thomas,CHI,6.4,"",100,5.8,5.3,4.8,0.14,0.0,0.45,"",00-0041051
-TE,Evan Engram,DEN,6.0,"",100,5.5,4.4,2.8,0.25,0.2,0.0,"",00-0033881
+TE,Gunnar Helm,TEN,6.1,"",100,5.5,5.4,8.8,-0.02,0.39,0.22,"",00-0040584
+RB,Jordan Mason,MIN,6.0,"",100,6.1,6.6,4.7,-0.11,-0.07,0.0,"",00-0037525
 RB,Seth McGowan,IND,6.0,"",100,6.3,7.6,11.5,0.02,-0.36,0.0,"",00-0041125
-TE,Darnell Washington,PIT,5.9,"",100,6.1,7.1,7.1,-0.24,0.01,0.0,"",00-0038558
-TE,Oronde Gadsden II,LAC,5.9,Sleeper: Questionable,100,5.8,4.9,5.2,0.01,0.1,0.0,Sleeper: Questionable,00-0040189
 WR,Tre Harris,LAC,6.3,"",100,6.5,7.6,7.8,-0.2,0.0,0.0,"",00-0040727
 QB,Cam Ward,TEN,14.1,"",100,13.4,13.3,17.0,0.66,0.0,0.0,"",00-0040676
-TE,Foster Moreau,HOU,5.8,"",100,5.3,6.0,6.2,0.1,0.37,0.0,"",00-0034981
+TE,Evan Engram,DEN,6.0,"",100,5.5,4.4,2.8,0.25,0.2,0.0,"",00-0033881
+TE,Oronde Gadsden II,LAC,5.9,Sleeper: Questionable,100,5.8,4.9,5.2,0.01,0.14,0.0,Sleeper: Questionable,00-0040189
 QB,Jacoby Brissett,BAL,14.0,Fill-in starter,100,14.0,13.7,10.6,0.05,-0.0,0.0,"Fill-in starter, until Lamar Jackson returns, est. return Dec 27",00-0033119
-TE,Kenyon Sadiq,NYJ,5.8,"",100,6.0,5.6,4.5,-0.09,-0.13,-0.04,"",00-0041032
-WR,Tez Johnson,TB,6.2,"",100,5.7,5.6,7.8,0.1,-0.0,0.32,"",00-0040237
+TE,Darnell Washington,PIT,5.9,"",100,6.1,7.1,7.1,-0.24,0.01,0.0,"",00-0038558
 WR,Marvin Mims Jr.,DEN,6.1,"",100,5.8,4.8,7.7,0.32,0.0,0.0,"",00-0038976
+TE,Foster Moreau,HOU,5.8,"",100,5.3,6.0,6.2,0.1,0.37,0.0,"",00-0034981
+TE,Kenyon Sadiq,NYJ,5.8,"",100,6.0,5.6,4.5,-0.09,-0.1,-0.04,"",00-0041032
 WR,Tank Dell,HOU,6.1,"",100,6.1,10.6,10.6,-0.05,0.0,0.0,"",00-0038977
 QB,Justin Herbert,LAC,13.9,"",100,13.6,10.8,11.5,0.33,0.0,0.0,"",00-0036355
 WR,Adonai Mitchell,NYJ,6.0,Questionable,75,7.9,9.6,12.0,0.18,-0.0,-0.05,"Questionable, est. return Nov 15 (knee, final wk10 report)",00-0039890
 TE,Nate Boerkircher,JAX,5.6,"",100,5.6,4.7,6.8,-0.1,0.1,0.0,"",00-0041503
 RB,Ty Johnson,BUF,5.5,"",100,5.3,5.8,4.1,0.04,0.23,0.0,"",00-0035537
 RB,Tyjae Spears,TEN,5.5,Questionable,75,6.5,4.4,5.1,0.45,0.39,0.0,"Questionable, est. return Nov 15 (knee, final wk10 report (Full Fri))",00-0039032
-TE,Drew Sample,CIN,5.4,"",100,4.5,5.7,7.5,0.73,0.24,0.0,"",00-0035631
-RB,Bam Knight,ARI,5.4,"",100,6.1,4.5,4.0,-0.19,-0.51,0.0,"",00-0037157
 WR,Elijah Moore,PHI,5.8,"",100,2.9,1.9,1.9,-0.11,-0.0,3.05,"",00-0036980
+RB,Bam Knight,ARI,5.4,"",100,6.1,4.5,4.0,-0.19,-0.51,0.0,"",00-0037157
+TE,Drew Sample,CIN,5.5,"",100,4.5,5.7,7.5,0.73,0.28,0.0,"",00-0035631
 WR,Jordan Watkins,SF,5.8,"",100,6.2,9.1,11.4,-0.39,-0.0,0.0,"",00-0040172
-DEF,Washington Commanders,WAS,3.6,"",100,6.0,5.6,9.0,-1.24,-1.25,0.0,"",WAS
+WR,Tez Johnson,TB,5.7,"",100,5.7,5.6,7.8,0.1,-0.0,-0.12,"",00-0040237
 WR,Rashod Bateman,BAL,5.6,"",100,5.8,6.3,4.0,-0.11,-0.0,0.0,"",00-0036550
 WR,Reggie Virgil,ARI,5.6,"",100,4.0,2.8,2.8,-0.09,-0.0,1.78,"",00-0041070
-TE,James Mitchell,DAL,5.2,"",100,3.3,6.0,6.0,-0.16,0.33,1.69,"",00-0037282
-TE,Marlin Klein,HOU,5.2,"",100,4.7,2.6,2.6,0.1,0.37,0.0,"",00-0041472
-DEF,New York Giants,NYG,3.5,"",100,5.9,6.3,7.0,-1.63,-0.83,0.0,"",NYG
-TE,Greg Dulcich,MIA,5.2,"",100,5.7,6.6,3.9,-0.3,-0.21,0.0,"",00-0037252
 DEF,Arizona Cardinals,ARI,3.5,"",100,5.4,2.0,2.0,-1.4,-0.57,0.0,"",ARI
+DEF,New York Giants,NYG,3.5,"",100,5.9,6.3,7.0,-1.63,-0.83,0.0,"",NYG
+DEF,Washington Commanders,WAS,3.4,"",100,6.0,5.6,9.0,-1.24,-1.36,0.0,"",WAS
+TE,Marlin Klein,HOU,5.2,"",100,4.7,2.6,2.6,0.1,0.37,0.0,"",00-0041472
+TE,James Mitchell,DAL,5.2,"",100,3.3,6.0,6.0,-0.16,0.33,1.67,"",00-0037282
+TE,Greg Dulcich,MIA,5.2,"",100,5.7,6.6,3.9,-0.3,-0.21,0.0,"",00-0037252
 RB,Jaylen Wright,MIA,5.1,"",100,5.2,5.1,6.4,0.12,-0.21,0.0,"",00-0039874
-TE,Zach Ertz,PHI,5.0,"",100,5.4,1.7,1.7,-0.13,-0.2,0.0,"",00-0030061
 WR,Josh Cameron,JAX,5.4,"",100,5.5,7.4,8.3,-0.11,0.0,0.0,"",00-0041100
+TE,Zach Ertz,PHI,5.0,"",100,5.4,1.7,1.7,-0.13,-0.2,0.0,"",00-0030061
 TE,Noah Gray,KC,4.9,"",100,4.3,4.6,4.4,0.35,0.3,0.0,"",00-0036637
 RB,Ray Davis,BUF,4.9,"",100,4.6,3.3,1.9,0.04,0.23,0.0,"",00-0039875
-DEF,Indianapolis Colts,IND,3.1,"",100,5.3,3.2,3.7,-1.05,-1.22,0.0,"",IND
 WR,Isaac TeSlaa,DET,5.2,"",100,5.0,5.2,4.6,-0.22,-0.0,0.45,"",00-0040669
-TE,Noah Fant,NO,4.7,"",100,4.9,5.0,1.8,0.12,-0.25,0.0,"",00-0035644
 WR,Devin Duvernay,ARI,5.2,"",100,4.3,3.7,6.2,-0.09,-0.0,1.01,"",00-0036331
 WR,KaVontae Turpin,DAL,5.2,Questionable,75,6.5,6.2,4.0,0.35,0.0,0.0,"Questionable, est. return Nov 8",00-0037801
+DEF,Indianapolis Colts,IND,3.1,"",100,5.3,3.2,3.7,-1.05,-1.22,0.0,"",IND
 WR,Demarcus Robinson,SF,5.1,"",100,5.5,8.2,8.2,-0.39,-0.0,0.0,"",00-0032775
-TE,Will Dissly,LAC,4.6,Sleeper: Questionable,100,4.5,,,0.01,0.1,0.0,Sleeper: Questionable,00-0034159
-RB,Emari Demercado,HOU,4.4,"",100,3.8,1.8,2.2,0.31,0.37,0.0,"",00-0038705
+TE,Noah Fant,NO,4.7,"",100,4.9,5.0,1.8,0.12,-0.25,0.0,"",00-0035644
+TE,Will Dissly,LAC,4.6,Sleeper: Questionable,100,4.5,,,0.01,0.14,0.0,Sleeper: Questionable,00-0034159
 WR,John Metchie III,CAR,4.8,"",100,4.9,4.9,3.9,-0.07,0.0,0.0,"",00-0037614
 WR,Calvin Ridley,TEN,4.8,"",100,4.3,2.5,2.4,0.16,0.0,0.38,"",00-0034837
-TE,Dawson Knox,BUF,4.3,"",100,4.0,3.2,3.7,0.08,0.23,0.0,"",00-0035689
-TE,Gavin Bartholomew,MIN,4.3,"",100,4.0,6.2,7.9,-0.11,-0.03,0.5,"",00-0040215
+RB,Emari Demercado,HOU,4.4,"",100,3.8,1.8,2.2,0.31,0.37,0.0,"",00-0038705
 WR,Ja'Kobi Lane,BAL,4.7,"",100,4.8,4.5,3.8,-0.11,-0.0,0.0,"",00-0040870
+WR,Marvin Harrison Jr.,HOU,4.7,Questionable,75,6.3,5.4,6.0,-0.05,0.0,0.0,"Questionable, est. return Nov 19 (Harrison (hamstring) was a non-participant in Tuesday's practice. (ESPN))",00-0039849
 DEF,Tennessee Titans,TEN,2.6,"",100,5.5,5.4,2.3,-1.19,-1.77,0.0,"",TEN
-WR,Marvin Harrison Jr.,HOU,4.7,Questionable,75,6.3,5.4,6.0,-0.05,0.0,0.0,"Questionable, est. return Nov 19 (Harrison (hamstring) was estimated as a non-participant on Monday's practice report. (ESPN))",00-0039849
-DEF,Miami Dolphins,MIA,2.6,"",100,5.4,3.7,7.7,-1.4,-1.41,0.0,"",MIA
 WR,Troy Franklin,DEN,4.6,"",100,4.3,2.4,2.5,0.32,0.0,0.0,"",00-0039868
-TE,Elijah Higgins,ARI,4.1,"",100,4.4,5.0,3.6,0.28,-0.51,0.0,"",00-0039041
+DEF,Miami Dolphins,MIA,2.5,"",100,5.3,3.7,7.7,-1.4,-1.41,0.0,"",MIA
+TE,Dawson Knox,BUF,4.3,"",100,4.0,3.2,3.7,0.08,0.23,0.0,"",00-0035689
+TE,Gavin Bartholomew,MIN,4.3,"",100,4.0,6.2,7.9,-0.11,-0.07,0.5,"",00-0040215
 RB,Ameer Abdullah,JAX,4.1,"",100,4.0,3.5,3.6,0.0,0.1,0.0,"",00-0032104
-RB,Roschon Johnson,CHI,4.1,"",100,3.2,4.6,1.7,0.46,0.38,0.0,"",00-0039021
 WR,Jalen Tolbert,MIA,4.5,"",100,4.4,4.5,6.0,0.11,-0.0,0.0,"",00-0037666
+TE,Elijah Higgins,ARI,4.1,"",100,4.4,5.0,3.6,0.28,-0.51,0.0,"",00-0039041
 WR,Darnell Mooney,NYG,4.4,"",100,4.4,3.8,4.2,0.07,-0.0,0.0,"",00-0036309
+RB,Roschon Johnson,CHI,4.1,"",100,3.2,4.6,1.7,0.46,0.38,0.0,"",00-0039021
 QB,J.J. McCarthy,NYG,12.3,"",100,12.7,12.7,11.5,-0.45,-0.0,0.0,"",00-0039923
 WR,Barion Brown,NO,4.4,"",100,4.5,5.6,7.9,-0.09,-0.0,0.0,"",00-0041099
 WR,Van Jefferson,WAS,4.4,"",100,4.2,8.4,8.4,0.17,0.0,0.0,"",00-0036415
-TE,Ben Sinnott,WAS,3.9,"",100,3.4,4.0,4.7,0.31,0.14,0.0,"",00-0039912
-RB,Sean Tucker,TB,3.8,"",100,4.2,4.9,5.2,-0.23,-0.1,-0.06,"",00-0038951
 WR,Jalen Nailor,LV,4.2,"",100,4.3,4.1,5.9,-0.11,-0.0,0.0,"",00-0037291
-TE,Nate Adkins,DEN,3.8,"",100,3.3,4.8,2.8,0.25,0.2,0.0,"",00-0038783
-TE,Charlie Kolar,LAC,3.8,"",100,3.6,4.0,4.3,0.01,0.1,0.0,"",00-0038046
+TE,Ben Sinnott,WAS,3.9,"",100,3.4,4.0,4.7,0.31,0.17,0.0,"",00-0039912
 WR,Chris Moore,BAL,4.2,"",100,4.3,6.9,5.5,-0.11,-0.0,0.0,"",00-0032398
+RB,Sean Tucker,TB,3.8,"",100,4.2,4.9,5.2,-0.23,-0.15,-0.06,"",00-0038951
+TE,Charlie Kolar,LAC,3.8,"",100,3.6,4.0,4.3,0.01,0.14,0.0,"",00-0038046
+TE,Nate Adkins,DEN,3.8,"",100,3.3,4.8,2.8,0.25,0.2,0.0,"",00-0038783
 WR,Xavier Legette,CAR,4.1,Questionable,75,5.5,5.2,5.2,-0.07,0.0,0.0,"Questionable, est. return Nov 15 (knee, final wk10 report (Full Fri))",00-0039342
 WR,Theo Wease Jr.,LAC,4.1,"",100,4.3,2.2,2.2,-0.2,0.0,0.0,"",00-0040311
 WR,Kaden Wetjen,PIT,4.0,"",100,4.0,3.9,3.8,-0.02,0.0,0.0,"",00-0041397
-TE,Jack Endries,CIN,3.5,"",100,2.5,3.3,3.3,0.73,0.24,0.0,"",00-0041116
-TE,Tyler Conklin,DET,3.5,"",100,3.7,1.0,1.0,-0.04,-0.11,0.0,"",00-0034270
 WR,Jack Bech,LV,3.9,"",100,4.1,5.2,3.1,-0.11,-0.0,0.0,"",00-0040729
-TE,Josh Cuevas,BAL,3.5,"",100,3.6,4.5,3.1,0.1,-0.21,0.0,"",00-0040887
+TE,Jack Endries,CIN,3.5,"",100,2.5,3.3,3.3,0.73,0.28,0.0,"",00-0041116
+WR,Ted Hurst III,TB,3.8,"",100,3.8,4.2,0.0,0.1,-0.0,-0.08,"",00-0041048
+TE,Josh Cuevas,BAL,3.5,"",100,3.6,4.5,3.1,0.1,-0.17,0.0,"",00-0040887
+TE,Tyler Conklin,DET,3.5,"",100,3.7,1.0,1.0,-0.04,-0.13,0.0,"",00-0034270
+WR,Luke McCaffrey,WAS,3.7,"",100,3.5,2.8,2.9,0.17,0.0,0.0,"",00-0039355
 TE,Daniel Bellinger,TEN,3.4,"",100,3.0,2.7,5.5,-0.02,0.39,0.0,"",00-0038115
 TE,Eli Stowers,PHI,3.4,"",100,3.7,2.8,2.8,-0.13,-0.2,0.0,"",00-0041483
-WR,Ted Hurst III,TB,3.7,"",100,3.8,4.2,0.0,0.1,-0.0,-0.16,"",00-0041048
-TE,Ian Thomas,LV,3.3,"",100,3.4,3.9,2.0,0.33,-0.4,0.0,"",00-0034365
-TE,Theo Johnson,NYG,3.3,Questionable,75,4.5,3.5,5.1,-0.16,-0.01,0.0,"Questionable, est. return Nov 8 (practiced Monday)",00-0039847
-WR,Luke McCaffrey,WAS,3.7,"",100,3.5,2.8,2.9,0.17,0.0,0.0,"",00-0039355
 WR,Gabe Davis,BUF,3.7,Sleeper: Questionable,100,4.0,,,-0.31,0.0,0.0,Sleeper: Questionable,00-0036196
 WR,Cody White,LV,3.7,"",100,3.8,5.3,1.5,-0.11,-0.0,0.0,"",00-0035891
-TE,Teagan Quitoriano,ARI,3.2,"",100,3.4,8.6,8.6,0.28,-0.51,0.0,"",00-0037277
 WR,Simi Fehoko,ARI,3.6,"",100,1.8,0.7,1.9,-0.09,-0.0,1.94,"",00-0036646
 WR,Greg Dortch,BUF,3.6,"",100,3.9,3.6,2.8,-0.31,0.0,0.0,"",00-0035500
-RB,Trevor Etienne,CAR,3.2,"",100,3.3,3.4,2.1,-0.17,0.03,0.0,"",00-0040644
+TE,Ian Thomas,LV,3.3,"",100,3.4,3.9,2.0,0.33,-0.4,0.0,"",00-0034365
 QB,Daniel Jones,IND,11.4,"",100,11.4,8.7,7.3,0.03,-0.0,0.0,"",00-0035710
+TE,Theo Johnson,NYG,3.3,Questionable,75,4.5,3.5,5.1,-0.16,-0.01,0.0,"Questionable, est. return Nov 8 (practiced Monday)",00-0039847
 WR,Ashton Dulin,IND,3.6,"",100,3.4,4.8,7.2,0.15,-0.0,0.0,"",00-0035021
-TE,Brevyn Spann-Ford,DAL,3.1,"",100,2.9,3.2,4.9,-0.16,0.33,0.0,"",00-0039530
-TE,Adam Trautman,DEN,3.1,"",100,2.6,2.3,2.8,0.25,0.2,0.0,"",00-0036422
+RB,Trevor Etienne,CAR,3.2,"",100,3.3,3.4,2.1,-0.17,0.07,0.0,"",00-0040644
+TE,Teagan Quitoriano,ARI,3.2,"",100,3.4,8.6,8.6,0.28,-0.51,0.0,"",00-0037277
 WR,Kevin Coleman Jr.,MIA,3.4,"",100,3.3,4.8,6.9,0.11,-0.0,0.0,"",00-0041529
-TE,Sam Roush,CHI,3.0,"",100,2.6,1.8,1.4,-0.05,0.38,0.0,"",00-0041558
 WR,Harrison Wallace III,ARI,3.4,"",100,1.7,2.7,2.7,-0.09,-0.0,1.78,"",00-0041368
 WR,Jauan Jennings,MIN,3.4,Questionable,75,4.6,1.9,2.8,-0.1,-0.0,0.0,"Questionable, est. return Nov 22 (questionable (ESPN))",00-0036259
-QB,Baker Mayfield,TB,11.2,Questionable,75,14.1,9.9,5.3,0.85,-0.0,0.0,"Questionable, est. return Nov 22 (The Buccaneers appear to be preparing for the possibility of Mayfield (foot) being sidelined for Sunday's game against the Lions, after the team signe (ESPN))",00-0034855
-TE,Mitchell Evans,CAR,2.9,"",100,2.9,3.0,2.7,-0.04,0.03,0.0,"",00-0040187
-TE,Matthew Hibner,BAL,2.9,"",100,3.0,3.2,0.5,0.1,-0.21,0.0,"",00-0040879
-TE,Jeremy Ruckert,NYJ,2.9,"",100,3.1,3.8,5.0,-0.09,-0.13,-0.02,"",00-0037805
+QB,Baker Mayfield,TB,11.2,Questionable,75,14.1,9.9,5.3,0.85,-0.0,0.0,"Questionable, est. return Nov 22 (Mayfield (foot) ""seems to be trending"" toward sitting out Sunday's game against the Lions, with Jalon Daniels likely to draw the Week 11 start, Ian Ra (ESPN))",00-0034855
+TE,Brevyn Spann-Ford,DAL,3.1,"",100,2.9,3.2,4.9,-0.16,0.33,0.0,"",00-0039530
+TE,Adam Trautman,DEN,3.1,"",100,2.6,2.3,2.8,0.25,0.2,0.0,"",00-0036422
+TE,Sam Roush,CHI,3.0,"",100,2.6,1.8,1.4,-0.05,0.38,0.0,"",00-0041558
 WR,Jahdae Walker,CHI,3.3,"",100,2.0,1.2,0.0,0.14,0.0,1.11,"",00-0040277
+TE,Mitchell Evans,CAR,3.0,"",100,2.9,3.0,2.7,-0.04,0.07,0.0,"",00-0040187
+TE,Matthew Hibner,BAL,2.9,"",100,3.0,3.2,0.5,0.1,-0.17,0.0,"",00-0040879
+TE,Jeremy Ruckert,NYJ,2.9,"",100,3.1,3.8,5.0,-0.09,-0.1,-0.02,"",00-0037805
 WR,Devontez Walker,BAL,3.1,"",100,3.2,3.5,3.9,-0.11,-0.0,0.0,"",00-0039792
 WR,Laquon Treadwell,IND,3.1,"",100,2.9,4.9,4.7,0.15,-0.0,0.0,"",00-0032951
 WR,KeAndre Lambert-Smith,LAC,3.1,"",100,3.3,4.1,4.1,-0.2,0.0,0.0,"",00-0040184
 WR,Britain Covey,PHI,3.0,Questionable,75,1.5,2.1,2.8,-0.11,-0.0,2.71,"Questionable, est. return Nov 22 (questionable (ESPN))",00-0037132
-RB,Jordan James,SF,2.6,"",100,2.9,3.8,4.6,-0.2,-0.14,0.0,"",00-0040177
-RB,Dylan Laube,LV,2.5,"",100,3.1,4.9,7.2,-0.15,-0.4,0.0,"",00-0039407
 WR,Ray-Ray McCloud,CHI,3.0,Sleeper: Questionable,100,2.7,,,0.14,0.0,0.15,Sleeper: Questionable,00-0034407
 WR,Cyrus Allen,KC,2.9,"",100,3.0,3.5,5.7,-0.1,0.0,0.0,"",00-0040890
-RB,Anthony Tyus III,CAR,2.5,"",100,2.6,5.1,4.1,-0.17,0.03,0.0,"",00-0040394
-TE,John Bates,WAS,2.5,"",100,2.0,1.3,0.5,0.31,0.14,0.0,"",00-0036628
-TE,Brock Wright,DET,2.5,"",100,2.6,1.9,2.3,-0.04,-0.11,0.0,"",00-0036754
-TE,Oscar Delp,NO,2.5,"",100,2.6,1.0,1.4,0.12,-0.25,0.0,"",00-0041041
-RB,Kene Nwangwu,NYJ,2.4,"",100,2.6,3.1,3.5,0.02,-0.13,-0.01,"",00-0036842
+RB,Dylan Laube,LV,2.5,"",100,3.1,4.9,7.2,-0.15,-0.4,0.0,"",00-0039407
+RB,Jordan James,SF,2.5,"",100,2.9,3.8,4.6,-0.2,-0.17,0.0,"",00-0040177
 WR,Deion Burks,IND,2.9,"",100,2.7,2.3,1.1,0.15,-0.0,0.0,"",00-0041132
-RB,Isaiah Davis,NYJ,2.4,"",100,2.6,2.1,1.5,0.02,-0.13,-0.01,"",00-0039798
-TE,Jackson Hawes,BUF,2.4,"",100,2.1,0.6,1.2,0.08,0.23,0.0,"",00-0040194
-RB,Sione Vaki,DET,2.4,Questionable,75,3.6,3.6,5.9,-0.32,-0.11,0.0,"Questionable, est. return Nov 15 (ankle, final wk10 report (Limited Fri))",00-0039364
-RB,DJ Giddens,IND,2.4,"",100,2.7,4.3,4.3,0.02,-0.36,0.0,"",00-0040179
+RB,Anthony Tyus III,CAR,2.5,"",100,2.6,5.1,4.1,-0.17,0.07,0.0,"",00-0040394
+RB,Kene Nwangwu,NYJ,2.5,"",100,2.6,3.1,3.5,0.02,-0.1,-0.01,"",00-0036842
 WR,Mitchell Tinsley,CIN,2.8,"",100,2.8,3.7,3.7,0.04,0.0,0.0,"",00-0038839
-TE,Cade Stover,HOU,2.4,"",100,1.9,1.2,1.1,0.1,0.37,0.0,"",00-0039359
-RB,Rasheen Ali,BAL,2.4,"",100,2.4,2.2,4.3,0.12,-0.21,0.0,"",00-0039796
+RB,Isaiah Davis,NYJ,2.5,"",100,2.6,2.1,1.5,0.02,-0.1,-0.01,"",00-0039798
+TE,John Bates,WAS,2.5,"",100,2.0,1.3,0.5,0.31,0.17,0.0,"",00-0036628
 WR,Chris Bell,MIA,2.8,Questionable,75,3.6,3.6,4.1,0.11,-0.0,0.0,"Questionable, est. return Nov 22 (questionable (ESPN))",00-0041525
-WR,Kameron Johnson,TB,2.7,"",100,2.3,2.1,1.5,0.1,-0.0,0.32,"",00-0039589
-TE,Anthony Firkser,DET,2.2,Sleeper: Questionable,100,2.3,,,-0.04,-0.11,0.0,Sleeper: Questionable,00-0033455
+TE,Oscar Delp,NO,2.5,"",100,2.6,1.0,1.4,0.12,-0.25,0.0,"",00-0041041
+RB,Rasheen Ali,BAL,2.4,"",100,2.4,2.2,4.3,0.12,-0.17,0.0,"",00-0039796
+TE,Brock Wright,DET,2.4,"",100,2.6,1.9,2.3,-0.04,-0.13,0.0,"",00-0036754
+RB,DJ Giddens,IND,2.4,"",100,2.7,4.3,4.3,0.02,-0.36,0.0,"",00-0040179
+RB,Sione Vaki,DET,2.4,Questionable,75,3.6,3.6,5.9,-0.32,-0.13,0.0,"Questionable, est. return Nov 15 (ankle, final wk10 report (Limited Fri))",00-0039364
+TE,Jackson Hawes,BUF,2.4,"",100,2.1,0.6,1.2,0.08,0.23,0.0,"",00-0040194
+TE,Cade Stover,HOU,2.4,"",100,1.9,1.2,1.1,0.1,0.37,0.0,"",00-0039359
 WR,LaJohntay Wester,BAL,2.6,"",100,2.7,2.8,2.2,-0.11,-0.0,0.0,"",00-0040075
-TE,Grant Calcaterra,PHI,2.1,"",100,2.4,0.0,0.0,-0.13,-0.2,0.0,"",00-0037086
 WR,Colbie Young,CIN,2.5,"",100,2.5,1.4,1.4,0.04,0.0,0.0,"",00-0041069
-TE,Kylen Granson,TEN,2.1,"",100,1.7,0.0,0.0,-0.02,0.39,0.0,"",00-0036876
 WR,Xavier Weaver,ARI,2.5,Sleeper: Questionable,100,0.8,,,-0.09,-0.0,1.78,Sleeper: Questionable,00-0039521
 WR,Camden Brown,DAL,2.5,"",100,2.1,3.4,3.4,0.35,0.0,0.0,"",00-0040930
-RB,LeQuint Allen Jr.,JAX,2.0,"",100,1.9,0.4,0.0,0.0,0.1,0.0,"",00-0040238
+TE,Anthony Firkser,DET,2.2,Sleeper: Questionable,100,2.3,,,-0.04,-0.13,0.0,Sleeper: Questionable,00-0033455
 WR,Brenen Thompson,LAC,2.4,Questionable,75,3.5,2.3,2.3,-0.2,0.0,0.0,"Questionable, est. return Nov 22 (Thompson (hamstring) is inactive for Monday night's game against the Ravens. (ESPN))",00-0041550
+TE,Grant Calcaterra,PHI,2.1,"",100,2.4,0.0,0.0,-0.13,-0.2,0.0,"",00-0037086
+TE,Kylen Granson,TEN,2.1,"",100,1.7,0.0,0.0,-0.02,0.39,0.0,"",00-0036876
+RB,LeQuint Allen Jr.,JAX,2.0,"",100,1.9,0.4,0.0,0.0,0.1,0.0,"",00-0040238
+WR,Anthony Gould,IND,2.3,Questionable,65,3.4,2.8,3.3,0.15,-0.0,0.0,"Questionable, est. return Nov 19 (The Colts listed Gould (toe) as a limited participant in Tuesday's walk-through practice. (ESPN))",00-0039816
+WR,Kameron Johnson,TB,2.3,"",100,2.3,2.1,1.5,0.1,-0.0,-0.05,"",00-0039589
 TE,Luke Schoonmaker,DAL,2.0,Questionable,75,2.5,2.0,2.0,-0.16,0.33,0.0,"Questionable, est. return Nov 8",00-0038547
 TE,Jake Briningstool,KC,2.0,"",100,1.3,1.3,2.0,0.35,0.3,0.0,"",00-0040081
-TE,Payne Durham,TB,1.9,"",100,1.4,0.5,0.5,0.69,-0.1,-0.03,"",00-0039050
-TE,Tanner Koziol,JAX,1.9,"",100,1.9,2.4,2.4,-0.1,0.1,0.0,"",00-0041084
-WR,Anthony Gould,IND,2.3,Questionable,65,3.4,2.8,3.3,0.15,-0.0,0.0,"Questionable, est. return Nov 19 (Gould (toe) was estimated as limited in Monday's walkthrough practice. (ESPN))",00-0039816
 RB,Gregory Desrosiers,NYG,1.9,"",100,2.0,2.5,2.5,-0.14,-0.01,0.0,"",00-0041376
-TE,Max Bredeson,MIN,1.8,"",100,2.0,0.0,0.0,-0.11,-0.03,0.0,"",00-0041081
-RB,Robert Henry Jr.,WAS,1.8,"",100,1.6,0.4,0.4,0.01,0.14,0.0,"",00-0041178
+TE,Tanner Koziol,JAX,1.9,"",100,1.9,2.4,2.4,-0.1,0.1,0.0,"",00-0041084
 WR,Andre Baccellia,ARI,2.2,Sleeper: Questionable,100,0.5,,,-0.09,-0.0,1.78,Sleeper: Questionable,00-0035876
+TE,Payne Durham,TB,1.9,"",100,1.4,0.5,0.5,0.69,-0.15,-0.03,"",00-0039050
+RB,Robert Henry Jr.,WAS,1.8,"",100,1.6,0.4,0.4,0.01,0.17,0.0,"",00-0041178
 WR,Derius Davis,LAC,2.2,"",100,2.4,2.4,4.6,-0.2,0.0,0.0,"",00-0038573
-TE,Will Mallory,IND,1.7,Questionable,75,2.8,2.0,2.0,-0.15,-0.36,0.0,"Questionable, est. return Nov 19 (Mallory (hamstring) did not participate in Monday's walkthrough practice. (ESPN))",00-0038394
 WR,Bryce Lance,NO,2.1,"",100,2.2,3.1,2.1,-0.09,-0.0,0.0,"",00-0041067
 WR,Nikko Remigio,HOU,2.1,"",100,2.2,2.2,3.5,-0.05,0.0,0.0,"",00-0038519
-RB,Hunter Luepke,DAL,1.7,"",100,1.3,1.2,0.9,0.01,0.33,0.0,"",00-0038738
+TE,Max Bredeson,MIN,1.8,"",100,2.0,0.0,0.0,-0.11,-0.07,0.0,"",00-0041081
 WR,Andrew Armstrong,KC,2.1,"",100,2.2,3.0,3.8,-0.1,0.0,0.0,"",00-0040298
-TE,Will Kacmarek,MIA,1.6,"",100,2.1,1.1,1.0,-0.3,-0.21,0.0,"",00-0041524
 QB,Geno Smith,NYJ,9.9,Questionable,75,13.5,13.6,10.4,-0.35,-0.0,0.0,"Questionable, est. return Nov 22 (Smith underwent tests Monday that didn't reveal a major injury to his left ankle, and he'll continue to be evaluated during the week before the Jets d (ESPN))",00-0030565
-RB,Tahj Brooks,CIN,1.6,"",100,1.5,1.0,1.0,-0.12,0.24,0.0,"",00-0040208
-RB,Scott Matlock,LAC,1.5,"",100,1.4,0.0,0.0,0.08,0.1,0.0,"",00-0038614
+RB,Hunter Luepke,DAL,1.7,"",100,1.3,1.2,0.9,0.01,0.33,0.0,"",00-0038738
+TE,Will Mallory,IND,1.7,Questionable,75,2.8,2.0,2.0,-0.15,-0.36,0.0,"Questionable, est. return Nov 19 (Mallory (hamstring) did not participate in Monday's walkthrough practice. (ESPN))",00-0038394
+RB,Tahj Brooks,CIN,1.6,"",100,1.5,1.0,1.0,-0.12,0.28,0.0,"",00-0040208
 WR,Brandon Smith,PIT,2.0,"",100,2.0,2.6,2.6,-0.02,0.0,0.0,"",00-0036775
+RB,Scott Matlock,LAC,1.6,"",100,1.4,0.0,0.0,0.08,0.14,0.0,"",00-0038614
+TE,Will Kacmarek,MIA,1.6,"",100,2.1,1.1,1.0,-0.3,-0.21,0.0,"",00-0041524
 RB,Lew Nichols III,PIT,1.5,"",100,1.6,1.6,3.1,-0.1,0.01,0.0,"",00-0038409
-TE,Stephen Carlson,CHI,1.5,"",100,1.2,0.0,0.0,-0.05,0.38,0.0,"",00-0035039
-TE,Johnny Mundt,PHI,1.5,"",100,1.8,1.1,0.5,-0.13,-0.2,0.0,"",00-0033246
-RB,Jacob Saylors,DET,1.5,Questionable,75,2.4,2.3,1.5,-0.32,-0.11,0.0,"Questionable, est. return Nov 8",00-0038896
-TE,Hunter Long,ARI,1.4,Questionable,75,2.1,1.0,1.7,0.28,-0.51,0.0,"Questionable, est. return Nov 15 (knee, final wk10 report (Limited Fri))",00-0037004
-RB,Carson Steele,PHI,1.4,Sleeper: Questionable,100,1.6,0.7,0.7,0.08,-0.2,0.0,Sleeper: Questionable,00-0039325
-RB,CJ Donaldson,NO,1.4,Questionable,75,2.1,1.8,3.1,0.05,-0.25,0.0,"Questionable, est. return Nov 22 (questionable (ESPN))",00-0041326
+RB,Jacob Saylors,DET,1.5,Questionable,75,2.4,2.3,1.5,-0.32,-0.13,0.0,"Questionable, est. return Nov 8",00-0038896
 WR,Jonathan Mingo,DAL,1.8,Questionable,75,2.1,2.1,2.7,0.35,0.0,0.0,"Questionable, est. return Nov 22 (questionable (ESPN))",00-0039062
 WR,Tai Felton,MIN,1.8,"",100,1.9,2.7,3.7,-0.1,-0.0,0.0,"",00-0040154
-RB,Kaytron Allen,MIA,1.4,"",100,1.5,1.7,2.0,0.12,-0.21,0.0,"",00-0041096
+RB,Carson Steele,PHI,1.4,Sleeper: Questionable,100,1.6,0.7,0.7,0.08,-0.2,0.0,Sleeper: Questionable,00-0039325
+RB,CJ Donaldson,NO,1.4,Questionable,75,2.1,1.8,3.1,0.05,-0.25,0.0,"Questionable, est. return Nov 22 (questionable (ESPN))",00-0041326
 WR,Jalen Royals,KC,1.8,"",100,1.9,2.4,2.1,-0.1,0.0,0.0,"",00-0040646
+TE,Stephen Carlson,CHI,1.5,"",100,1.2,0.0,0.0,-0.05,0.38,0.0,"",00-0035039
+TE,Johnny Mundt,PHI,1.5,"",100,1.8,1.1,0.5,-0.13,-0.2,0.0,"",00-0033246
+TE,Hunter Long,ARI,1.4,Questionable,75,2.1,1.0,1.7,0.28,-0.51,0.0,"Questionable, est. return Nov 15 (knee, final wk10 report (Limited Fri))",00-0037004
+RB,Kaytron Allen,MIA,1.4,"",100,1.5,1.7,2.0,0.12,-0.21,0.0,"",00-0041096
+WR,Brycen Tremayne,CAR,1.6,"",100,1.7,2.2,0.7,-0.07,0.0,0.0,"",00-0038840
 RB,DJ Herman,MIA,1.2,"",100,1.3,1.6,1.6,0.12,-0.21,0.0,"",00-0041436
 RB,Jaydn Ott,KC,1.2,Questionable,75,1.6,1.0,1.0,-0.21,0.3,0.0,"Questionable, est. return Nov 22 (questionable (ESPN))",00-0040959
-WR,Brycen Tremayne,CAR,1.6,"",100,1.7,2.2,0.7,-0.07,0.0,0.0,"",00-0038840
 TE,Pharaoh Brown,IND,1.2,"",100,1.7,1.7,1.7,-0.15,-0.36,0.0,"",00-0033439
 TE,Brevin Jordan,HOU,1.2,Questionable,75,1.1,0.6,0.3,0.1,0.37,0.0,"Questionable, est. return Nov 19 (questionable (ESPN))",00-0036556
-TE,Bauer Sharp,TB,1.2,"",100,0.6,0.4,1.0,0.69,-0.1,-0.01,"",00-0041094
-TE,Colson Yankoff,WAS,1.1,Questionable,75,1.1,0.6,0.5,0.31,0.14,0.0,"Questionable, est. return Nov 23 (questionable (ESPN))",00-0039686
-RB,Julius Chestnut,TEN,1.1,"",100,0.3,0.0,0.0,0.45,0.39,0.0,"",00-0037594
-TE,Ben Yurosek,MIN,1.1,"",100,1.2,1.8,1.7,-0.11,-0.03,0.0,"",00-0040509
-TE,David Martin-Robinson,TEN,1.1,"",100,0.7,0.0,0.0,-0.02,0.39,0.0,"",00-0039648
 WR,DeAndre Carter,DET,1.5,"",100,1.0,1.5,1.1,-0.22,-0.0,0.73,"",00-0031763
 QB,Joe Milton III,PHI,9.3,"",100,9.7,13.2,13.2,-0.4,-0.0,0.0,"",00-0039398
 WR,Jacob Cowing,SF,1.5,"",100,1.9,1.7,3.5,-0.39,-0.0,0.0,"",00-0039365
 WR,Nick Westbrook-Ikhine,IND,1.5,"",100,1.3,0.0,0.0,0.15,-0.0,0.0,"",00-0036182
+RB,Julius Chestnut,TEN,1.1,"",100,0.3,0.0,0.0,0.45,0.39,0.0,"",00-0037594
 WR,Dante Pettis,SF,1.5,Sleeper: Questionable,100,1.8,,,-0.39,-0.0,0.0,Sleeper: Questionable,00-0034860
+TE,Colson Yankoff,WAS,1.2,Questionable,75,1.1,0.6,0.5,0.31,0.17,0.0,"Questionable, est. return Nov 23 (questionable (ESPN))",00-0039686
+TE,Bauer Sharp,TB,1.1,"",100,0.6,0.4,1.0,0.69,-0.15,-0.01,"",00-0041094
 WR,Jalin Hyatt,NYG,1.4,"",100,1.3,0.0,0.0,0.07,-0.0,0.0,"",00-0038938
+TE,David Martin-Robinson,TEN,1.1,"",100,0.7,0.0,0.0,-0.02,0.39,0.0,"",00-0039648
+TE,Ben Yurosek,MIN,1.0,"",100,1.2,1.8,1.7,-0.11,-0.07,0.0,"",00-0040509
 WR,Dareke Young,LV,1.3,"",100,1.4,2.1,0.7,-0.11,-0.0,0.0,"",00-0037093
 WR,Jared Wayne,MIA,1.3,Questionable,75,1.6,2.1,1.0,0.11,-0.0,0.0,"Questionable, est. return Nov 22 (questionable (ESPN))",00-0038728
 WR,Skyler Bell,BUF,1.2,"",100,1.5,0.0,0.0,-0.31,0.0,0.0,"",00-0041443
@@ -381,21 +380,21 @@ K,Mike Badgley,BUF,0.6,No games yet,15,3.7,,,0.0,0.4,0.0,"",00-0034084
 K,Younghoe Koo,NYG,0.6,No games yet,15,3.9,,,0.0,-0.01,0.0,"",00-0033702
 K,Jude McAtamney,NYG,0.5,No games yet,15,3.3,,,0.0,-0.01,0.0,"",00-0039934
 K,Charlie Smyth,NO,0.2,Practice squad,5,5.1,9.5,9.5,0.0,-0.44,0.0,"",00-0039229
-K,Harrison Mevis,BAL,0.2,Practice squad,5,4.7,6.4,9.0,0.0,-0.36,0.0,"",00-0039498
-K,Tyler Loop,BAL,0.0,Doubtful,0,8.8,8.6,5.0,0.0,-0.36,0.0,"Doubtful, est. return Nov 5 (groin)",00-0040074
+K,Harrison Mevis,BAL,0.2,Practice squad,5,4.7,6.4,9.0,0.0,-0.3,0.0,"",00-0039498
+K,Tyler Loop,BAL,0.0,Doubtful,0,8.8,8.6,5.0,0.0,-0.3,0.0,"Doubtful, est. return Nov 5 (groin)",00-0040074
 QB,Kyle McCord,MIA,7.4,Fill-in starter,100,7.8,12.8,12.8,-0.46,-0.0,0.0,"Fill-in starter, until Malik Willis returns, est. return Dec 13",00-0040014
 QB,Carson Beck,ARI,6.0,"",100,6.3,0.4,0.4,-0.26,-0.0,0.0,"",00-0041561
-QB,Cade Klubnik,NYJ,2.1,Backup QB (depth chart),25,8.3,6.1,6.1,-0.35,-0.0,0.61,"",00-0041056
+QB,Cade Klubnik,NYJ,2.1,Backup QB (depth chart),25,8.3,6.1,6.1,-0.35,-0.0,0.58,"",00-0041056
 QB,Jake Browning,LAC,0.3,Practice squad,5,4.9,,,0.33,0.0,0.0,"",00-0035100
-QB,Cooper Rush,TB,0.2,Practice squad,5,2.6,2.6,2.6,0.85,-0.0,1.29,"",00-0033662
+QB,Cooper Rush,TB,0.2,Practice squad,5,2.6,2.6,2.6,0.85,-0.0,1.28,"",00-0033662
 QB,Nick Mullens,JAX,0.2,Practice squad,5,3.7,,-0.3,0.5,0.0,0.0,"",00-0033319
 QB,Brady Cook,MIA,0.2,Practice squad,5,3.7,,,-0.46,-0.0,0.0,"",00-0040398
 QB,Brett Rypien,LV,0.1,Practice squad,5,2.4,,,0.01,-0.0,0.0,"",00-0034955
 QB,Trey Lance,LAC,0.0,Injured Reserve,0,7.6,,,0.33,0.0,0.0,"Injured Reserve, est. return Nov 16",00-0037012
-QB,Lamar Jackson,BAL,0.0,Injured Reserve,0,18.8,19.8,13.1,0.05,-0.0,0.0,"Injured Reserve, est. return Dec 27 (Jackson (thumb) is ""doing well"" and is expected to be out for ""6-to-10 weeks,"" per head coach Jesse Minter. (ESPN))",00-0034796
-QB,Kyle Allen,BUF,0.0,Backup QB (depth chart),0,2.4,,-0.2,-0.2,0.0,7.25,"",00-0034577
-QB,Riley Leonard,IND,0.0,Sleeper: Out,0,7.8,,,0.03,-0.0,0.0,Sleeper: Out,00-0040206
-QB,Carson Wentz,MIN,0.0,Backup QB (depth chart),0,10.1,7.6,7.6,0.26,-0.0,0.0,"",00-0032950
+QB,Justin Fields,KC,0.0,Backup QB (depth chart),0,14.3,,-1.0,1.28,0.0,0.96,"",00-0036945
+QB,Kyler Murray,MIN,0.0,Out,0,15.0,14.8,17.4,0.26,-0.0,0.0,"Out, est. return Nov 29 (out (ESPN))",00-0035228
+QB,Max Brosmer,MIN,0.0,Sleeper: Out,0,5.0,,2.3,0.26,-0.0,0.0,Sleeper: Out,00-0040494
+QB,Zach Wilson,NO,0.0,Sleeper: Out,0,5.7,,,0.79,-0.0,0.0,Sleeper: Out,00-0037013
 QB,Anthony Richardson,IND,0.0,Backup QB (depth chart),0,11.8,,0.7,0.03,-0.0,0.0,"",00-0039164
-QB,Quinn Ewers,JAX,0.0,Backup QB (depth chart),0,9.9,,0.3,0.5,0.0,0.0,"",00-0040234
-QB,Brandon Allen,TEN,0.0,Backup QB (depth chart),0,5.2,,,0.66,0.0,3.8,"",00-0032434
+QB,Marcus Mariota,WAS,0.0,Backup QB (depth chart),0,13.1,14.6,11.5,0.66,0.0,0.0,"",00-0032268
+QB,Josh Johnson,ARI,0.0,Backup QB (depth chart),0,7.0,,,-0.26,-0.0,1.92,"",00-0026300
