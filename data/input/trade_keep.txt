@@ -1,4 +1,3 @@
 # Players never offered or dropped in trade_finder.py (handcuffs Scott keeps)
 Rico Dowdle
 Emmett Johnson
-Seth McGowan
