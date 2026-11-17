@@ -159,3 +159,7 @@ print(fp, len(res))
 pd.set_option("display.width", 250)
 print(res.head(15).to_string(index=False))
 print(res.sort_values("Min gain", ascending=False).head(15).to_string(index=False))
+
+# rules gate: keep-list / injured players must not appear in the output
+import subprocess
+print(subprocess.run([sys.executable, str(__import__("pathlib").Path(__file__).parent / "check_rules.py"), str(week)], capture_output=True, text=True, env={**os.environ, "PYTHONPATH": "src"}).stdout.strip())

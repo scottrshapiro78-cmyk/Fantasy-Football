@@ -54,6 +54,9 @@ def main():
         for line in l.splitlines():
             if line.startswith("DATA CHECK"):
                 print(line)
+    chk = subprocess.run([sys.executable, "scripts/check_rules.py", str(w + 1)], cwd=ROOT, capture_output=True, text=True,
+                         env={**__import__("os").environ, "PYTHONPATH": str(ROOT / "src")})
+    print(chk.stdout.strip())
     if "--copy-to" in sys.argv:
         dest = Path(sys.argv[sys.argv.index("--copy-to") + 1])
         for p in (DATA / "output").glob(f"*_wk{w + 1}_*.xlsx"):
