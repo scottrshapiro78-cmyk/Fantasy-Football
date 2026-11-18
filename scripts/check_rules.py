@@ -6,7 +6,7 @@ Rules (add new ones here and in docs/rules.md; weekly_refresh.py and trade_finde
  2. Injured players (Out / IR / Doubtful / Out for season) are never offered in a trade.
  3. Every player Scott gave news on (a note containing "Scott" in data/input/news_2026.tsv) carries that status
     in the rankings (his word outranks the feed until a newer official report).
- 5. No stale injury news (return date long past).\n 4. Add/drop plans (check_plan) must fit the Yahoo roster: 1 QB 2 RB 3 WR 1 TE 1 FLEX 1 K 1 DEF + 5 BN (+1 IR),
+ 6. Add/drop plans are tested week by week with byes and injuries: `check_rules.py plan <week> "adds" "drops"`.\n 5. No stale injury news (return date long past).\n 4. Add/drop plans (check_plan) must fit the Yahoo roster: 1 QB 2 RB 3 WR 1 TE 1 FLEX 1 K 1 DEF + 5 BN (+1 IR),
     never leave the lineup without a K, DEF, TE or QB, and never drop a keep-list player.
 """
 import sys
@@ -103,6 +103,45 @@ def check_plan(roster, adds, drops, pos, league="burbs"):
         bad.append("not enough RB/WR to fill the lineup")
     return bad
 
+
+def plan_lineup_check(adds, drops, week, horizon=2):
+    """Rule 6: after the add/drop, each of the next `horizon` weeks must still field a full legal starting lineup from
+    players who are NOT on bye and NOT Out/IR/Doubtful. Returns a list of violations (empty = ok)."""
+    import nflreadpy as nfl, polars as pl
+    ros = pd.read_excel(DATA / "output" / f"ros_2026_wk{week}_burbs.xlsx", sheet_name="Overall").set_index("Player")
+    sch = nfl.load_schedules([2026]).filter(pl.col("game_type") == "REG")
+    cur = [p for p in my_roster(week) if p not in drops] + [a for a in adds if a not in my_roster(week)]
+    slots = load_leagues()["burbs"]["roster"]
+    bad = [f"cannot drop keep-list player {p}" for p in drops if p in keep_list()]
+    cap = sum(v for k, v in slots.items() if k != "IR")
+    if len(cur) > cap:
+        bad.append(f"roster {len(cur)} > {cap} spots")
+    for w in range(week, week + horizon):
+        playing = set(sch.filter(pl.col("week") == w)["home_team"].to_list() + sch.filter(pl.col("week") == w)["away_team"].to_list())
+        ok = {}
+        for p in cur:
+            if p not in ros.index:
+                continue
+            r = ros.loc[p]
+            if r["Team"] in playing and str(r["Status"]) not in OUT:
+                ok.setdefault(r["Pos"], []).append(p)
+        for pos, n in (("QB", 1), ("RB", 2), ("WR", 3), ("TE", 1), ("K", 1), ("DEF", 1)):
+            if len(ok.get(pos, [])) < n:
+                bad.append(f"week {w}: only {len(ok.get(pos, []))} available {pos} (need {n}); byes/injuries counted")
+        flex = len(ok.get("RB", [])) - 2 + len(ok.get("WR", [])) - 3 + len(ok.get("TE", [])) - 1
+        if flex < 1:
+            bad.append(f"week {w}: no player left for FLEX")
+    return bad
+
+
+if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "plan":
+    # python scripts/check_rules.py plan <week> "Add1,Add2" "Drop1,Drop2"
+    wk = int(sys.argv[2]); adds = [x for x in sys.argv[3].split(",") if x]; drops = [x for x in sys.argv[4].split(",") if x]
+    res = plan_lineup_check(adds, drops, wk)
+    for r in res:
+        print("PLAN VIOLATION:", r)
+    print("plan ok" if not res else f"{len(res)} problem(s): do NOT give this advice")
+    sys.exit(1 if res else 0)
 
 if __name__ == "__main__":
     wk = int(sys.argv[1]) if len(sys.argv) > 1 else 11
