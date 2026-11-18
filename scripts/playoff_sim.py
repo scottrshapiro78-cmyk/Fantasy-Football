@@ -52,7 +52,7 @@ SCHED = {9: [(ME, "Who Are You People"), (MC, "Bring the Ruckus"), (GV, "BKs Bal
 # progress, so they are not used)
 WK_OVERRIDE = {}
 if lg != "burbs":
-    SCHED = {}  # no schedule pasted for this league: opponents are drawn at random each week
+    SCHED = {11: [(ME, "Guido")]}  # CBS: only week 11 known (Scott 18 Nov); other opponents drawn at random each week
 # optional scenario for this week, e.g. FORCE="Gin and Jews:W,Gaza Vybz:L"
 import os
 FORCE = dict(x.rsplit(":", 1) for x in os.environ.get("FORCE", "").split(",") if x)
