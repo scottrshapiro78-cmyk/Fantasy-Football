@@ -296,6 +296,10 @@ def project(season: int, thru: int, league: str, fitp: dict | None = None) -> pl
     d = d.with_columns((pl.col(col) + ss * (pl.col("sos_left_new") - pl.col("sos_left"))).alias(col),
                        (ss * pl.col("sos_left_new")).alias("sched_adj"),
                        pl.col("sos_left_new").alias("sos_left")).drop("sos_left_new")
+    # not on any NFL roster this season and no games played (released / unsigned, e.g. Tyreek Hill 2026): his
+    # preseason team is stale, so drop him instead of showing a projection for a team he isn't on (Nov 18 2026)
+    d = d.with_columns(pl.when(pl.col("roster_team").is_null() & (pl.col("n").fill_null(0) == 0) & (pl.col("position") != "DEF"))
+                         .then(pl.lit("gone")).otherwise(pl.col("status")).alias("status"))
     d = d.with_columns(pl.when((pl.col("status") == "active") & (pl.col("n") == 0) & (pl.col("position") != "DEF"))
                          .then(pl.lit("no_games")).otherwise(pl.col("status")).alias("status"))
     manual = DATA / "input" / f"status_{season}.csv"  # news the data doesn't have yet: Player, Status
@@ -508,7 +512,9 @@ def apply_news(d: pl.DataFrame, season: int, thru: int) -> pl.DataFrame:
     live = sleeper_injuries()
     if live is not None:  # live feed first; a pasted report (with return dates) overrides it below
         d = d.join(live, on="player_id", how="left").with_columns(
-            pl.when(pl.col("sl_status").is_in(["IR", "PUP", "Sus", "NFI"])).then(pl.lit("out_long"))
+            # a player on no NFL roster stays gone whatever Sleeper lists (Tyreek Hill, Nov 18 2026)
+            pl.when(pl.col("status") == "gone").then(pl.lit("gone"))
+              .when(pl.col("sl_status").is_in(["IR", "PUP", "Sus", "NFI"])).then(pl.lit("out_long"))
               .when(pl.col("sl_status").is_in(["Out", "Doubtful"])).then(pl.lit("out_week"))
               .when(pl.col("sl_status") == "Questionable").then(pl.lit("active"))
               .otherwise(pl.col("status")).alias("status"),

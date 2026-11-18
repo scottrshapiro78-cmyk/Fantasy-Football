@@ -62,6 +62,9 @@ last_reg = cfg["regular_season_weeks"][1]
 WEEKS = list(range(week + 1, 18))
 
 roster = pd.read_csv(rpath).fillna("")
+if lg == "burbs":  # confirmed moves since the last pasted rosters (data/input/burbs_my_moves.csv)
+    from ffmodel import ledger
+    roster = ledger.apply(roster)
 # WK_ROSTER: rosters as they stood for this week's games (when testing a trade that starts next week)
 roster_wk = pd.read_csv(os.environ["WK_ROSTER"]).fillna("") if os.environ.get("WK_ROSTER") else roster
 st = pd.read_csv(spath)

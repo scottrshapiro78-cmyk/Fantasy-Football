@@ -32,6 +32,9 @@ MATCH = {"QB": 1.0, "RB": 0.45, "WR": 0.35, "TE": 0.55, "K": 0.0, "DEF": 0.5}
 cfg = load_leagues()[lg]
 slots, flex = cfg["roster"], cfg["flex_eligible"]
 roster = pd.read_csv(rpath).fillna("")
+if lg == "burbs":  # confirmed moves since the last pasted rosters (data/input/burbs_my_moves.csv)
+    from ffmodel import ledger
+    roster = ledger.apply(roster)
 rs = pd.read_excel(out / f"ros_{season}_wk{week}_{lg}.xlsx", sheet_name="Overall")
 w_ = pl.read_parquet(DATA / "processed" / "player_weeks.parquet").filter(pl.col("season") == season, pl.col("week") <= thru)
 eff = defense_effects(w_, f"fpts_{lg}").select("position", "opponent_team", pl.col(f"def_fpts_{lg}").alias("eff")).to_pandas()

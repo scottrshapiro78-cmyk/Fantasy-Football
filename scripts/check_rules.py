@@ -78,16 +78,9 @@ def check_stale(week):
 
 def my_roster(week):
     """Roster ledger: base file + moves in data/input/burbs_my_moves.csv (action,Player,Pos). Single source of truth."""
-    base = pd.read_csv(DATA / "input" / f"burbs_rosters_2026wk{week}.csv").fillna("")
-    cur = [p for p in base[base.Team == "Gin and Jews"].Player]
-    mv = DATA / "input" / "burbs_my_moves.csv"
-    if mv.exists():
-        for r in pd.read_csv(mv).itertuples():
-            if r.action == "drop" and r.Player in cur:
-                cur.remove(r.Player)
-            elif r.action == "add" and r.Player not in cur:
-                cur.append(r.Player)
-    return cur
+    from ffmodel import ledger
+    base = ledger.apply(pd.read_csv(DATA / "input" / f"burbs_rosters_2026wk{week}.csv").fillna(""))
+    return list(base[base.Team == ledger.ME].Player)
 
 
 def check_plan(roster, adds, drops, pos, league="burbs"):

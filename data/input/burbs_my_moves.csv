@@ -1,4 +1,6 @@
-action,Player,Pos
-drop,Keaton Mitchell,RB
-add,Mark Andrews,TE
-drop,Seth McGowan,RB
+action,Player,Pos,Team
+drop,Keaton Mitchell,RB,
+add,Mark Andrews,TE,
+drop,Seth McGowan,RB,
+add,Chig Okonkwo,TE,🙏
+add,Michael Mayer,TE,BKs Ballers
