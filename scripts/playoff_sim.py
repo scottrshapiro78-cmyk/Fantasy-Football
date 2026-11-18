@@ -52,7 +52,13 @@ SCHED = {9: [(ME, "Who Are You People"), (MC, "Bring the Ruckus"), (GV, "BKs Bal
 # progress, so they are not used)
 WK_OVERRIDE = {}
 if lg != "burbs":
-    SCHED = {11: [(ME, "Guido")]}  # CBS: only week 11 known (Scott 18 Nov); other opponents drawn at random each week
+    import csv as _csv  # CBS weeks 11-14 pasted by Scott 18 Nov (data/input/cbs_schedule_2026.csv)
+    SCHED = {}
+    for _r in _csv.DictReader(open(DATA / "input" / "cbs_schedule_2026.csv")):
+        SCHED.setdefault(int(_r["week"]), []).append((_r["team_a"], _r["team_b"]))
+    for _w, _l in SCHED.items():  # the sim expects our own game first, written (ME, opponent)
+        _l.sort(key=lambda x: ME not in x)
+        _l[0] = (ME, _l[0][1] if _l[0][0] == ME else _l[0][0])
 # optional scenario for this week, e.g. FORCE="Gin and Jews:W,Gaza Vybz:L"
 import os
 FORCE = dict(x.rsplit(":", 1) for x in os.environ.get("FORCE", "").split(",") if x)
