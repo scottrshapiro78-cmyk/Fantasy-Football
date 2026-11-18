@@ -18,6 +18,10 @@ the biggest misses each week are the main source of new ideas.
 - WR depth-chart moves (scripts/study_new_starter.py, 2021-25): new starters +0.75 (model ran 0.9 low, n=119); WRs dropped from the starters x0.85 (model ran 1.3 high, n=47, miss 3.16 -> 2.9)
 
 ## Tested and rejected
+- TE targets per game in rest-of-season projections (Nov 18 2026, scripts/study_te_targets.py). Against a points-only
+  baseline it helps (2018-25: miss 2.313 -> 2.252, -2.6%; the Nov 18 "-3.5%" was the same baseline on 2012-25), but
+  against the model's actual formula (2021-25, n=309, which already counts usage through expected points) it makes
+  things worse: 2.046 -> 2.077 (+1.5%); fitted targets weight -0.12. REJECTED. Gesicki's 9.2 stands.
 - ROS value: steadier replacement-level anchor (the anchor's per-game option value x median games of the five players around replacement, so one injured player at replacement can't shift a position; Nov 16 2026, scripts/study_replacement_anchor.py, 2021-25 at weeks 8-11, 20 cases per league): cross-position rank correlation with actual ROS value fell (Burbs 0.660 -> 0.646, CBS 0.673 -> 0.663; better in only 8 and 7 of 20 cases), RB error rose (Burbs 11.5 -> 13.4). Week-to-week steadier (RB top-12 jump 7.2 -> 6.4) but less accurate. Kept as value(robust_base=False)
 - Discounting a player's role when a teammate returns (worse MAE)
 - Expert-rank blend in season (re-test set for Jan 2027 with a full season of weekly ranks)
