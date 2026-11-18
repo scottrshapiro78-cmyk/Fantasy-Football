@@ -47,6 +47,14 @@ def main() -> None:
     print(f"seasons {seasons['season'].min()}-{seasons['season'].max()}, "
           f"Yahoo ID match 2022+: {rate:.1%}")
 
+    from ffmodel import features   # needs the two tables above
+    f = features.build()
+    f.write_parquet(out / "features.parquet")
+    print(f"features: {f.height:,} player-seasons")
+    from ffmodel import dst
+    dst.team_seasons().write_parquet(out / "dst_seasons.parquet")
+    (out.parent / "output").mkdir(exist_ok=True)   # build_ros / build_weekly write here
+
 
 if __name__ == "__main__":
     main()

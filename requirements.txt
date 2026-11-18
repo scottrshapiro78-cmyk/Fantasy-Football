@@ -5,3 +5,8 @@ pandas
 pyyaml
 openpyxl
 pytest
+statsmodels
+scikit-learn
+lightgbm
+xlsxwriter
+numpy

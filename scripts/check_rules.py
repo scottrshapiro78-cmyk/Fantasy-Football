@@ -6,7 +6,9 @@ Rules (add new ones here and in docs/rules.md; weekly_refresh.py and trade_finde
  2. Injured players (Out / IR / Doubtful / Out for season) are never offered in a trade.
  3. Every player Scott gave news on (a note containing "Scott" in data/input/news_2026.tsv) carries that status
     in the rankings (his word outranks the feed until a newer official report).
- 6. Add/drop plans are tested week by week with byes and injuries: `check_rules.py plan <week> "adds" "drops"`.\n 5. No stale injury news (return date long past).\n 4. Add/drop plans (check_plan) must fit the Yahoo roster: 1 QB 2 RB 3 WR 1 TE 1 FLEX 1 K 1 DEF + 5 BN (+1 IR),
+ 6. Add/drop plans are tested week by week with byes and injuries: `check_rules.py plan <week> "adds" "drops"`.
+ 5. No stale injury news (return date long past).
+ 4. Add/drop plans (check_plan) must fit the Yahoo roster: 1 QB 2 RB 3 WR 1 TE 1 FLEX 1 K 1 DEF + 5 BN (+1 IR),
     never leave the lineup without a K, DEF, TE or QB, and never drop a keep-list player.
 """
 import sys
