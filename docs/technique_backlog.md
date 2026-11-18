@@ -18,6 +18,12 @@ the biggest misses each week are the main source of new ideas.
 - WR depth-chart moves (scripts/study_new_starter.py, 2021-25): new starters +0.75 (model ran 0.9 low, n=119); WRs dropped from the starters x0.85 (model ran 1.3 high, n=47, miss 3.16 -> 2.9)
 
 ## Tested and rejected
+- TE targets per game and TE snap share in rest-of-season projections (Nov 18 2026, scripts/study_te_targets.py).
+  Vs a points-only baseline, 2012-25 (n=874): targets -3.5%, snaps -1.1%. Vs the model's own formula over every season
+  its backtest can be built (2019-25, n=421; preseason projections can't be built before 2019): model 2.156,
+  +targets 2.170 (+0.6%), +snaps 2.152 (-0.2%), both 2.164. The model already counts usage through expected points
+  and already beats points+targets (2.16 vs 2.25). REJECTED both. Gesicki's 9.2 stands.
+- ROS value: steadier replacement-level anchor (the anchor's per-game option value x median games of the five players around replacement, so one injured player at replacement can't shift a position; Nov 16 2026, scripts/study_replacement_anchor.py, 2021-25 at weeks 8-11, 20 cases per league): cross-position rank correlation with actual ROS value fell (Burbs 0.660 -> 0.646, CBS 0.673 -> 0.663; better in only 8 and 7 of 20 cases), RB error rose (Burbs 11.5 -> 13.4). Week-to-week steadier (RB top-12 jump 7.2 -> 6.4) but less accurate. Kept as value(robust_base=False)
 - Discounting a player's role when a teammate returns (worse MAE)
 - Expert-rank blend in season (re-test set for Jan 2027 with a full season of weekly ranks)
 - Preseason: team-down correction from last season's team scoring or last season's Vegas implied points (Nov 15 2026, scripts/study_preseason.py, 2021-25 out of sample, drafted pool n=694): miss 2.76 -> 2.78, no gain at any position

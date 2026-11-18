@@ -6,7 +6,9 @@ Rules (add new ones here and in docs/rules.md; weekly_refresh.py and trade_finde
  2. Injured players (Out / IR / Doubtful / Out for season) are never offered in a trade.
  3. Every player Scott gave news on (a note containing "Scott" in data/input/news_2026.tsv) carries that status
     in the rankings (his word outranks the feed until a newer official report).
- 6. Add/drop plans are tested week by week with byes and injuries: `check_rules.py plan <week> "adds" "drops"`.\n 5. No stale injury news (return date long past).\n 4. Add/drop plans (check_plan) must fit the Yahoo roster: 1 QB 2 RB 3 WR 1 TE 1 FLEX 1 K 1 DEF + 5 BN (+1 IR),
+ 6. Add/drop plans are tested week by week with byes and injuries: `check_rules.py plan <week> "adds" "drops"`.
+ 5. No stale injury news (return date long past).
+ 4. Add/drop plans (check_plan) must fit the Yahoo roster: 1 QB 2 RB 3 WR 1 TE 1 FLEX 1 K 1 DEF + 5 BN (+1 IR),
     never leave the lineup without a K, DEF, TE or QB, and never drop a keep-list player.
 """
 import sys
@@ -76,16 +78,9 @@ def check_stale(week):
 
 def my_roster(week):
     """Roster ledger: base file + moves in data/input/burbs_my_moves.csv (action,Player,Pos). Single source of truth."""
-    base = pd.read_csv(DATA / "input" / f"burbs_rosters_2026wk{week}.csv").fillna("")
-    cur = [p for p in base[base.Team == "Gin and Jews"].Player]
-    mv = DATA / "input" / "burbs_my_moves.csv"
-    if mv.exists():
-        for r in pd.read_csv(mv).itertuples():
-            if r.action == "drop" and r.Player in cur:
-                cur.remove(r.Player)
-            elif r.action == "add" and r.Player not in cur:
-                cur.append(r.Player)
-    return cur
+    from ffmodel import ledger
+    base = ledger.apply(pd.read_csv(DATA / "input" / f"burbs_rosters_2026wk{week}.csv").fillna(""))
+    return list(base[base.Team == ledger.ME].Player)
 
 
 def check_plan(roster, adds, drops, pos, league="burbs"):
@@ -143,9 +138,9 @@ def check_ghosts(week):
     d = pd.read_excel(f, sheet_name="Overall")
     ok = ("Injured", "Out", "Backup", "IR", "Suspend")
     z = d[(d["Games Played"].fillna(0) == 0) & (d["ROS PPG"] >= 6) & d.Pos.isin(["RB", "WR", "TE"])]
-    for r in z.itertuples():
-        if not any(k in str(r.Status) for k in ok):
-            out.append(f"{r.Player} ({r.Team}) is ranked at {r._asdict().get('_11', '')} PPG with no 2026 games and no injury label: team/role data unverified")
+    for _, r in z.iterrows():
+        if not any(k in str(r["Status"]) for k in ok):
+            out.append(f"{r['Player']} ({r['Team']}) is ranked at {r['ROS PPG']} PPG with no 2026 games and no injury label: team/role data unverified")
     return out
 
 

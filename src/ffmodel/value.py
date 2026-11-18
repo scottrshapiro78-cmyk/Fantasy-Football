@@ -52,7 +52,7 @@ def option_gain(mu: pl.Expr, repl: pl.Expr, sd: pl.Expr) -> pl.Expr:
 
 
 def value(proj: pl.DataFrame, league_key: str, depth_override: dict | None = None,
-          option: bool = False) -> pl.DataFrame:
+          option: bool = False, robust_base: bool = False) -> pl.DataFrame:
     """proj needs: player_id, player_display_name, position, pred_ppg_<league>, exp_frac."""
     cfg = load_leagues()
     league, vcfg = cfg[league_key], cfg["value"]
@@ -75,6 +75,18 @@ def value(proj: pl.DataFrame, league_key: str, depth_override: dict | None = Non
         # the replacement player himself has some option value; measure everyone above him
         base = {p: (out.filter(pl.col("position") == p).sort(ppg, descending=True)["vorp"].to_list() + [0.0] * 999)[depth[p]]
                 for p in POS}
+        if robust_base:
+            # candidate fix (under test): the anchor's per-game option value times the median games of the five
+            # players around replacement level, so one injured player sitting exactly there can't move the position
+            def _base(p):
+                r = out.filter(pl.col("position") == p).sort(ppg, descending=True)
+                if r.height == 0:
+                    return 0.0
+                i = min(depth[p], r.height - 1)
+                g_i = r["exp_games"][i]
+                per_game = r["vorp"][i] / g_i if g_i else OUTCOME_SD.get(p, 3.0) * 0.3989
+                return per_game * float(r.slice(max(i - 2, 0), 5)["exp_games"].median())
+            base = {p: _base(p) for p in POS}
         out = out.with_columns(pl.col("vorp") - pl.col("position").replace_strict(base, return_dtype=pl.Float64))
     else:
         out = out.with_columns(pl.col("vorp_mean").alias("vorp"))

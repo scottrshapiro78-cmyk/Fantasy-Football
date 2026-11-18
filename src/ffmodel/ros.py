@@ -296,6 +296,10 @@ def project(season: int, thru: int, league: str, fitp: dict | None = None) -> pl
     d = d.with_columns((pl.col(col) + ss * (pl.col("sos_left_new") - pl.col("sos_left"))).alias(col),
                        (ss * pl.col("sos_left_new")).alias("sched_adj"),
                        pl.col("sos_left_new").alias("sos_left")).drop("sos_left_new")
+    # not on any NFL roster this season and no games played (released / unsigned, e.g. Tyreek Hill 2026): his
+    # preseason team is stale, so drop him instead of showing a projection for a team he isn't on (Nov 18 2026)
+    d = d.with_columns(pl.when(pl.col("roster_team").is_null() & (pl.col("n").fill_null(0) == 0) & (pl.col("position") != "DEF"))
+                         .then(pl.lit("gone")).otherwise(pl.col("status")).alias("status"))
     d = d.with_columns(pl.when((pl.col("status") == "active") & (pl.col("n") == 0) & (pl.col("position") != "DEF"))
                          .then(pl.lit("no_games")).otherwise(pl.col("status")).alias("status"))
     manual = DATA / "input" / f"status_{season}.csv"  # news the data doesn't have yet: Player, Status
@@ -508,7 +512,9 @@ def apply_news(d: pl.DataFrame, season: int, thru: int) -> pl.DataFrame:
     live = sleeper_injuries()
     if live is not None:  # live feed first; a pasted report (with return dates) overrides it below
         d = d.join(live, on="player_id", how="left").with_columns(
-            pl.when(pl.col("sl_status").is_in(["IR", "PUP", "Sus", "NFI"])).then(pl.lit("out_long"))
+            # a player on no NFL roster stays gone whatever Sleeper lists (Tyreek Hill, Nov 18 2026)
+            pl.when(pl.col("status") == "gone").then(pl.lit("gone"))
+              .when(pl.col("sl_status").is_in(["IR", "PUP", "Sus", "NFI"])).then(pl.lit("out_long"))
               .when(pl.col("sl_status").is_in(["Out", "Doubtful"])).then(pl.lit("out_week"))
               .when(pl.col("sl_status") == "Questionable").then(pl.lit("active"))
               .otherwise(pl.col("status")).alias("status"),
@@ -522,7 +528,9 @@ def apply_news(d: pl.DataFrame, season: int, thru: int) -> pl.DataFrame:
     feed, _ = injury_feed(season)
     if feed is not None:
         feed = feed.filter(pl.col("Pos").is_in(["QB", "RB", "WR", "TE", "K", "PK"]),
-                           ~pl.col("Note").str.contains("coach's decision|emergency third"))
+                           ~pl.col("Note").str.contains("coach's decision|emergency third"),
+                           # practice-squad injured list: keep the model's practice-squad status (Jawhar Jordan, Nov 2026)
+                           ~pl.col("Note").str.to_lowercase().str.contains("practice squad injured"))
         fk = set(feed["Player"].map_elements(_norm, return_dtype=pl.Utf8).to_list())
         keep = news.filter(pl.col("Note").str.contains("Scott") | ~pl.col("Player").map_elements(_norm, return_dtype=pl.Utf8).is_in(list(fk)))
         kk = set(keep["Player"].map_elements(_norm, return_dtype=pl.Utf8).to_list())
@@ -641,30 +649,85 @@ ESPN_INJ_URL = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/injur
 FEED_MAX_AGE_DAYS = 4
 
 
-def injury_feed(season: int) -> tuple[pl.DataFrame | None, str]:
-    """League-wide injury list WITH expected return dates (ESPN's injuries page): Player, Pos, Return ("Nov 29"),
-    Status, Note. The official report says who is out this week but not for how long; this does.
-    Tried in order: ESPN's API directly (needs site.api.espn.com allowed in the environment's network settings),
-    then data/input/injury_feed_<season>.tsv, which the scheduled news sweep refreshes by reading the same page.
-    Returns (rows or None, description of the source and its age)."""
+ESPN_SITE = "https://site.api.espn.com/apis"
+FEED_POS = ("QB", "RB", "WR", "TE", "PK")
+
+
+def espn_injury_rows() -> list[dict]:
+    """Every QB/RB/WR/TE/PK with an ESPN expected return date: Team, Player, Pos, Return ("Nov 29"), Status, Note.
+    ESPN's league injuries endpoint only lists each team's 25 most recent injury updates, so long-term IR players
+    (e.g. a back on IR since October) drop off it. So: take that list, then read all 32 team rosters for injured
+    skill players it left out and fetch each one's own page for the return date."""
     import datetime as dt
     import json
     import urllib.request
+    from concurrent.futures import ThreadPoolExecutor
     mon = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+    def get(url, tries=3):
+        for k in range(tries):
+            try:
+                with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"}), timeout=30) as r:
+                    return json.load(r)
+            except Exception:
+                if k == tries - 1:
+                    raise
+
+    def soft(url):   # one team's roster or one player's page failing shouldn't sink the whole feed
+        try:
+            return get(url)
+        except Exception:
+            return {}
+
+    def row(team, a, i):
+        rd = (i.get("details") or {}).get("returnDate")
+        pos = (a.get("position") or {}).get("abbreviation")
+        if not rd or pos not in FEED_POS:
+            return None
+        d_ = dt.date.fromisoformat(rd[:10])
+        note = (i.get("shortComment") or "")[:150].replace("\t", " ").replace("\n", " ")
+        return {"Team": team, "Player": a.get("displayName"), "Pos": pos, "Return": f"{mon[d_.month - 1]} {d_.day}",
+                "Status": i.get("status") or "Out", "Note": note}
+
+    js = get(ESPN_INJ_URL)
+    out, seen, teams = [], set(), {}
+    for t in js.get("injuries", []):
+        teams[t["id"]] = t["displayName"]
+        for i in t.get("injuries", []):
+            a = i.get("athlete", {})
+            seen.add(a.get("displayName"))
+            r = row(t["displayName"], a, i)
+            if r:
+                out.append(r)
+    with ThreadPoolExecutor(8) as ex:
+        rosters = list(ex.map(lambda tid: (tid, soft(f"{ESPN_SITE}/site/v2/sports/football/nfl/teams/{tid}/roster")), teams))
+        items = [(tid, a, g.get("position")) for tid, r in rosters for g in r.get("athletes", []) for a in g.get("items", [])]
+        # practice-squad players (incl. the practice-squad injured list) keep the model's practice-squad status
+        ps = {a["displayName"] for _, a, grp in items
+              if grp == "practiceSquad" or "practice" in str((a.get("status") or {}).get("name", "")).lower()}
+        todo = [(teams[tid], a["id"]) for tid, a, _ in items
+                if a.get("injuries") and a["displayName"] not in seen and a["displayName"] not in ps
+                and (a.get("position") or {}).get("abbreviation") in FEED_POS]
+        pages = list(ex.map(lambda x: (x[0], soft(f"{ESPN_SITE}/common/v3/sports/football/nfl/athletes/{x[1]}")), todo))
+    out = [r for r in out if r["Player"] not in ps]
+    for team, pg in pages:
+        a = pg.get("athlete", {})
+        if a.get("injuries"):
+            r = row(team, a, a["injuries"][0])
+            if r:
+                out.append(r)
+    return out
+
+
+def injury_feed(season: int) -> tuple[pl.DataFrame | None, str]:
+    """League-wide injury list WITH expected return dates (ESPN's injuries page): Player, Pos, Return ("Nov 29"),
+    Status, Note. The official report says who is out this week but not for how long; this does.
+    Tried in order: ESPN's API directly (espn_injury_rows; needs site.api.espn.com allowed in the environment's network settings),
+    then data/input/injury_feed_<season>.tsv, which the scheduled news sweep refreshes by reading the same page.
+    Returns (rows or None, description of the source and its age)."""
+    import datetime as dt
     try:
-        with urllib.request.urlopen(urllib.request.Request(ESPN_INJ_URL, headers={"User-Agent": "Mozilla/5.0"}), timeout=30) as r:
-            js = json.load(r)
-        rows = []
-        for t in js.get("injuries", []):
-            for i in t.get("injuries", []):
-                a, det = i.get("athlete", {}), i.get("details", {}) or {}
-                rd = det.get("returnDate")
-                if not rd:
-                    continue
-                d_ = dt.date.fromisoformat(rd[:10])
-                rows.append({"Player": a.get("displayName"), "Pos": (a.get("position") or {}).get("abbreviation"),
-                             "Return": f"{mon[d_.month - 1]} {d_.day}", "Status": i.get("status") or "Out",
-                             "Note": ((i.get("shortComment") or "")[:150]).replace("\t", " ") + " (ESPN)"})
+        rows = [{k: v for k, v in r.items() if k != "Team"} | {"Note": r["Note"] + " (ESPN)"} for r in espn_injury_rows()]
         if rows:
             return pl.DataFrame(rows), "ESPN live feed"
     except Exception:
