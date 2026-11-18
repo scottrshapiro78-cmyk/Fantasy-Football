@@ -25,6 +25,9 @@ from ffmodel.ros import dst_weeks
 season = int(sys.argv[1]) if len(sys.argv) > 1 else 2026
 week = int(sys.argv[2]) if len(sys.argv) > 2 else 9
 thru = week - 1
+# Questionable tags come from the current week's injury report; for a week beyond the next game week they are stale, so no discount
+_last = pl.read_parquet(DATA / "processed" / "player_weeks.parquet").filter(pl.col("season") == season)["week"].max()
+FUTURE = week > _last + 1
 POS = ["QB", "RB", "WR", "TE", "K", "DEF"]
 MATCH = {"QB": 1.0, "RB": 0.45, "WR": 0.35, "TE": 0.55, "K": 0.0, "DEF": 0.5}
 VEGAS = {"QB": 0.0, "RB": 0.075, "WR": 0.0, "TE": 0.075, "K": 0.13, "DEF": -0.25}  # DEF uses the opponent's implied pts
@@ -103,11 +106,11 @@ for lg in ("burbs", "cbs"):
     play = (pl.when(pl.col("status").is_in(["out_week", "out_long", "season", "dated", "gone"])).then(0.0)
               .when(pl.col("status") == "practice").then(0.05)
               .when(pl.col("status") == "no_games").then(0.15)
-              .when(news.str.starts_with("Questionable") & news.str.to_lowercase().str.contains("concussion")
+              .when(~pl.lit(FUTURE) & news.str.starts_with("Questionable") & news.str.to_lowercase().str.contains("concussion")
                     & news.str.contains("DNP|limited")).then(CONCUSSION_PLAY)
-              .when(news.str.starts_with("Questionable") & news.str.contains("DNP")).then(DNP_PLAY)
-              .when(news.str.starts_with("Questionable") & news.str.contains("limited")).then(LIMITED_PLAY)
-              .when(news.str.starts_with("Questionable")).then(QUESTIONABLE_PLAY)
+              .when(~pl.lit(FUTURE) & news.str.starts_with("Questionable") & news.str.contains("DNP")).then(DNP_PLAY)
+              .when(~pl.lit(FUTURE) & news.str.starts_with("Questionable") & news.str.contains("limited")).then(LIMITED_PLAY)
+              .when(~pl.lit(FUTURE) & news.str.starts_with("Questionable")).then(QUESTIONABLE_PLAY)
               .otherwise(1.0))
     d = d.with_columns((m * pl.col("eff").fill_null(0)).alias("match_adj"), (v * impd.fill_null(0)).alias("vegas_adj"),
                        play.alias("play"))
