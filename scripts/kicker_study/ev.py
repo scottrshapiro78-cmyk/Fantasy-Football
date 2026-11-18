@@ -1,5 +1,5 @@
 import polars as pl, numpy as np
-X=pl.read_parquet('scratch/X.parquet')
+X=pl.read_parquet('data/processed/kicker_X.parquet')
 K=4
 def rate(df,p,c):
     mu=df.filter(pl.col('season')<2026)[c].mean() if c in df.columns else None
@@ -32,4 +32,4 @@ b=fit(X.filter(pl.col('season')<2026),sets['M3 M1 + venue (indoor/cold/home)'],'
 d=X.filter(pl.col('season')<2026,pl.col('week')>=6).with_columns(pl.col('dr_kb').qcut(3,labels=['tough','mid','soft']).alias('dt'))
 print(d.group_by('dt').agg(pl.len(),pl.col('kb').mean(),pl.col('or_kb').mean()).sort('dt'))
 print(X.filter(pl.col('season')<2026).group_by('indoor','cold').agg(pl.len(),pl.col('kb').mean(),(pl.col('fga')).mean()).sort('indoor','cold'))
-X.write_parquet('scratch/Xr.parquet')
+X.write_parquet('data/processed/kicker_Xr.parquet')

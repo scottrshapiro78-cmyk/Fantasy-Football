@@ -1,6 +1,6 @@
 import polars as pl, numpy as np, nflreadpy as nfl, re
 pl.Config.set_tbl_rows(40); pl.Config.set_tbl_cols(20); pl.Config.set_tbl_width_chars(250)
-X=pl.read_parquet('scratch/Xr.parquet'); tg=pl.read_parquet('scratch/tg.parquet')
+X=pl.read_parquet('data/processed/kicker_Xr.parquet'); tg=pl.read_parquet('data/processed/kicker_tg.parquet')
 f=['or_kb','or_range_dr','or_rz_stall','or_pat','indoor','cold','home']
 tr=X.filter(pl.col('season')<2026)
 B={}
@@ -47,7 +47,7 @@ print('roster week',mw,'injury week',iw)
 print(r.select('rk','kicker','posteam','team','status','report_status','k_games26','last_wk','n_k','gl','g15','indoor_g',
   pl.col('ros_burbs').round(1),pl.col('ros_cbs').round(1),pl.col('wk15_17_burbs').round(1),pl.col('ppg_burbs').round(1),
   pl.col('range_dr_pg').round(2),pl.col('rz_stall_pct').round(2),pl.col('fga_pg').round(2),pl.col('pat_pg').round(2),'burbs','cbs'))
-r.write_csv('scratch/ros_k.csv')
+r.write_csv('data/processed/kicker_ros_k.csv')
 
 # ---- verified current kicker per team
 rwk=rw.filter(pl.col('position')=='K')

@@ -26,7 +26,7 @@ tg=tg.join(ven,on='game_id',how='left').with_columns(
    pl.col('roof').is_in(['dome','closed']).cast(pl.Int8).alias('indoor'),
    (pl.col('roof').is_in(['outdoors','open'])&pl.col('gameday').str.slice(5,2).is_in(['12','01'])).cast(pl.Int8).alias('cold'),
    (pl.col('posteam')==pl.col('home_team')).cast(pl.Int8).alias('home'))
-tg.write_parquet('scratch/tg.parquet')
+tg.write_parquet('data/processed/kicker_tg.parquet')
 # to-date (prior weeks, same season) rates for offense and defense
 def todate(df,key,cols,pref):
     df=df.sort('season',key,'week')
@@ -37,5 +37,5 @@ cols=['kb','kc','range_dr','rz_dr','rz_stall','fga','pat','drives']
 off=todate(tg,'posteam',cols,'o_')
 de=todate(tg,'defteam',cols,'d_')
 X=tg.join(off,on=['season','week','posteam']).join(de,on=['season','week','defteam'])
-X.write_parquet('scratch/X.parquet')
+X.write_parquet('data/processed/kicker_X.parquet')
 print(tg.group_by('season').agg(pl.len(),pl.col('kb').mean(),pl.col('range_dr').mean(),pl.col('indoor').mean()).sort('season'))

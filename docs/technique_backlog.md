@@ -68,3 +68,14 @@ TE .0818/.0818. Rest-of-season share of weeks 10-17 missed: MAE flat vs model QB
 WR .169/.161, TE .189/.192; only QBs separate (missed time earlier: 34% vs 12%, mostly job security).
 REJECTED for the sim: signals are short-lived (next week or two) and the weekly rankings already use the current
 injury report; no reliable rest-of-season gain. Keep the flat position rate.
+
+## Kicker ROS: offense opportunity, opponent defense, venue (tested 18 Nov 2026, not adopted)
+Team-game kicker points 2021-2025 (Burbs scoring), weeks 4+, predicted from same-season to-date rates (shrunk 4 games
+to the league mean), linear fit, leave-one-season-out MAE (2026 wk 4-10 as a holdout check):
+- M0 team kicker pts to date 3.662 (2026: 3.716)
+- M1 + offense opportunity (drives to opp 30, red-zone FG rate, PATs) 3.653 (-0.25%; 2026: 3.747, worse)
+- M2 M1 + opponent defense allowed (K pts, range drives, RZ stalls, PATs) 3.657 (+0.1% vs M1); defense K pts only 3.649 (-0.1%)
+- M3 M1 + venue (indoor +1.0 pt/g, home +0.4, December outdoors ~0) 3.632 (-0.6% vs M1; 2026: 3.759, worse)
+None clears the 2% bar. Opponent defense: kickers facing the softest third of defenses averaged 8.4 pts vs 7.7 against the
+toughest third, but the to-date defense rate adds no out-of-sample accuracy. Scripts: scripts/kicker_study/
+(output: /mnt/project-files/ff-model/kickers/kicker_ros_2026_wk11.csv).
