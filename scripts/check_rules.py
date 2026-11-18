@@ -134,6 +134,21 @@ def plan_lineup_check(adds, drops, week, horizon=2):
     return bad
 
 
+def check_ghosts(week):
+    """A skill player ranked with ROS PPG >= 6, no 2026 games and no injury/backup label has no usable team or role data."""
+    out = []
+    f = DATA / "output" / f"ros_2026_wk{week}_burbs.xlsx"
+    if not f.exists():
+        return out
+    d = pd.read_excel(f, sheet_name="Overall")
+    ok = ("Injured", "Out", "Backup", "IR", "Suspend")
+    z = d[(d["Games Played"].fillna(0) == 0) & (d["ROS PPG"] >= 6) & d.Pos.isin(["RB", "WR", "TE"])]
+    for r in z.itertuples():
+        if not any(k in str(r.Status) for k in ok):
+            out.append(f"{r.Player} ({r.Team}) is ranked at {r._asdict().get('_11', '')} PPG with no 2026 games and no injury label: team/role data unverified")
+    return out
+
+
 if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "plan":
     # python scripts/check_rules.py plan <week> "Add1,Add2" "Drop1,Drop2"
     wk = int(sys.argv[2]); adds = [x for x in sys.argv[3].split(",") if x]; drops = [x for x in sys.argv[4].split(",") if x]
@@ -145,7 +160,7 @@ if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "plan":
 
 if __name__ == "__main__":
     wk = int(sys.argv[1]) if len(sys.argv) > 1 else 11
-    problems = check_trades(wk) + check_scott_news(wk) + check_stale(wk)
+    problems = check_trades(wk) + check_scott_news(wk) + check_stale(wk) + check_ghosts(wk)
     for p in problems:
         print("RULE VIOLATION:", p)
     print("rules ok" if not problems else f"{len(problems)} rule violation(s)")
