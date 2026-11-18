@@ -68,3 +68,9 @@ TE .0818/.0818. Rest-of-season share of weeks 10-17 missed: MAE flat vs model QB
 WR .169/.161, TE .189/.192; only QBs separate (missed time earlier: 34% vs 12%, mostly job security).
 REJECTED for the sim: signals are short-lived (next week or two) and the weekly rankings already use the current
 injury report; no reliable rest-of-season gain. Keep the flat position rate.
+
+## Added Nov 17 2026 (from live mistakes; test before adopting, report to Scott first)
+- QB -> TE/WR target lift: pass-catchers' targets and points by QB (Brissett TE usage; Cousins +4.5 for Jefferson). Backtest by QB identity, shrunk by games.
+- Backup uplift from the player's own games without the starter, shrunk toward the league TE2 +1.3 / RB2 average.
+- Playoff-week availability by team elimination (shutdown risk): eliminated teams' lead RB plays 74% of weeks 15-17 vs 87%; backups do not gain (tested Nov 17).
+- Snap share for TEs: tested, +2% only, not adopted.
