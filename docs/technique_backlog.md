@@ -75,3 +75,9 @@ injury report; no reliable rest-of-season gain. Keep the flat position rate.
 - Backup uplift from the player's own games without the starter, shrunk toward the league TE2 +1.3 / RB2 average.
 - Playoff-week availability by team elimination (shutdown risk): eliminated teams' lead RB plays 74% of weeks 15-17 vs 87%; backups do not gain (tested Nov 17).
 - Snap share for TEs: tested, +2% only, not adopted.
+
+## QB change -> TE/WR/RB effect (tested Nov 18, scripts/study_qb_change.py)
+359 QB-change events since 2021 (79 TE, 174 WR, 106 RB), leave-one-season-out. Feature: change in the QB's TE (or WR) target share x the player's share of his position.
+TE: -1% to -4% MAE (worse than no adjustment). WR: +0.4% to +1% (lead WRs +5% MAE, tiny sample). RB with QB carries: -0.5%. None clears the 2% rule: REJECTED, not wired in.
+Brissett TE share 0.30 vs Lamar 0.31 (league 0.22): by this spec no lift for Andrews.
+Restricted rerun (Nov 18): TE only when incoming QB TE share > league (n=30): -2.1% MAE; and up vs old QB (n=14): -11%. RB only when incoming QB carries > league avg 3.4/g (n=39): -1.1%; and up vs old (n=18): +0.7%. Still rejected.
