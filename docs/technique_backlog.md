@@ -101,7 +101,7 @@ Restricted rerun (Nov 18): TE only when incoming QB TE share > league (n=30): -2
   signal (hit rate RB 75%, WR 63%, TE 64%, QB 52%); last-3 next; last-week points and usage jumps are the worst
   (usage jump hit rate ~30%). A ridge blend of all signals adds 0-1 point of hit rate. No change to add/drop logic.
 
-## Expert consensus blend (tested Nov 19, scripts/study_expert_blend.py) - PASSES the 2% bar, awaiting Scott
+## Expert consensus blend (tested Nov 19, scripts/study_expert_blend.py) - ADOPTED Nov 19 where it passes (Scott)
 FantasyPros consensus rankings (ECR), free archive: raw.githubusercontent.com/dynastyprocess/data/master/files/db_fpecr.parquet
 (weekly snapshots late 2020 to now, updated weekly). ECR is a rank, so the expert order gets the model's own sorted numbers;
 blend weight w picked leaving the graded season out. MAE model -> blend:
@@ -109,3 +109,7 @@ blend weight w picked leaving the graded season out. MAE model -> blend:
 - ROS after wk10, 2020-25: QB -2.1% (w 1.0), RB -2.9% (w .65), WR -1.7% (w .55, under bar), TE -3.2% (w .9)
 - Weekly wks 5-17, 2020-26 (simplified weekly model): QB -4.5%, RB -4.2%, WR -3.9%, TE -2.8% (w .8-1.0)
 Caveats: weekly base is the simplified replication, not build_weekly itself; ROS snapshot can include week-11 injury news the backtest model lacks.
+- Retest vs the real weekly model (base = ROS formula from ros_history_wk9-11, predicting weeks 10-12, 2021-25, + production
+  matchup/Vegas): QB -5.4% (w 1.0), RB -2.9% (w .9), WR -3.5% (w 1.0), TE -0.1% (rejected). Wired in: weekly QB/RB/WR, ROS QB/RB/TE.
+- Note: ros_history_wk{t} files hold games THROUGH week t (not t-1). study_long_data's ROS grading counted week t in both "so far"
+  and "after"; same for every variant, so the comparisons stand, but absolute MAEs there are slightly optimistic.

@@ -99,7 +99,7 @@ if "ros" in which:
         parts.append(to_points(c, "model", ["position"]))
     rows += grade(pl.concat(parts), "model", "y", "ROS wk11+")
 
-if "week" in which:
+if "week" in which or "weekprod" in which:
     PM = {"QB": 1.0, "RB": 0.45, "WR": 0.35, "TE": 0.55}
     PV = {"QB": 0.0, "RB": 0.075, "WR": 0.0, "TE": 0.075}
     pw = (pl.read_parquet(DATA / "processed" / "player_weeks.parquet").filter(pl.col("position").is_in(list(PM)), pl.col("week") <= 17, pl.col("season") >= 2019)
@@ -126,8 +126,29 @@ if "week" in which:
     we = we.join(sunday.with_columns(pl.col("week").cast(pl.Int32)), how="cross").filter(
         (pl.col("sun") - pl.col("scrape_date")).dt.total_days().is_between(0, 6))
     we = we.sort("scrape_date").group_by("player_id", "season", "week").agg(pl.col("ecr").last())
-    d = d.join(we, on=["player_id", "season", "week"]).select("player_id", "position", "season", "week", "model", pl.col("pts").alias("y"), "ecr")
-    rows += grade(to_points(d, "model", ["season", "week", "position"]), "model", "y", "weekly")
+    d = d.join(we, on=["player_id", "season", "week"])
+    if "week" in which:
+        rows += grade(to_points(d.select("player_id", "position", "season", "week", "model", pl.col("pts").alias("y"), "ecr"),
+                                "model", ["season", "week", "position"]), "model", "y", "weekly")
+    if "weekprod" in which:
+        # closer to build_weekly: base = the model's ROS PPG (history snapshot) with the remaining schedule taken out
+        fit = json.load(open(DATA / "processed" / "ros_fit.json"))
+        bs = []
+        for t in (9, 10, 11):
+            hh = pl.read_parquet(DATA.parent / "data" / "processed" / f"ros_history_wk{t}.parquet").filter(pl.col("position").is_in(list(PM)))
+            for p_ in PM:
+                c = hh.filter(pl.col("position") == p_)
+                k, u, r, s_ = (fit[x]["burbs"][p_] for x in ("k", "u", "r", "s"))
+                so = c["ppg_burbs_sofar"].fill_null(0).to_numpy() - s_ * c["sos_faced_burbs"].fill_null(0).to_numpy()
+                inner = so + u * c["luck_pg"].fill_null(0).to_numpy() + r * c["role_trend"].fill_null(0).to_numpy()
+                nn = c["n"].to_numpy()
+                bs.append(c.select("player_id", "season").with_columns(pl.lit(t + 1, dtype=pl.Int32).alias("week"),
+                          pl.Series("base", (k * c["pred_ppg_burbs"].to_numpy() + nn * inner) / (k + nn))))
+        bs = pl.concat(bs).with_columns(pl.col("season").cast(pl.Int32))
+        q = d.with_columns(pl.col("season").cast(pl.Int32)).join(bs, on=["player_id", "season", "week"]).with_columns(
+            (pl.col("base") + pl.col("position").replace_strict(PM) * pl.col("eff") + pl.col("position").replace_strict(PV) * pl.col("dimp")).alias("model"))
+        rows += grade(to_points(q.select("player_id", "position", "season", "week", "model", pl.col("pts").alias("y"), "ecr"),
+                                "model", ["season", "week", "position"]), "model", "y", "weekly (ROS base, wks 10-12)")
 
 r = pd.DataFrame(rows, columns=["horizon", "pos", "n", "seasons", "model_mae", "expert_only_mae", "blend_mae", "blend_vs_model", "w_expert"])
 print(r.to_string(index=False))

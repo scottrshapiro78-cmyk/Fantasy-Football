@@ -9,13 +9,14 @@ Week projection = ROS PPG with the rest-of-season schedule taken out (talent + r
 then x chance he plays (injury report / roster status). Weights fitted on 2021-2025 weeks 5-17
 (scratch backtest): matchups and lines move weekly scoring a little; defenses the most.
 """
+import datetime as _dt
 import sys
 
 import polars as pl
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
 
-from ffmodel import data, fillin, freshness, ros
+from ffmodel import data, expert, fillin, freshness, ros
 from ffmodel.board import _tiers
 from ffmodel.config import DATA, load_leagues
 from ffmodel.guide import GUIDE, add_guide
@@ -80,12 +81,16 @@ GUIDE.update({
     "Play Chance": "Chance he plays this week: 0% if Out / Doubtful / IR, 85% if Questionable (65% if he missed Wednesday practice), 55% if in the concussion protocol, low for practice-squad or players with no games yet.",
     "Teammate Out Adj": "Points added because a teammate may sit this week (weighted by the chance he sits). Backup QB / RB / TE when the starter at his position may sit, and the other WRs when the top WR may sit: his own record in games the starter missed (this season and past seasons), shrunk toward the league average (QB +8.9, RB +5.6, TE +2.0, WR +1.8). The top TE also gets +0.9 when the top WR may sit. If the starting QB may sit, his RBs / WRs / TEs lose a little for the backup (about 0.7% of their PPG per point of QB quality, 2019-2025).",
     "Last 3 PPG": "Average points in his last 3 games.",
+    "Expert Adj": "Change from blending in the FantasyPros expert consensus for this week (QB/RB/WR; their order on the model's point scale). Backtest 2021-25: cut the weekly miss 3-5%. TEs: no gain, model only.",
     "Pts Over Repl": "Week projection minus a replacement-level starter at his position (the last starter in a 12-team league). Ranks the Overall tab across positions.",
     "Status": "Injury report status (from the latest report you pasted) or roster status.",
 })
 
 out_dir = DATA / "output"
 cfg = load_leagues()
+_sun = max(_dt.date.fromisoformat(g) for g in games["gameday"].unique().to_list())
+ecr_wk, ecr_note = expert.latest("weekly", week_sunday=_sun)
+print("EXPERT:", ecr_note)
 for lg in ("burbs", "cbs"):
     col = f"pred_ppg_{lg}"
     d = ros.project(season, thru, lg)
@@ -183,8 +188,11 @@ for lg in ("burbs", "cbs"):
     bq = (pl.col("status") == "backup") & (pl.col("position") == "QB")
     d = d.with_columns(pl.when(bq).then(pl.col("lead_sit").fill_null(0.0)).otherwise(pl.col("play")).alias("play"),
                        pl.when(bq).then(qb_lift).otherwise(pl.col("absence_adj")).alias("absence_adj"))
-    d = d.with_columns(((pl.col("base") + pl.col("match_adj") + pl.col("vegas_adj") + pl.col("absence_adj")).clip(0)
-                        * pl.col("play")).alias("wk"))
+    d = d.with_columns((pl.col("base") + pl.col("match_adj") + pl.col("vegas_adj") + pl.col("absence_adj")).clip(0).alias("raw"))
+    # expert consensus blend (ffmodel.expert): QB/RB/WR only, healthy-enough players; TE stays model-only
+    d = expert.blend(d.with_columns(pl.col("raw").alias("pre_expert")), "raw", expert.WEEKLY_W, ecr_wk,
+                     eligible=(pl.col("play") >= 0.85) & (pl.col("status") != "backup"))
+    d = d.with_columns((pl.col("raw") - pl.col("pre_expert")).alias("expert_adj"), (pl.col("raw") * pl.col("play")).alias("wk"))
     # replacement = last starter in the league (flex filled by the best leftover RB/WR/TE)
     L = cfg[lg]
     n, ros_ = L["teams"], L["roster"]
@@ -225,6 +233,7 @@ for lg in ("burbs", "cbs"):
         pl.when(pl.col("position") == "DEF").then(pl.col("opp_imp")).otherwise(pl.col("imp")).round(1).alias("Team Implied Pts"),
         pl.col("vegas_adj").round(2).alias("Vegas Adj"),
         pl.col("absence_adj").round(2).alias("Teammate Out Adj"),
+        pl.col("expert_adj").round(2).alias("Expert Adj"),
         pl.col("role_flag").fill_null("").alias("Role"),
         r1(f"ppg_{lg}_sofar").alias("PPG So Far"), r1("l3").alias("Last 3 PPG"), pl.col("n").alias("Games Played"),
         r1("por").alias("Pts Over Repl"), pl.col("news").fill_null("").alias("Injury News"),
@@ -257,7 +266,7 @@ for lg in ("burbs", "cbs"):
     for line in [
         f"{'THE BURBS' if lg == 'burbs' else 'CBS'}: week {week} rankings, {season}, using games through week {thru}.",
         f"On bye: {', '.join(byes) if byes else 'none'}.",
-        "Wk Proj = Base PPG (rest-of-season talent/role, schedule removed) + Matchup Adj + Vegas Adj, times Play Chance.",
+        "Wk Proj = (Base PPG (rest-of-season talent/role, schedule removed) + Matchup Adj + Vegas Adj + Teammate Out Adj + Expert Adj) x Play Chance.",
         "Matchup: this opponent's points allowed to the position this season vs what those players usually score.",
         "Vegas: team implied points this week vs its usual this season. Weights fitted on 2021-2025 weeks 5-17:",
         "  matchup x1.0 QB, x0.45 RB, x0.35 WR, x0.55 TE, x0.5 DEF; Vegas +0.075/pt RB and TE, +0.13/pt K, -0.25/pt of opponent's total for DEF.",
