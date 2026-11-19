@@ -116,4 +116,4 @@ Caveats: weekly base is the simplified replication, not build_weekly itself; ROS
 - Disagreement study (Nov 19): gap 2+ PPG, model HIGHER than consensus -> model closer only 25-44% (weekly/ROS/preseason);
   model LOWER -> 50-60% (slump fades 76%, below-hype breakouts 65%; role-up + model higher only 33%).
   Split blend (expert weight by direction, LOSO) vs same-weight blend: ROS RB -3.9% vs -2.8%, WR -2.8% vs -1.7%, TE -3.3% vs -2.8%;
-  weekly RB -3.9% vs -2.9%, WR -3.8% vs -3.5%, TE -3.2% vs -0.1%; QB no gain (experts better both ways). Awaiting Scott.
+  weekly RB -3.9% vs -2.9%, WR -3.8% vs -3.5%, TE -3.2% vs -0.1%; QB no gain (experts better both ways). ADOPTED Nov 19 (Scott), with an Edge column.

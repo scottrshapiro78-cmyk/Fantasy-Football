@@ -4,10 +4,13 @@ Source: dynastyprocess db_fpecr.parquet (free, updated weekly; FantasyPros PPR c
 ECR is a ranking, not points: within each position the expert order is given the model's own sorted numbers
 (same scale, expert order), then blended: (1 - w) x model + w x expert.
 
-Weights from scripts/study_expert_blend.py (Nov 19 2026), leave-one-season-out, adopted only where the blend
-cut the average miss 2%+ (rules.md rule 5); a position not listed stays model-only:
-- weekly (ROS-based weekly model, weeks 10-12, 2021-25): QB -5.4%, RB -2.9%, WR -3.5%; TE -0.1% (not used)
-- ROS after week 10 (2020-25): QB -2.1%, RB -2.9%, TE -3.2%; WR -1.7% (not used)
+Weights from scripts/study_expert_blend.py (Nov 19 2026), leave-one-season-out, SPLIT by direction:
+(weight on experts when the model is ABOVE consensus, weight when the model is BELOW consensus).
+Backtest: when the model was 2+ PPG above consensus it was closer to the result only 25-44% of the time;
+when it was below ("fade"), 50-76%. So the model defers on its buys and keeps its fades.
+- weekly (ROS-based weekly model, weeks 10-12, 2021-25): QB -5.0%, RB -3.9%, WR -3.8%, TE -3.2% vs model alone
+- ROS after week 10 (2020-25): RB -3.9%, WR -2.8%, TE -3.3%; QB -1.6% to -2.1% across reruns, under the bar: model only
+Every position still gets 'expert_pts' so the Edge column can show model vs consensus.
 If the feed can't be fetched or is stale, everything stays model-only and the build says so.
 """
 from __future__ import annotations
@@ -22,8 +25,9 @@ from .config import DATA
 
 URL = "https://raw.githubusercontent.com/dynastyprocess/data/master/files/db_fpecr.parquet"
 CACHE = DATA / "external" / "db_fpecr.parquet"
-WEEKLY_W = {"QB": 1.0, "RB": 0.9, "WR": 1.0}
-ROS_W = {"QB": 1.0, "RB": 0.65, "TE": 0.9}
+WEEKLY_W = {"QB": (1.0, 1.0), "RB": (1.0, 0.2), "WR": (1.0, 0.4), "TE": (1.0, 0.0)}
+ROS_W = {"QB": (0.0, 0.0), "RB": (0.9, 0.2), "WR": (0.9, 0.0), "TE": (0.4, 1.0)}
+EDGE = 2.0  # PPG gap that counts as a real disagreement
 MAX_AGE_DAYS = 8  # a snapshot older than this is ignored
 
 
@@ -95,7 +99,17 @@ def blend(df: pl.DataFrame, col: str, weights: dict, ecr: pl.DataFrame | None, e
               .select("position", "_r", pl.col(col).alias("expert_pts")))
     m = by_ecr.join(by_val, on=["position", "_r"]).select("_i", "expert_pts")
     d = d.join(m, on="_i", how="left")
-    w = pl.col("position").replace_strict(weights, default=0.0, return_dtype=pl.Float64)
+    up = pl.col("position").replace_strict({k: v[0] for k, v in weights.items()}, default=0.0, return_dtype=pl.Float64)
+    dn = pl.col("position").replace_strict({k: v[1] for k, v in weights.items()}, default=0.0, return_dtype=pl.Float64)
+    w = pl.when(pl.col(col) > pl.col("expert_pts")).then(up).otherwise(dn)
     d = d.with_columns(pl.when(pl.col("expert_pts").is_not_null())
                        .then((1 - w) * pl.col(col) + w * pl.col("expert_pts")).otherwise(pl.col(col)).alias(col))
     return d.drop("_i", "ecr")
+
+
+def edge_cols(model: str, consensus: str = "expert_pts") -> list[pl.Expr]:
+    """Model (before blend) vs consensus, and a flag: Fade = model 2+ below (historically right 50-76%),
+    Model high = 2+ above (historically right only 25-44%; the blend mostly defers to consensus there)."""
+    gap = pl.col(model) - pl.col(consensus)
+    return [pl.col(consensus).round(1).alias("Consensus"), gap.round(1).alias("Model - Consensus"),
+            pl.when(gap <= -EDGE).then(pl.lit("Fade")).when(gap >= EDGE).then(pl.lit("Model high")).otherwise(pl.lit("")).alias("Edge")]

@@ -81,7 +81,10 @@ GUIDE.update({
     "Play Chance": "Chance he plays this week: 0% if Out / Doubtful / IR, 85% if Questionable (65% if he missed Wednesday practice), 55% if in the concussion protocol, low for practice-squad or players with no games yet.",
     "Teammate Out Adj": "Points added because a teammate may sit this week (weighted by the chance he sits). Backup QB / RB / TE when the starter at his position may sit, and the other WRs when the top WR may sit: his own record in games the starter missed (this season and past seasons), shrunk toward the league average (QB +8.9, RB +5.6, TE +2.0, WR +1.8). The top TE also gets +0.9 when the top WR may sit. If the starting QB may sit, his RBs / WRs / TEs lose a little for the backup (about 0.7% of their PPG per point of QB quality, 2019-2025).",
     "Last 3 PPG": "Average points in his last 3 games.",
-    "Expert Adj": "Change from blending in the FantasyPros expert consensus for this week (QB/RB/WR; their order on the model's point scale). Backtest 2021-25: cut the weekly miss 3-5%. TEs: no gain, model only.",
+    "Expert Adj": "Change from blending in the FantasyPros consensus for this week (their order on the model's point scale). When the model is above consensus it mostly defers (models buys were right only 25-44% of the time in 2021-25); when below, it keeps most of its own number (fades held up 50-76%). Cut the weekly miss 3-5%.",
+    "Consensus": "FantasyPros consensus for this week, as points on the model's scale (their order, the model's numbers).",
+    "Model - Consensus": "Model projection (before the blend) minus consensus.",
+    "Edge": "Fade = model 2+ points below consensus (historically the model was right 50-76% of the time: an edge). Model high = 2+ above (right only 25-44%: treat with suspicion).",
     "Pts Over Repl": "Week projection minus a replacement-level starter at his position (the last starter in a 12-team league). Ranks the Overall tab across positions.",
     "Status": "Injury report status (from the latest report you pasted) or roster status.",
 })
@@ -189,9 +192,10 @@ for lg in ("burbs", "cbs"):
     d = d.with_columns(pl.when(bq).then(pl.col("lead_sit").fill_null(0.0)).otherwise(pl.col("play")).alias("play"),
                        pl.when(bq).then(qb_lift).otherwise(pl.col("absence_adj")).alias("absence_adj"))
     d = d.with_columns((pl.col("base") + pl.col("match_adj") + pl.col("vegas_adj") + pl.col("absence_adj")).clip(0).alias("raw"))
-    # expert consensus blend (ffmodel.expert): QB/RB/WR only, healthy-enough players; TE stays model-only
+    # expert consensus split blend (ffmodel.expert): defer to consensus when the model is above it, keep the model's fades
     d = expert.blend(d.with_columns(pl.col("raw").alias("pre_expert")), "raw", expert.WEEKLY_W, ecr_wk,
                      eligible=(pl.col("play") >= 0.85) & (pl.col("status") != "backup"))
+    # Consensus / Edge are per game before play chance; shown for every QB/RB/WR/TE with a consensus rank
     d = d.with_columns((pl.col("raw") - pl.col("pre_expert")).alias("expert_adj"), (pl.col("raw") * pl.col("play")).alias("wk"))
     # replacement = last starter in the league (flex filled by the best leftover RB/WR/TE)
     L = cfg[lg]
@@ -234,6 +238,7 @@ for lg in ("burbs", "cbs"):
         pl.col("vegas_adj").round(2).alias("Vegas Adj"),
         pl.col("absence_adj").round(2).alias("Teammate Out Adj"),
         pl.col("expert_adj").round(2).alias("Expert Adj"),
+        *expert.edge_cols("pre_expert"),
         pl.col("role_flag").fill_null("").alias("Role"),
         r1(f"ppg_{lg}_sofar").alias("PPG So Far"), r1("l3").alias("Last 3 PPG"), pl.col("n").alias("Games Played"),
         r1("por").alias("Pts Over Repl"), pl.col("news").fill_null("").alias("Injury News"),

@@ -53,7 +53,10 @@ GUIDE.update({
     "Schedule Adj (PPG)": "How much his remaining opponents add (+) or take away (-) per game, based on how those defenses have played this season against his position (run defense for RBs, pass defense for QB/WR/TE; for team defenses, the offenses they still face).",
     "ROS Draft Rd": "The round he'd go in if your 12-team league re-drafted today on rest-of-season value (15 rounds; past that = Waiver). Use it to compare players across positions and in trades.",
     "ROS Pick": "Round.pick of that re-draft, e.g. 3.07 = 7th pick of round 3 (31st overall).",
-    "Expert Adj (PPG)": "Change to ROS PPG from blending in the FantasyPros rest-of-season expert consensus (QB/RB/TE; their order on the model's point scale). Backtest 2020-25: cut the miss 2-3%. WRs: under 2%, model only.",
+    "Expert Adj (PPG)": "Change to ROS PPG from blending in the FantasyPros rest-of-season consensus (RB/WR/TE; QB model only). Mostly defers when the model is above consensus, keeps the model's fades. Backtest 2020-25: cut the miss 3-4%.",
+    "Consensus": "FantasyPros rest-of-season consensus as PPG on the model's scale (their order, the model's numbers).",
+    "Model - Consensus": "Model ROS PPG (before the blend) minus consensus.",
+    "Edge": "Fade = model 2+ PPG below consensus (historically right 50-76%: sell/avoid candidates). Model high = 2+ above (right only 25-44%).",
     "ROS VORP": "Rest-of-season value over replacement: extra points over a waiver-level player at his position for the rest of the season. Drives the ranking; use it to compare trades.",
 })
 
@@ -63,7 +66,7 @@ print("EXPERT:", ecr_note)
 for lg in ("burbs", "cbs"):
     d = ros.project(season, thru, lg)
     col = f"pred_ppg_{lg}"
-    # expert consensus blend (ffmodel.expert): QB/RB/TE, players currently active; WR stays model-only
+    # expert consensus split blend (ffmodel.expert): defer when the model is above consensus, keep its fades; QB model-only
     d = expert.blend(d.with_columns(pl.col(col).alias("pre_expert")), col, expert.ROS_W, ecr_ros,
                      eligible=pl.col("status").fill_null("active") == "active")
     d = d.with_columns((pl.col(col) - pl.col("pre_expert")).alias("expert_adj"))
@@ -97,7 +100,7 @@ for lg in ("burbs", "cbs"):
         pl.col("role_flag").fill_null("").alias("Role"),
         pl.format("{}% → {}%", pl.col("snap_pre").cast(pl.Int32), pl.col("snap_l3").cast(pl.Int32)).alias("Snaps (before → last 3)"),
         pl.format("{}% → {}%", pl.col("share_pre").cast(pl.Int32), pl.col("share_l3").cast(pl.Int32)).alias("Work Share (before → last 3)"),
-        r1("expert_adj").alias("Expert Adj (PPG)"), r1("role_trend").alias("Role Trend (xFP)"), r1("sched_adj").alias("Schedule Adj (PPG)"),
+        r1("expert_adj").alias("Expert Adj (PPG)"), *expert.edge_cols("pre_expert"), r1("role_trend").alias("Role Trend (xFP)"), r1("sched_adj").alias("Schedule Adj (PPG)"),
         r1("prior").alias("Preseason PPG"), r1(f"ppg_{lg}_sofar").alias("PPG So Far"),
         pl.col("n").alias("Games Played"), pl.col("games_left_reg").alias("Games Left (reg season)"),
         pl.col("games_left_po").alias("Playoff Games (wk 15-17)"), r1("exp_games").alias("Exp Games Left"),
