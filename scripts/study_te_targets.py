@@ -69,3 +69,38 @@ m = h.select("player_id", "season", "model").join(d, on=["player_id", "season"])
 print(f"B) model as-is (no refit) miss {float((m['model'] - m['after']).abs().mean()):.3f}")
 report("B) vs the model", m, "model")
 report("B') same seasons, simple", m, "ppg")
+
+
+# C) snap share built into the model's own fit: refit k/u/r/s (the ros.fit grids) with and without a snap-share
+#    term, each fitted leave-one-season-out on the other seasons, so both versions get the same fitting procedure.
+import itertools
+from ffmodel.ros import K_GRID, U_GRID, R_GRID, S_GRID
+c = h.join(d.select("player_id", "season", "snap", "after"), on=["player_id", "season"]).filter(pl.col("after").is_not_null())
+SNAP_MU = float(c["snap"].mean())
+W_GRID = [0.0, 1.0, 2.0, 3.0, 4.0, 6.0, 8.0]
+
+
+def preds(t, k, u, r, s_, w):
+    so_ = t["ppg_burbs_sofar"].to_numpy() - s_ * t["sos_faced_burbs"].fill_null(0).to_numpy()
+    n = t["n"].to_numpy()
+    inner = so_ + u * t["luck_pg"].fill_null(0).to_numpy() + r * t["role_trend"].fill_null(0).to_numpy() \
+        + w * (t["snap"].to_numpy() - SNAP_MU)
+    return (k * t["pred_ppg_burbs"].to_numpy() + n * inner) / (k + n) + s_ * t["sos_left_burbs"].fill_null(0).to_numpy()
+
+
+def loso_fit(ws):
+    errs, picks = [], []
+    for s in sorted(c["season"].unique()):
+        tr, te = c.filter(pl.col("season") != s), c.filter(pl.col("season") == s)
+        y = tr["after"].to_numpy()
+        best = min(itertools.product(K_GRID, U_GRID, R_GRID, S_GRID, ws),
+                   key=lambda g: float(np.mean(np.abs(preds(tr, *g) - y))))
+        picks.append(best[-1])
+        errs.append(np.abs(preds(te, *best) - te["after"].to_numpy()))
+    return float(np.concatenate(errs).mean()), picks
+
+
+c0, _ = loso_fit([0.0])
+c1, picks = loso_fit(W_GRID)
+print(f"C) fitted inside the model, n={c.height}: without snaps {c0:.3f}  with snaps {c1:.3f}  "
+      f"change {100 * (c1 / c0 - 1):+.1f}%  (snap weight chosen per held-out season: {picks})")

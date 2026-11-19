@@ -22,8 +22,9 @@ the biggest misses each week are the main source of new ideas.
   Nov 18 on 2019-25 (n=421, data from 2012): vs the model, targets +0.6% (worse), snaps -0.2%. REJECTED then.
   Nov 19 long run (FF_DATA=data_2006 FF_FIRST_SEASON=2006: data 2006-26, model backtest 2015-25, n=650; 2013-14 fail
   because the DST model needs snap data from 2013): model as-is 2.165, model refit 2.202; +targets 2.183 (-0.9% vs refit,
-  REJECTED); +snap share 2.129 (-3.3% vs refit, -1.7% vs as-is; better in 8 of 11 seasons). BORDERLINE: snap share
-  to be tested inside ros.fit (fitted with k/u/r, leave-one-season-out) before any adoption. Gesicki's 9.2 stands.
+  REJECTED); +snap share 2.129 (-3.3% vs refit, -1.7% vs as-is; better in 8 of 11 seasons). Then fitted INSIDE the model
+  (k/u/r/s grids plus a snap weight, leave-one-season-out, 2015-25, n=650): 2.167 without snaps vs 2.168 with (+0.1%).
+  The earlier -3.3% came from the straight-line recalibration, not from snaps. REJECTED. Gesicki's 9.2 stands.
 - ROS value: steadier replacement-level anchor (the anchor's per-game option value x median games of the five players around replacement, so one injured player at replacement can't shift a position; Nov 16 2026, scripts/study_replacement_anchor.py, 2021-25 at weeks 8-11, 20 cases per league): cross-position rank correlation with actual ROS value fell (Burbs 0.660 -> 0.646, CBS 0.673 -> 0.663; better in only 8 and 7 of 20 cases), RB error rose (Burbs 11.5 -> 13.4). Week-to-week steadier (RB top-12 jump 7.2 -> 6.4) but less accurate. Kept as value(robust_base=False)
 - Discounting a player's role when a teammate returns (worse MAE)
 - Expert-rank blend in season (re-test set for Jan 2027 with a full season of weekly ranks)
