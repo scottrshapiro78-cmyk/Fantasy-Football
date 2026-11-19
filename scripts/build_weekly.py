@@ -293,6 +293,7 @@ for lg in ("burbs", "cbs"):
     fr = freshness.checks(season, week)
     freshness.add_sheet(path, fr)
     # snapshot for the accuracy scorecard (scripts/scorecard.py); frozen once Sunday's games have kicked off
+    # expert_adj is per game before play chance: model-only projection = proj - expert_adj x play/100
     import datetime as _dt
     snap = DATA / "tracking" / f"weekly_{season}_wk{week}_{lg}.csv"
     snap.parent.mkdir(exist_ok=True)
@@ -302,6 +303,6 @@ for lg in ("burbs", "cbs"):
         df.select([pl.col(k).alias(v) for k, v in {"Pos": "pos", "Player": "player", "Team": "team", "Wk Proj": "proj",
                    "Status": "status", "Play Chance": "play", "Base PPG": "base", "PPG So Far": "sofar", "Last 3 PPG": "last3",
                    "Matchup Adj": "match", "Vegas Adj": "vegas", "Teammate Out Adj": "mate", "Injury News": "news",
-                   "nflverse ID": "player_id"}.items()]).write_csv(snap)
+                   "Expert Adj": "expert_adj", "Consensus": "consensus", "nflverse ID": "player_id"}.items()]).write_csv(snap)
     print(path, df.height, "byes:", byes)
     print("DATA CHECK:", freshness.summary(fr))
