@@ -113,3 +113,7 @@ Caveats: weekly base is the simplified replication, not build_weekly itself; ROS
   matchup/Vegas): QB -5.4% (w 1.0), RB -2.9% (w .9), WR -3.5% (w 1.0), TE -0.1% (rejected). Wired in: weekly QB/RB/WR, ROS QB/RB/TE.
 - Note: ros_history_wk{t} files hold games THROUGH week t (not t-1). study_long_data's ROS grading counted week t in both "so far"
   and "after"; same for every variant, so the comparisons stand, but absolute MAEs there are slightly optimistic.
+- Disagreement study (Nov 19): gap 2+ PPG, model HIGHER than consensus -> model closer only 25-44% (weekly/ROS/preseason);
+  model LOWER -> 50-60% (slump fades 76%, below-hype breakouts 65%; role-up + model higher only 33%).
+  Split blend (expert weight by direction, LOSO) vs same-weight blend: ROS RB -3.9% vs -2.8%, WR -2.8% vs -1.7%, TE -3.3% vs -2.8%;
+  weekly RB -3.9% vs -2.9%, WR -3.8% vs -3.5%, TE -3.2% vs -0.1%; QB no gain (experts better both ways). Awaiting Scott.

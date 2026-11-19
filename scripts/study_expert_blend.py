@@ -29,6 +29,8 @@ ecr = (ecr.join(yid, on="yahoo_id", how="left")
        .with_columns(pl.coalesce("pid_y", "pid_n").alias("player_id")).drop_nulls("player_id")
        .with_columns(pl.col("scrape_date").str.to_date()))
 GRID = np.arange(0, 1.01, 0.1)
+import os
+DUMP = os.environ.get("DUMP")
 
 
 def to_points(df, model, keys):
@@ -44,6 +46,8 @@ def grade(df, model, y, label):
         q = df.filter(pl.col("position") == p).to_pandas()
         if q.empty:
             continue
+        if DUMP:
+            q.assign(horizon=label).to_parquet(f"{DUMP}/{label.split()[0]}_{p}.parquet")
         errs, ws = [], []
         for s in sorted(q.season.unique()):
             tr, te = q[q.season != s], q[q.season == s]
@@ -98,7 +102,7 @@ if "ros" in which:
         if e.is_empty():
             continue
         e = e.filter(pl.col("scrape_date") == e["scrape_date"].max()).unique("player_id").select("player_id", "ecr")
-        c = c.join(e, on="player_id").select("player_id", "position", "season", "model", pl.col("ppg_burbs_after").alias("y"), "ecr")
+        c = c.join(e, on="player_id").select("player_id", "position", "season", "model", pl.col("ppg_burbs_after").alias("y"), "ecr", "role_trend", pl.col("pred_ppg_burbs").alias("prior"), "n", pl.col("ppg_burbs_sofar").alias("sofar"))
         parts.append(to_points(c, "model", ["position"]))
     rows += grade(pl.concat(parts), "model", "y", "ROS wk11+")
 
