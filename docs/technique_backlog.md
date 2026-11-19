@@ -68,3 +68,14 @@ TE .0818/.0818. Rest-of-season share of weeks 10-17 missed: MAE flat vs model QB
 WR .169/.161, TE .189/.192; only QBs separate (missed time earlier: 34% vs 12%, mostly job security).
 REJECTED for the sim: signals are short-lived (next week or two) and the weekly rankings already use the current
 injury report; no reliable rest-of-season gain. Keep the flat position rate.
+
+## Studied Nov 19 2026: late-season shutdowns on teams out of the race (scripts/study_shutdowns.py)
+Stars (PPR PPG weeks 1-13: QB12/RB24/WR30/TE10), 2013-25, who played in one of their team's last two games before week 14.
+"Nagged" = Q/D/Out on the report in 2+ weeks of weeks 1-13. Contention by standings entering each week (no tiebreakers):
+out/longshot = 2+ games behind the last playoff seed. Weeks 14-17 (fantasy playoffs), missed-game rate:
+alive healthy 6.2% (1,263 games) / alive nagged 12.4% (548); out/longshot healthy 11.4% (590) / nagged 17.7% (282).
+Being out of the race adds about 5 points for healthy and nagged stars alike (nagged +5.3, 90% CI -1 to +12; healthy +5.2,
+CI +2 to +8; extra for nagged +0.1, CI -7 to +7). Snap share when they play barely moves (-1 to -3 pts).
+Final week is different (out/longshot nagged 34% missed) but it is outside the fantasy playoffs.
+NOT ADOPTED, NOT RUN THROUGH THE RULE-5 TEST: the effect is about 0.05 games a week for a third of teams in 3 weeks, roughly
+1 PPG per week for an 18-PPG star, far too small to move the season-wide miss 2%. Use as a tiebreaker note only.
