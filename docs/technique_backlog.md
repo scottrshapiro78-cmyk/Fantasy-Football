@@ -100,3 +100,12 @@ Restricted rerun (Nov 18): TE only when incoming QB TE share > league (n=30): -2
 - Waivers (2006-26, undrafted pool, decision weeks 3-12, top 3 per position): season-to-date PPG is the best single pick
   signal (hit rate RB 75%, WR 63%, TE 64%, QB 52%); last-3 next; last-week points and usage jumps are the worst
   (usage jump hit rate ~30%). A ridge blend of all signals adds 0-1 point of hit rate. No change to add/drop logic.
+
+## Expert consensus blend (tested Nov 19, scripts/study_expert_blend.py) - PASSES the 2% bar, awaiting Scott
+FantasyPros consensus rankings (ECR), free archive: raw.githubusercontent.com/dynastyprocess/data/master/files/db_fpecr.parquet
+(weekly snapshots late 2020 to now, updated weekly). ECR is a rank, so the expert order gets the model's own sorted numbers;
+blend weight w picked leaving the graded season out. MAE model -> blend:
+- Preseason 2021-25: QB 2.75 -> 2.44 (-11.2%, w 1.0), RB 2.91 -> 2.81 (-3.4%, w .5), WR 2.77 -> 2.64 (-4.6%, w .9), TE 2.36 -> 2.22 (-6.1%, w .9)
+- ROS after wk10, 2020-25: QB -2.1% (w 1.0), RB -2.9% (w .65), WR -1.7% (w .55, under bar), TE -3.2% (w .9)
+- Weekly wks 5-17, 2020-26 (simplified weekly model): QB -4.5%, RB -4.2%, WR -3.9%, TE -2.8% (w .8-1.0)
+Caveats: weekly base is the simplified replication, not build_weekly itself; ROS snapshot can include week-11 injury news the backtest model lacks.
