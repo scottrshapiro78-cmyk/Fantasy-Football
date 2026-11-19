@@ -76,11 +76,15 @@ def check_stale(week):
     return bad
 
 
-def my_roster(week):
-    """Roster ledger: base file + moves in data/input/burbs_my_moves.csv (action,Player,Pos). Single source of truth."""
+def my_roster(week, league="burbs"):
+    """Roster ledger: base file + moves in data/input/burbs_my_moves.csv (action,Player,Pos). Single source of truth.
+    CBS: the pasted roster file is used as is (no move ledger)."""
     from ffmodel import ledger
-    base = ledger.apply(pd.read_csv(DATA / "input" / f"burbs_rosters_2026wk{week}.csv").fillna(""))
-    return list(base[base.Team == ledger.ME].Player)
+    base = pd.read_csv(DATA / "input" / f"{league}_rosters_2026wk{week}.csv").fillna("")
+    if league == "burbs":
+        base = ledger.apply(base)
+    mine = base[(base.Team == ledger.ME) & (base.Slot != "IR")]  # IR players do not count against the roster cap
+    return list(mine.Player)
 
 
 def check_plan(roster, adds, drops, pos, league="burbs"):
@@ -99,14 +103,14 @@ def check_plan(roster, adds, drops, pos, league="burbs"):
     return bad
 
 
-def plan_lineup_check(adds, drops, week, horizon=2):
+def plan_lineup_check(adds, drops, week, horizon=2, league="burbs"):
     """Rule 6: after the add/drop, each of the next `horizon` weeks must still field a full legal starting lineup from
     players who are NOT on bye and NOT Out/IR/Doubtful. Returns a list of violations (empty = ok)."""
     import nflreadpy as nfl, polars as pl
-    ros = pd.read_excel(DATA / "output" / f"ros_2026_wk{week}_burbs.xlsx", sheet_name="Overall").set_index("Player")
+    ros = pd.read_excel(DATA / "output" / f"ros_2026_wk{week}_{league}.xlsx", sheet_name="Overall").set_index("Player")
     sch = nfl.load_schedules([2026]).filter(pl.col("game_type") == "REG")
-    cur = [p for p in my_roster(week) if p not in drops] + [a for a in adds if a not in my_roster(week)]
-    slots = load_leagues()["burbs"]["roster"]
+    cur = [p for p in my_roster(week, league) if p not in drops] + [a for a in adds if a not in my_roster(week, league)]
+    slots = load_leagues()[league]["roster"]
     bad = [f"cannot drop keep-list player {p}" for p in drops if p in keep_list()]
     cap = sum(v for k, v in slots.items() if k != "IR")
     if len(cur) > cap:
@@ -120,10 +124,11 @@ def plan_lineup_check(adds, drops, week, horizon=2):
             r = ros.loc[p]
             if r["Team"] in playing and str(r["Status"]) not in OUT:
                 ok.setdefault(r["Pos"], []).append(p)
-        for pos, n in (("QB", 1), ("RB", 2), ("WR", 3), ("TE", 1), ("K", 1), ("DEF", 1)):
+        nwr = slots["WR"]
+        for pos, n in (("QB", 1), ("RB", 2), ("WR", nwr), ("TE", 1), ("K", 1), ("DEF", 1)):
             if len(ok.get(pos, [])) < n:
                 bad.append(f"week {w}: only {len(ok.get(pos, []))} available {pos} (need {n}); byes/injuries counted")
-        flex = len(ok.get("RB", [])) - 2 + len(ok.get("WR", [])) - 3 + len(ok.get("TE", [])) - 1
+        flex = len(ok.get("RB", [])) - 2 + len(ok.get("WR", [])) - nwr + len(ok.get("TE", [])) - 1
         if flex < 1:
             bad.append(f"week {w}: no player left for FLEX")
     return bad
@@ -144,10 +149,20 @@ def check_ghosts(week):
     return out
 
 
+if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "offer":
+    # python scripts/check_rules.py offer "Player A,Player B"   (players Scott would GIVE in a trade, any league)
+    gives = [x for x in sys.argv[2].split(",") if x]
+    bad = [f"{g} is on the keep-list: never offered in a trade" for g in gives if g in keep_list()]
+    for b in bad:
+        print("OFFER VIOLATION:", b)
+    print("offer ok" if not bad else "do NOT offer these players")
+    sys.exit(1 if bad else 0)
+
 if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "plan":
     # python scripts/check_rules.py plan <week> "Add1,Add2" "Drop1,Drop2"
     wk = int(sys.argv[2]); adds = [x for x in sys.argv[3].split(",") if x]; drops = [x for x in sys.argv[4].split(",") if x]
-    res = plan_lineup_check(adds, drops, wk)
+    lg = sys.argv[5] if len(sys.argv) > 5 else "burbs"  # optional 5th arg: cbs
+    res = plan_lineup_check(adds, drops, wk, league=lg)
     for r in res:
         print("PLAN VIOLATION:", r)
     print("plan ok" if not res else f"{len(res)} problem(s): do NOT give this advice")

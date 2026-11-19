@@ -13,3 +13,7 @@ Add a rule here AND in check_rules.py when Scott gives a new one.
 8. Waiver bids, add/drop and trade advice use only numbers the pipeline produced (ROS / weekly files, trade_finder, playoff_sim). A hand-applied adjustment (e.g. the Nov 17 "+2.5 Brissett bump" on Andrews) must be shown as a separate line: "untested adjustment: +X a game, based on N games", next to the pipeline number, and the bid must be sized off the pipeline number unless the adjustment has passed rule 5. (Added Nov 18 after Scott overpaid for Andrews on an untested bump.)
 9. Player teams come from this season's NFL rosters. A player on no 2026 roster with no 2026 games (released/unsigned, e.g. Tyreek Hill) is dropped from the rankings, never shown under his old team.
 10. Use data already on file before saying it is missing: league schedule (playoff_sim.py SCHED), standings and rosters in data/input, FAB history (Nov 16 transactions paste), league settings (config). Burbs playoff odds come from playoff_sim.py only.
+
+9. Keep-list applies to BOTH leagues (Burbs and CBS): Emmett Johnson (Walker's KC handcuff, Scott 18 Nov) and Rico Dowdle are never offered in a trade and never dropped. Scott's standing words: "can't move johnson, need that backfield locked".
+   - Before any trade idea: `PYTHONPATH=src python3 scripts/check_rules.py offer "Player A,Player B"` (players Scott gives). Exit 1 = do not suggest it.
+   - Before any CBS add/drop: `PYTHONPATH=src python3 scripts/check_rules.py plan <week> "Add" "Drop" cbs` (CBS lineup: 2 WR + FLEX, 14 spots).
