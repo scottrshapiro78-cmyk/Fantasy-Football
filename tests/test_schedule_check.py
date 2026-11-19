@@ -86,3 +86,53 @@ def test_team_named_claims_and_several_players():
     assert chk("KC hosts Arizona on Sunday in week 11.") == []
     assert any("KC" in b for b in chk("KC plays Thursday in week 11."))
     assert any("SEA" in b for b in chk("Seattle plays Sunday."))
+
+
+# --- manual notes vs. newer sources (Lemon bug, Nov 19 2026) ---
+from ffmodel.schedule_check import apply_fixes, norm, notes_check  # noqa: E402
+
+START = dt.date(2026, 11, 17)  # first day of week 11
+NEWS = pd.DataFrame([
+    dict(Player="DeVonta Smith", Pos="WR", Return="Nov 22", Status="Out", Note="Yahoo O; Scott 11/12: may return after bye"),
+    dict(Player="Kenneth Walker III", Pos="RB", Return="Nov 17", Status="Questionable", Note="Scott 11/17: believes he plays"),
+    dict(Player="Kyle Monangai", Pos="RB", Return="Nov 15", Status="Out", Note="Yahoo O (bye wk10)"),
+    dict(Player="Isaac Guerendo", Pos="RB", Return="Nov 8", Status="Out", Note="PUP"),
+    dict(Player="Josh Jacobs", Pos="RB", Return="Nov 29", Status="Out", Note="Scott 11/20: told me he is out two more weeks"),
+    dict(Player="Will Shipley", Pos="RB", Return="Nov 22", Status="Injured Reserve", Note=""),
+])
+FEED = {norm("DeVonta Smith"): dict(status="Questionable", date=dt.date(2026, 11, 18), ret=dt.date(2026, 11, 22),
+                                    comment="Smith (hamstring) was spotted practicing Wednesday"),
+        norm("Kenneth Walker III"): dict(status="Questionable", date=dt.date(2026, 11, 18), ret=None, comment="groin"),
+        norm("Kyle Monangai"): dict(status="Active", date=dt.date(2026, 11, 18), ret=None, comment="full participant"),
+        norm("Josh Jacobs"): dict(status="Questionable", date=dt.date(2026, 11, 18), ret=None, comment="practiced")}
+OFFICIAL = {norm("Will Shipley"): "Limited Participation in Practice / game status not set yet"}
+
+
+def _rows():
+    return {x["player"]: x for x in notes_check(NEWS, FEED, OFFICIAL, START)}
+
+
+def test_old_scott_note_loses_to_newer_feed():
+    x = _rows()["DeVonta Smith"]
+    assert x["kind"] == "conflict" and x["fixable"] and x["new_status"] == "Questionable"
+
+
+def test_scott_note_newer_than_feed_wins_and_agreeing_note_passes():
+    r = _rows()
+    assert "Josh Jacobs" not in r and "Kenneth Walker III" not in r
+
+
+def test_healthy_on_feed_removes_note_and_unlisted_expired_needs_a_person():
+    r = _rows()
+    assert r["Kyle Monangai"]["fixable"] and r["Kyle Monangai"]["new_status"] == ""
+    assert r["Isaac Guerendo"]["kind"] == "expired" and not r["Isaac Guerendo"]["fixable"]
+
+
+def test_practicing_on_official_report_flags_ir_note():
+    assert _rows()["Will Shipley"]["kind"] == "conflict"
+
+
+def test_apply_fixes_rewrites_only_fixable_rows():
+    new = apply_fixes(NEWS, notes_check(NEWS, FEED, OFFICIAL, START)).set_index("Player")
+    assert new.loc["DeVonta Smith", "Status"] == "Questionable" and "Scott" not in new.loc["DeVonta Smith", "Note"]
+    assert "Kyle Monangai" not in new.index and new.loc["Isaac Guerendo", "Status"] == "Out"

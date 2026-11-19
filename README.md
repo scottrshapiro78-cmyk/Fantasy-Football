@@ -36,7 +36,16 @@ send the advice until it is fixed.
 PYTHONPATH=src python3 scripts/check_schedule.py facts "Kenneth Walker III,Chris Olave"  # write advice from this
 PYTHONPATH=src python3 scripts/check_schedule.py text advice.md                         # check the draft
 PYTHONPATH=src python3 scripts/check_schedule.py tags                                   # stale tags, both leagues
+PYTHONPATH=src python3 scripts/check_schedule.py notes [--fix]                          # notes vs. newer reports
 ```
+
+`notes` compares every manual note in `data/input/news_2026.tsv` with the live ESPN feed and this week's official
+NFL injury report. A note is flagged when a newer source disagrees (a Scott note only wins while it is dated later
+than the feed entry), when the note's return date is before the current week, or when the player is practicing
+while the note says Doubtful/Out/IR. `--fix` rewrites the notes a newer source settles and removes players the feed
+now lists as healthy; it leaves for a person a Scott note with no date, a practice-report conflict, and an expired
+note for a player not on the feed (PUP/NFI players are often missing from it). Conflicts on players rostered in
+either league block advice (exit 1); the rest are listed. Run it on every refresh, before build_ros.py.
 
 The text check ties each day ("tonight", "Thursday"), opponent ("at Buffalo", "BUF") or "bye" to the player or team
 named in the same sentence, honours "next week", "week N" and "Thanksgiving", and reads "doesn't play" as a negative

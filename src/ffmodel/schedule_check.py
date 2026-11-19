@@ -201,3 +201,80 @@ def stale_tags(ros: pd.DataFrame, sched: pd.DataFrame, week: int, owned: set | N
             bad.append(f"stale tag: {r['Player']} ({r['Team']}) {r['Status']}, est. return {d:%b %d} is from before week "
                        f"{week} (window starts {start:%b %d}); get this week's report or clear the tag")
     return bad
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Manual notes vs. the live feed and the official report (added Nov 19 2026 after the Lemon bug: a Nov 12 note kept
+# DeVonta Smith and Wicks "Out" after both practiced and were listed Questionable for week 11).
+SEV = {"": 0, "Active": 0, "Questionable": 1, "Doubtful": 2, "Out": 3, "Injured Reserve": 4, "Out for season": 4}
+
+
+def norm(name: str) -> str:
+    n = re.sub(r"[^a-z ]", "", str(name).lower().replace("-", " "))
+    return " ".join(w for w in n.split() if w not in ("jr", "sr", "ii", "iii", "iv", "v"))
+
+
+def note_date(note: str, season: int = 2026):
+    """Latest M/D date written in a note ("Scott 11/12: ..."), or None."""
+    ds = []
+    for m, d in re.findall(r"\b(1[0-2]|[1-9])/(3[01]|[12]\d|[1-9])\b", str(note)):
+        ds.append(dt.date(season + (1 if int(m) <= 3 else 0), int(m), int(d)))
+    return max(ds) if ds else None
+
+
+def notes_check(news: pd.DataFrame, feed: dict, official: dict, start: dt.date, owned: set | None = None,
+                season: int = 2026) -> list[dict]:
+    """Every manual note that disagrees with newer information or has expired.
+
+    news: data/input/news_<season>.tsv (Player, Pos, Return, Status, Note).
+    feed: {norm name: dict(status, date (date), ret (date|None), comment)} from the live ESPN feed.
+    official: {norm name: practice/report text} from this week's official injury report.
+    start: first day of the current week (day after the previous week's last game).
+    Returns rows dict(player, owned, kind, note, newer, fixable, new_status, new_return, new_note)."""
+    out = []
+    for r in news.fillna("").itertuples(index=False):
+        k, st, note = norm(r.Player), str(r.Status), str(r.Note)
+        ret = return_date(f"est. return {r.Return}", season)
+        nd = note_date(note, season)
+        f, o = feed.get(k), official.get(k)
+        own = owned is None or r.Player in owned
+        base = dict(player=r.Player, owned=own, note=f"{st}, return {r.Return}: {note[:70]}")
+        if f is not None and SEV.get(f["status"], 0) != SEV.get(st, 0):
+            newer = nd is None or f["date"] >= nd
+            if newer:
+                fs = f["status"]
+                out.append(dict(base, kind="conflict", newer=f"feed {f['date']:%b %d}: {fs} ({f['comment'][:70]})",
+                                fixable=not ("Scott" in note and nd is None),
+                                new_status="" if fs == "Active" else fs,
+                                new_return=f"{f['ret']:%b %-d}" if f["ret"] else str(r.Return),
+                                new_note=f"ESPN {f['date']:%m/%d}: {f['comment'][:90]}"))
+                continue
+        # practicing this week while the note says Doubtful/Out/IR, and no newer feed entry agreeing with the note
+        if o and SEV.get(st, 0) >= 2 and re.search(r"Full|Limited", o) and f is None:
+            out.append(dict(base, kind="conflict", newer=f"official report this week: {o}", fixable=False,
+                            new_status="", new_return="", new_note=""))
+            continue
+        if st in ("Questionable", "Doubtful", "Out") and ret is not None and ret < start:
+            fs = f["status"] if f else ""
+            out.append(dict(base, kind="expired", newer=f"return date {ret:%b %d} is before this week ({start:%b %d})"
+                            + (f"; feed says {fs}" if f else "; not on the feed"),
+                            # not on the feed: healthy, or a long absence the feed does not list (PUP/NFI) -> a person decides
+                            fixable=f is not None and not ("Scott" in note and nd is not None and nd >= start),
+                            new_status="" if fs in ("", "Active") else fs,
+                            new_return=(f"{f['ret']:%b %-d}" if f and f["ret"] else str(r.Return)),
+                            new_note=(f"ESPN {f['date']:%m/%d}: {f['comment'][:90]}" if f else "")))
+    return out
+
+
+def apply_fixes(news: pd.DataFrame, rows: list[dict]) -> pd.DataFrame:
+    """Rewrite fixable rows from the newer source; a player now healthy is removed from the notes."""
+    news = news.copy()
+    for x in rows:
+        if not x["fixable"]:
+            continue
+        i = news.index[news.Player == x["player"]]
+        if not x["new_status"]:
+            news = news.drop(i)
+        else:
+            news.loc[i, ["Status", "Return", "Note"]] = [x["new_status"], x["new_return"], x["new_note"]]
+    return news
