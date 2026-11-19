@@ -50,6 +50,9 @@ def grade(df, model, y, label):
             w = min(GRID, key=lambda w: np.abs((1 - w) * tr[model] + w * tr.expert - tr[y]).mean())
             ws.append(w); errs.append(np.abs((1 - w) * te[model] + w * te.expert - te[y]))
         m0 = np.abs(q[model] - q[y]).mean(); ex = np.abs(q.expert - q[y]).mean(); bl = pd.concat(errs).mean()
+        wins = sum(e.mean() < np.abs(q.loc[e.index, model] - q.loc[e.index, y]).mean() for e in errs)
+        rc = q[model].corr(q.expert, method="spearman"); ec = (q[model] - q[y]).corr(q.expert - q[y])
+        print(f"  {label} {p}: blend better in {wins} of {len(errs)} seasons; rank corr model vs experts {rc:.2f}; miss corr {ec:.2f}")
         out.append((label, p, len(q), q.season.nunique(), round(m0, 3), round(ex, 3), round(bl, 3), f"{100 * (bl / m0 - 1):+.1f}%", np.median(ws)))
     return out
 
