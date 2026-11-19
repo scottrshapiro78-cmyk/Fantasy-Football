@@ -4,3 +4,4 @@ __pycache__/
 .pytest_cache/
 *.egg-info/
 data/input/expert/
+data_2006/

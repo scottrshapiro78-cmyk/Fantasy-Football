@@ -50,7 +50,9 @@ def prepare(df: pl.DataFrame, league: str, medians: pd.DataFrame | None = None):
     if medians is None:
         medians = d.groupby("position")[X].median()
     for c in X:
-        d[c] = d[c].fillna(d["position"].map(medians[c]))
+        # position median; if a feature has no data at all for a position (e.g. injury reports before 2009 in the
+        # long backtest set) fall back to the overall median, then 0. Never triggers on 2012+ data.
+        d[c] = d[c].fillna(d["position"].map(medians[c])).fillna(medians[c].median()).fillna(0.0)
     return d, medians
 
 

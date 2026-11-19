@@ -1,6 +1,6 @@
 """Do TE targets per game or snap share (weeks 1-10) improve rest-of-season PPG (weeks 11-17)? Nov 18 2026.
 
-A) Simple test, 2012-25: ppg_after ~ ppg_sofar (+ feature), leave-one-season-out.
+A) Simple test, every season loaded (2012-25, or 2006-25 with FF_DATA=data_2006 FF_FIRST_SEASON=2006): ppg_after ~ ppg_sofar (+ feature), leave-one-season-out.
 B) Against the model's own rest-of-season formula (ros.project weights from ros_fit.json), 2019-25 = every season
    the model backtest can be built for (its preseason projection needs earlier seasons to train on, so 2018 and
    before fail). ppg_after ~ model (+ feature), leave-one-season-out. Rule 5: adopt only if the miss drops >= 2%.
@@ -19,7 +19,7 @@ pre = pw.filter(pl.col("week") <= 10).group_by("player_id", "season").agg(
     pl.len().alias("g"), pl.col("fpts_burbs").mean().alias("ppg"), pl.col("targets").fill_null(0).mean().alias("tpg"))
 post = pw.filter(pl.col("week") >= 11).group_by("player_id", "season").agg(pl.len().alias("g2"), pl.col("fpts_burbs").mean().alias("after"))
 ps = pl.read_parquet(DATA / "processed" / "player_seasons.parquet").select("player_id", "season", "pfr_id").drop_nulls()
-sn = (data.snap_counts(list(range(2012, 2026))).filter(pl.col("week") <= 10, pl.col("game_type") == "REG")
+sn = (data.snap_counts(list(range(2012, 2026)))  # snap counts start 2012; earlier seasons get the median.filter(pl.col("week") <= 10, pl.col("game_type") == "REG")
       .with_columns(pl.col("season").cast(pl.Int32))
       .join(ps.with_columns(pl.col("season").cast(pl.Int32)), left_on=["pfr_player_id", "season"], right_on=["pfr_id", "season"])
       .group_by("player_id", "season").agg(pl.col("offense_pct").cast(pl.Float64).mean().alias("snap")))
@@ -52,10 +52,14 @@ report("A) simple", d, "ppg")
 
 f = json.load(open(DATA / "processed" / "ros_fit.json"))
 k, u, r, sw = (f[x]["burbs"]["TE"] for x in ("k", "u", "r", "s"))
-hs = [pl.read_parquet(DATA / "processed" / "ros_history_wk11.parquet")]
-old = DATA / "processed" / "ros_history_wk11_2019_2020.parquet"
-if old.exists():
-    hs.append(pl.read_parquet(old))
+long = sorted((DATA / "processed").glob("ros_history_wk11_long*.parquet"))  # FF_DATA=data_2006: 2015-25
+if long:
+    hs = [pl.read_parquet(f) for f in long]
+else:
+    hs = [pl.read_parquet(DATA / "processed" / "ros_history_wk11.parquet")]
+    old = DATA / "processed" / "ros_history_wk11_2019_2020.parquet"
+    if old.exists():
+        hs.append(pl.read_parquet(old))
 h = pl.concat(hs, how="diagonal_relaxed").filter(pl.col("position") == "TE", pl.col("n") >= 5)
 so = pl.col("ppg_burbs_sofar") - sw * pl.col("sos_faced_burbs").fill_null(0)
 h = h.with_columns(((k * pl.col("pred_ppg_burbs") + pl.col("n") * (so + u * pl.col("luck_pg").fill_null(0)

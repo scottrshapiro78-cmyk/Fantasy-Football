@@ -6,7 +6,10 @@ import nflreadpy as nfl
 
 from .config import DATA
 
-FIRST_SEASON = 2012  # 10+ seasons to fit aging, stability and injury priors
+import os
+
+# 10+ seasons to fit aging, stability and injury priors. FF_FIRST_SEASON=2006 (with FF_DATA) builds the long backtest set
+FIRST_SEASON = int(os.environ.get("FF_FIRST_SEASON", 2012))
 CURRENT_SEASON = 2026
 PLAYER_IDS_RAW = "https://raw.githubusercontent.com/dynastyprocess/data/master/files/db_playerids.csv"
 
@@ -18,7 +21,12 @@ def _cached(name: str, seasons: list[int], loader, refresh_current: bool = False
         if path.exists() and not (refresh_current and s == CURRENT_SEASON):
             out.append(pl.read_parquet(path))
             continue
-        df = loader([s])
+        try:
+            df = loader([s])
+        except ValueError as e:  # season outside what nflverse has (injuries start 2009, snap counts 2012)
+            if "must be between" in str(e):
+                continue
+            raise
         path.parent.mkdir(parents=True, exist_ok=True)
         df.write_parquet(path)
         out.append(df)
