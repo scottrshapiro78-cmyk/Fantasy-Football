@@ -88,3 +88,15 @@ injury report; no reliable rest-of-season gain. Keep the flat position rate.
 TE: -1% to -4% MAE (worse than no adjustment). WR: +0.4% to +1% (lead WRs +5% MAE, tiny sample). RB with QB carries: -0.5%. None clears the 2% rule: REJECTED, not wired in.
 Brissett TE share 0.30 vs Lamar 0.31 (league 0.22): by this spec no lift for Andrews.
 Restricted rerun (Nov 18): TE only when incoming QB TE share > league (n=30): -2.1% MAE; and up vs old QB (n=14): -11%. RB only when incoming QB carries > league avg 3.4/g (n=39): -1.1%; and up vs old (n=18): +0.7%. Still rejected.
+
+## Longer data (2006+), all positions (tested Nov 19, scripts/study_long_data.py, study_weekly_long.py, study_waivers.py)
+- ROS (after week 10, 2015-25 backtest): refitting k/u/r/s on 2015-25 vs production (fit 2021-25): QB +0.3%, RB -0.5%, WR +0.2%, TE +0.5%.
+  Extra terms: snap share 0 to +0.5% worse; WR/TE targets per game, RB touches: no gain. REJECTED, production weights stand.
+- Preseason, graded 2019-25: ridge trained 2012+ (production) QB 2.53 / RB 3.00 / WR 2.70; ridge 2006+ 2.58 / 2.98 / 2.74;
+  LightGBM 2006+ 2.67 / 3.06 / 2.77. Older seasons do not help (only RB -0.6%); LightGBM worse everywhere. Keep ridge 2012+.
+- Weekly (2006-25, simplified replication): production matchup/Vegas weights are 0.6-1.0% worse than no adjustment.
+  Refit (much less matchup, more Vegas: QB 0.30/0.225, RB 0.05/0.25, WR 0.10/0.10, TE 0.05/0.125) beats production by
+  0.7-1.65%: under the 2% bar. Not adopted; candidate if Scott wants it.
+- Waivers (2006-26, undrafted pool, decision weeks 3-12, top 3 per position): season-to-date PPG is the best single pick
+  signal (hit rate RB 75%, WR 63%, TE 64%, QB 52%); last-3 next; last-week points and usage jumps are the worst
+  (usage jump hit rate ~30%). A ridge blend of all signals adds 0-1 point of hit rate. No change to add/drop logic.
