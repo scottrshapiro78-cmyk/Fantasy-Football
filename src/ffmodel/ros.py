@@ -569,6 +569,10 @@ def apply_news(d: pl.DataFrame, season: int, thru: int) -> pl.DataFrame:
     short = pl.col("Status").is_in(list(sev)) & (pl.col("ret") <= pl.col("next_game") + pl.duration(days=2))
     use_off = pl.col("o_status").is_not_null() & (pl.col("Status").is_null() | (short & (o_sev >= t_sev)))
     drop_note = short & pl.col("o_status").is_null() & pl.col("team").is_in(final_teams) & (t_sev < 3)
+    # a short-term note whose return date is before this week's game belongs to a game already played: expired
+    #   (a week-10 "Questionable, Nov 15" tag otherwise kept docking that player in week 11 until Friday's report)
+    expired = short & (pl.col("ret") < pl.col("next_game") - pl.duration(days=3)) & pl.col("o_status").is_null()
+    drop_note = drop_note | expired
     o_ret = pl.when(pl.col("o_status") == "Questionable").then(pl.col("next_game")).otherwise(pl.col("next_game") + pl.duration(days=2))
     o_note = pl.concat_str([pl.col("o_inj").fill_null("").str.to_lowercase(), pl.lit(", official report"),
                             pl.when(pl.col("o_prac").fill_null("").str.starts_with("Did Not")).then(pl.lit(", DNP last practice"))
