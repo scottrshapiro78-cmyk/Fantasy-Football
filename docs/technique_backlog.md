@@ -18,6 +18,13 @@ the biggest misses each week are the main source of new ideas.
 - WR depth-chart moves (scripts/study_new_starter.py, 2021-25): new starters +0.75 (model ran 0.9 low, n=119); WRs dropped from the starters x0.85 (model ran 1.3 high, n=47, miss 3.16 -> 2.9)
 
 ## Tested and rejected
+- TE targets per game and TE snap share in rest-of-season projections (Nov 18-19 2026, scripts/study_te_targets.py).
+  Nov 18 on 2019-25 (n=421, data from 2012): vs the model, targets +0.6% (worse), snaps -0.2%. REJECTED then.
+  Nov 19 long run (FF_DATA=data_2006 FF_FIRST_SEASON=2006: data 2006-26, model backtest 2015-25, n=650; 2013-14 fail
+  because the DST model needs snap data from 2013): model as-is 2.165, model refit 2.202; +targets 2.183 (-0.9% vs refit,
+  REJECTED); +snap share 2.129 (-3.3% vs refit, -1.7% vs as-is; better in 8 of 11 seasons). Then fitted INSIDE the model
+  (k/u/r/s grids plus a snap weight, leave-one-season-out, 2015-25, n=650): 2.167 without snaps vs 2.168 with (+0.1%).
+  The earlier -3.3% came from the straight-line recalibration, not from snaps. REJECTED. Gesicki's 9.2 stands.
 - ROS value: steadier replacement-level anchor (the anchor's per-game option value x median games of the five players around replacement, so one injured player at replacement can't shift a position; Nov 16 2026, scripts/study_replacement_anchor.py, 2021-25 at weeks 8-11, 20 cases per league): cross-position rank correlation with actual ROS value fell (Burbs 0.660 -> 0.646, CBS 0.673 -> 0.663; better in only 8 and 7 of 20 cases), RB error rose (Burbs 11.5 -> 13.4). Week-to-week steadier (RB top-12 jump 7.2 -> 6.4) but less accurate. Kept as value(robust_base=False)
 - Discounting a player's role when a teammate returns (worse MAE)
 - Expert-rank blend in season (re-test set for Jan 2027 with a full season of weekly ranks)
@@ -69,3 +76,44 @@ TE .0818/.0818. Rest-of-season share of weeks 10-17 missed: MAE flat vs model QB
 WR .169/.161, TE .189/.192; only QBs separate (missed time earlier: 34% vs 12%, mostly job security).
 REJECTED for the sim: signals are short-lived (next week or two) and the weekly rankings already use the current
 injury report; no reliable rest-of-season gain. Keep the flat position rate.
+
+## Added Nov 17 2026 (from live mistakes; test before adopting, report to Scott first)
+- QB -> TE/WR target lift: pass-catchers' targets and points by QB (Brissett TE usage; Cousins +4.5 for Jefferson). Backtest by QB identity, shrunk by games.
+- Backup uplift from the player's own games without the starter, shrunk toward the league TE2 +1.3 / RB2 average.
+- Playoff-week availability by team elimination (shutdown risk): eliminated teams' lead RB plays 74% of weeks 15-17 vs 87%; backups do not gain (tested Nov 17).
+- Snap share for TEs: tested, +2% only, not adopted.
+
+## QB change -> TE/WR/RB effect (tested Nov 18, scripts/study_qb_change.py)
+359 QB-change events since 2021 (79 TE, 174 WR, 106 RB), leave-one-season-out. Feature: change in the QB's TE (or WR) target share x the player's share of his position.
+TE: -1% to -4% MAE (worse than no adjustment). WR: +0.4% to +1% (lead WRs +5% MAE, tiny sample). RB with QB carries: -0.5%. None clears the 2% rule: REJECTED, not wired in.
+Brissett TE share 0.30 vs Lamar 0.31 (league 0.22): by this spec no lift for Andrews.
+Restricted rerun (Nov 18): TE only when incoming QB TE share > league (n=30): -2.1% MAE; and up vs old QB (n=14): -11%. RB only when incoming QB carries > league avg 3.4/g (n=39): -1.1%; and up vs old (n=18): +0.7%. Still rejected.
+
+## Longer data (2006+), all positions (tested Nov 19, scripts/study_long_data.py, study_weekly_long.py, study_waivers.py)
+- ROS (after week 10, 2015-25 backtest): refitting k/u/r/s on 2015-25 vs production (fit 2021-25): QB +0.3%, RB -0.5%, WR +0.2%, TE +0.5%.
+  Extra terms: snap share 0 to +0.5% worse; WR/TE targets per game, RB touches: no gain. REJECTED, production weights stand.
+- Preseason, graded 2019-25: ridge trained 2012+ (production) QB 2.53 / RB 3.00 / WR 2.70; ridge 2006+ 2.58 / 2.98 / 2.74;
+  LightGBM 2006+ 2.67 / 3.06 / 2.77. Older seasons do not help (only RB -0.6%); LightGBM worse everywhere. Keep ridge 2012+.
+- Weekly (2006-25, simplified replication): production matchup/Vegas weights are 0.6-1.0% worse than no adjustment.
+  Refit (much less matchup, more Vegas: QB 0.30/0.225, RB 0.05/0.25, WR 0.10/0.10, TE 0.05/0.125) beats production by
+  0.7-1.65%: under the 2% bar. Not adopted; candidate if Scott wants it.
+- Waivers (2006-26, undrafted pool, decision weeks 3-12, top 3 per position): season-to-date PPG is the best single pick
+  signal (hit rate RB 75%, WR 63%, TE 64%, QB 52%); last-3 next; last-week points and usage jumps are the worst
+  (usage jump hit rate ~30%). A ridge blend of all signals adds 0-1 point of hit rate. No change to add/drop logic.
+
+## Expert consensus blend (tested Nov 19, scripts/study_expert_blend.py) - ADOPTED Nov 19 where it passes (Scott)
+FantasyPros consensus rankings (ECR), free archive: raw.githubusercontent.com/dynastyprocess/data/master/files/db_fpecr.parquet
+(weekly snapshots late 2020 to now, updated weekly). ECR is a rank, so the expert order gets the model's own sorted numbers;
+blend weight w picked leaving the graded season out. MAE model -> blend:
+- Preseason 2021-25: QB 2.75 -> 2.44 (-11.2%, w 1.0), RB 2.91 -> 2.81 (-3.4%, w .5), WR 2.77 -> 2.64 (-4.6%, w .9), TE 2.36 -> 2.22 (-6.1%, w .9)
+- ROS after wk10, 2020-25: QB -2.1% (w 1.0), RB -2.9% (w .65), WR -1.7% (w .55, under bar), TE -3.2% (w .9)
+- Weekly wks 5-17, 2020-26 (simplified weekly model): QB -4.5%, RB -4.2%, WR -3.9%, TE -2.8% (w .8-1.0)
+Caveats: weekly base is the simplified replication, not build_weekly itself; ROS snapshot can include week-11 injury news the backtest model lacks.
+- Retest vs the real weekly model (base = ROS formula from ros_history_wk9-11, predicting weeks 10-12, 2021-25, + production
+  matchup/Vegas): QB -5.4% (w 1.0), RB -2.9% (w .9), WR -3.5% (w 1.0), TE -0.1% (rejected). Wired in: weekly QB/RB/WR, ROS QB/RB/TE.
+- Note: ros_history_wk{t} files hold games THROUGH week t (not t-1). study_long_data's ROS grading counted week t in both "so far"
+  and "after"; same for every variant, so the comparisons stand, but absolute MAEs there are slightly optimistic.
+- Disagreement study (Nov 19): gap 2+ PPG, model HIGHER than consensus -> model closer only 25-44% (weekly/ROS/preseason);
+  model LOWER -> 50-60% (slump fades 76%, below-hype breakouts 65%; role-up + model higher only 33%).
+  Split blend (expert weight by direction, LOSO) vs same-weight blend: ROS RB -3.9% vs -2.8%, WR -2.8% vs -1.7%, TE -3.3% vs -2.8%;
+  weekly RB -3.9% vs -2.9%, WR -3.8% vs -3.5%, TE -3.2% vs -0.1%; QB no gain (experts better both ways). ADOPTED Nov 19 (Scott), with an Edge column.

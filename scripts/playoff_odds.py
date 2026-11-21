@@ -6,7 +6,17 @@ Each remaining regular-season week: every team's best lineup from ROS PPG x chan
 each week (fixed pairs can be given in KNOWN). Team-week score ~ Normal(proj, 22.5); ties on record broken by points for.
 Writes data/output/playoff_odds_<league>_2026_wk<week>.xlsx.
 """
+import os
 import sys
+
+# RETIRED (Nov 18 2026): this script pairs unknown weeks at random and only knows Scott's own opponents.
+# Burbs playoff odds come from scripts/playoff_sim.py, which has the pasted league schedule for every team
+# plus injuries and bench depth. Calling this script now runs playoff_sim.py with the same arguments.
+# Pass --legacy as the last argument to run the old model anyway (for comparisons only).
+if "--legacy" not in sys.argv:
+    print("playoff_odds.py is retired; running scripts/playoff_sim.py with the same arguments")
+    os.execv(sys.executable, [sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "playoff_sim.py")] + sys.argv[1:])
+sys.argv.remove("--legacy")
 
 import numpy as np
 import pandas as pd

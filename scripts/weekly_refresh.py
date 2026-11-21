@@ -54,6 +54,13 @@ def main():
         for line in l.splitlines():
             if line.startswith("DATA CHECK"):
                 print(line)
+    chk = subprocess.run([sys.executable, "scripts/check_rules.py", str(w + 1)], cwd=ROOT, capture_output=True, text=True,
+                         env={**__import__("os").environ, "PYTHONPATH": str(ROOT / "src")})
+    print(chk.stdout.strip())
+    rules_ok = chk.returncode == 0
+    if not rules_ok:
+        print(chk.stderr.strip()[-2000:])
+    print("RULES CHECK: " + ("passed" if rules_ok else "FAILED (see above) - report this at the top of the post"))
     if "--copy-to" in sys.argv:
         dest = Path(sys.argv[sys.argv.index("--copy-to") + 1])
         for p in (DATA / "output").glob(f"*_wk{w + 1}_*.xlsx"):
@@ -61,6 +68,8 @@ def main():
         for p in (DATA / "output").glob("accuracy_2026_*.xlsx"):
             shutil.copy(p, dest)
         print("copied to", dest)
+    if not rules_ok:
+        sys.exit(1)
 
 
 main()

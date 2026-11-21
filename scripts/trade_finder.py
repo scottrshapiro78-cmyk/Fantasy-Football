@@ -32,6 +32,9 @@ MATCH = {"QB": 1.0, "RB": 0.45, "WR": 0.35, "TE": 0.55, "K": 0.0, "DEF": 0.5}
 cfg = load_leagues()[lg]
 slots, flex = cfg["roster"], cfg["flex_eligible"]
 roster = pd.read_csv(rpath).fillna("")
+if lg == "burbs":  # confirmed moves since the last pasted rosters (data/input/burbs_my_moves.csv)
+    from ffmodel import ledger
+    roster = ledger.apply(roster)
 rs = pd.read_excel(out / f"ros_{season}_wk{week}_{lg}.xlsx", sheet_name="Overall")
 w_ = pl.read_parquet(DATA / "processed" / "player_weeks.parquet").filter(pl.col("season") == season, pl.col("week") <= thru)
 eff = defense_effects(w_, f"fpts_{lg}").select("position", "opponent_team", pl.col(f"def_fpts_{lg}").alias("eff")).to_pandas()
@@ -103,11 +106,23 @@ def score(t, wt=None):
 mine = list(roster[roster.Team == ME].Player)
 base_me = score(team_value(mine))
 skill = [p for p in mine if VAL.get(p, ("K",))[0] in ("QB", "RB", "WR", "TE")]
+# Permanent exclusions (Scott): never offer or drop these. Keep list lives in data/input/trade_keep.txt
+# (one name per line; Dowdle and Johnson are elite handcuffs). Injured players (out past the next week) are never
+# offered either (any current Out / IR / Doubtful status): the partner would be paying for nothing, so no real deal exists.
+_kp = DATA / "input" / "trade_keep.txt"
+KEEP = {l.strip() for l in _kp.read_text().splitlines() if l.strip() and not l.startswith("#")} if _kp.exists() else set()
+INJ_OUT = {p for p in skill if str(rs.loc[p]["Status"]) in ("Out", "Injured Reserve", "Doubtful", "IR / PUP / suspended", "Out for season")}
+skill = [p for p in skill if p not in KEEP and p not in INJ_OUT]
+print("excluded from your give side:", sorted(KEEP & set(mine)), "injured:", sorted(INJ_OUT))
 if keys == ["ALL"]:  # any 1 or 2 of my skill players
     gives = [[a] for a in skill] + [list(c) for c in itertools.combinations(skill, 2)]
 else:
     gives = [[k] for k in keys] + [[k, o] for k in keys for o in skill if o not in keys]
 GET_SIZES = (1, 2) if keys == ["ALL"] else (2,)
+if os.environ.get("GET_SIZES"):  # e.g. GET_SIZES=1 for "my two for their one"
+    GET_SIZES = tuple(int(x) for x in os.environ["GET_SIZES"].split(","))
+if os.environ.get("EXACT") == "1":  # give exactly the listed players, nothing else
+    gives = [list(keys)]
 rows = []
 for t in roster.Team.unique():
     if t == ME:
@@ -118,7 +133,7 @@ for t in roster.Team.unique():
         for get in (g for k_ in GET_SIZES for g in itertools.combinations(theirs, k_)):
             new_me = [p for p in mine if p not in give] + list(get)
             if len(get) > len(give):  # drop my lowest-value player to make room
-                worst = min((p for p in new_me if p not in get), key=lambda p: score(team_value([p])) if p in VAL else -1)
+                worst = min((p for p in new_me if p not in get and p not in KEEP), key=lambda p: score(team_value([p])) if p in VAL else -1)
                 new_me = [p for p in new_me if p != worst]
             else:
                 worst = ""
@@ -128,7 +143,7 @@ for t in roster.Team.unique():
                 tw = min((p for p in new_them if p not in give), key=lambda p: score(team_value([p]), WT_THEM) if p in VAL else -1)
                 new_them = [p for p in new_them if p != tw]
             d_them = score(team_value(new_them), WT_THEM) - base_them
-            if d_me > 0 and d_them > 0:
+            if d_me > 0 and (d_them > 0 or os.environ.get("ONE_SIDED") == "1"):
                 rows.append({"Partner": t, "You give": " + ".join(give), "You get": " + ".join(get), "Drop": worst,
                              f"Your gain (weighted, wk {WEEKS[0]}-17)": round(d_me, 1),
                              f"Your reg season gain/wk (wk {WEEKS[0]}-14)": round((team_value(new_me) - team_value(mine))[:-3].mean(), 2),
@@ -147,3 +162,7 @@ print(fp, len(res))
 pd.set_option("display.width", 250)
 print(res.head(15).to_string(index=False))
 print(res.sort_values("Min gain", ascending=False).head(15).to_string(index=False))
+
+# rules gate: keep-list / injured players must not appear in the output
+import subprocess
+print(subprocess.run([sys.executable, str(__import__("pathlib").Path(__file__).parent / "check_rules.py"), str(week)], capture_output=True, text=True, env={**os.environ, "PYTHONPATH": "src"}).stdout.strip())

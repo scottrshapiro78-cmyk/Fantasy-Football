@@ -9,13 +9,14 @@ Week projection = ROS PPG with the rest-of-season schedule taken out (talent + r
 then x chance he plays (injury report / roster status). Weights fitted on 2021-2025 weeks 5-17
 (scratch backtest): matchups and lines move weekly scoring a little; defenses the most.
 """
+import datetime as _dt
 import sys
 
 import polars as pl
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
 
-from ffmodel import data, fillin, freshness, ros
+from ffmodel import data, expert, fillin, freshness, ros
 from ffmodel.board import _tiers
 from ffmodel.config import DATA, load_leagues
 from ffmodel.guide import GUIDE, add_guide
@@ -25,6 +26,9 @@ from ffmodel.ros import dst_weeks
 season = int(sys.argv[1]) if len(sys.argv) > 1 else 2026
 week = int(sys.argv[2]) if len(sys.argv) > 2 else 9
 thru = week - 1
+# Questionable tags come from the current week's injury report; for a week beyond the next game week they are stale, so no discount
+_last = pl.read_parquet(DATA / "processed" / "player_weeks.parquet").filter(pl.col("season") == season)["week"].max()
+FUTURE = week > _last + 1
 POS = ["QB", "RB", "WR", "TE", "K", "DEF"]
 MATCH = {"QB": 1.0, "RB": 0.45, "WR": 0.35, "TE": 0.55, "K": 0.0, "DEF": 0.5}
 VEGAS = {"QB": 0.0, "RB": 0.075, "WR": 0.0, "TE": 0.075, "K": 0.13, "DEF": -0.25}  # DEF uses the opponent's implied pts
@@ -67,6 +71,7 @@ last3 = (wks.sort("week").group_by("player_id")
             .agg(*[pl.col(f"fpts_{lg}").tail(3).mean().alias(f"l3_{lg}") for lg in ("burbs", "cbs")]))
 
 GUIDE.update({
+    "QB Context": "Fact check, not used in Wk Proj. Who started his team's latest game at QB, how many games this player has played with that QB and his PPG in them, vs his games with other QBs. 'new QB, small sample' = 2 or fewer games with this QB: do not read a trend into it.",
     "Wk Proj": "Projected fantasy points this week, after matchup, Vegas line and the chance he plays. Rank and start/sit on this.",
     "Opp": "This week's opponent ('@' = away).",
     "Kickoff": "Game day and time (ET).",
@@ -77,12 +82,19 @@ GUIDE.update({
     "Play Chance": "Chance he plays this week: 0% if Out / Doubtful / IR, 85% if Questionable (65% if he missed Wednesday practice), 55% if in the concussion protocol, low for practice-squad or players with no games yet.",
     "Teammate Out Adj": "Points added because a teammate may sit this week (weighted by the chance he sits). Backup QB / RB / TE when the starter at his position may sit, and the other WRs when the top WR may sit: his own record in games the starter missed (this season and past seasons), shrunk toward the league average (QB +8.9, RB +5.6, TE +2.0, WR +1.8). The top TE also gets +0.9 when the top WR may sit. If the starting QB may sit, his RBs / WRs / TEs lose a little for the backup (about 0.7% of their PPG per point of QB quality, 2019-2025).",
     "Last 3 PPG": "Average points in his last 3 games.",
+    "Expert Adj": "Change from blending in the FantasyPros consensus for this week (their order on the model's point scale). When the model is above consensus it mostly defers (models buys were right only 25-44% of the time in 2021-25); when below, it keeps most of its own number (fades held up 50-76%). Cut the weekly miss 3-5%.",
+    "Consensus": "FantasyPros consensus for this week, as points on the model's scale (their order, the model's numbers).",
+    "Model - Consensus": "Model projection (before the blend) minus consensus.",
+    "Edge": "Fade = model 2+ points below consensus (historically the model was right 50-76% of the time: an edge). Model high = 2+ above (right only 25-44%: treat with suspicion).",
     "Pts Over Repl": "Week projection minus a replacement-level starter at his position (the last starter in a 12-team league). Ranks the Overall tab across positions.",
     "Status": "Injury report status (from the latest report you pasted) or roster status.",
 })
 
 out_dir = DATA / "output"
 cfg = load_leagues()
+_sun = max(_dt.date.fromisoformat(g) for g in games["gameday"].unique().to_list())
+ecr_wk, ecr_note = expert.latest("weekly", week_sunday=_sun)
+print("EXPERT:", ecr_note)
 for lg in ("burbs", "cbs"):
     col = f"pred_ppg_{lg}"
     d = ros.project(season, thru, lg)
@@ -103,11 +115,11 @@ for lg in ("burbs", "cbs"):
     play = (pl.when(pl.col("status").is_in(["out_week", "out_long", "season", "dated", "gone"])).then(0.0)
               .when(pl.col("status") == "practice").then(0.05)
               .when(pl.col("status") == "no_games").then(0.15)
-              .when(news.str.starts_with("Questionable") & news.str.to_lowercase().str.contains("concussion")
+              .when(~pl.lit(FUTURE) & news.str.starts_with("Questionable") & news.str.to_lowercase().str.contains("concussion")
                     & news.str.contains("DNP|limited")).then(CONCUSSION_PLAY)
-              .when(news.str.starts_with("Questionable") & news.str.contains("DNP")).then(DNP_PLAY)
-              .when(news.str.starts_with("Questionable") & news.str.contains("limited")).then(LIMITED_PLAY)
-              .when(news.str.starts_with("Questionable")).then(QUESTIONABLE_PLAY)
+              .when(~pl.lit(FUTURE) & news.str.starts_with("Questionable") & news.str.contains("DNP")).then(DNP_PLAY)
+              .when(~pl.lit(FUTURE) & news.str.starts_with("Questionable") & news.str.contains("limited")).then(LIMITED_PLAY)
+              .when(~pl.lit(FUTURE) & news.str.starts_with("Questionable")).then(QUESTIONABLE_PLAY)
               .otherwise(1.0))
     d = d.with_columns((m * pl.col("eff").fill_null(0)).alias("match_adj"), (v * impd.fill_null(0)).alias("vegas_adj"),
                        play.alias("play"))
@@ -180,8 +192,12 @@ for lg in ("burbs", "cbs"):
     bq = (pl.col("status") == "backup") & (pl.col("position") == "QB")
     d = d.with_columns(pl.when(bq).then(pl.col("lead_sit").fill_null(0.0)).otherwise(pl.col("play")).alias("play"),
                        pl.when(bq).then(qb_lift).otherwise(pl.col("absence_adj")).alias("absence_adj"))
-    d = d.with_columns(((pl.col("base") + pl.col("match_adj") + pl.col("vegas_adj") + pl.col("absence_adj")).clip(0)
-                        * pl.col("play")).alias("wk"))
+    d = d.with_columns((pl.col("base") + pl.col("match_adj") + pl.col("vegas_adj") + pl.col("absence_adj")).clip(0).alias("raw"))
+    # expert consensus split blend (ffmodel.expert): defer to consensus when the model is above it, keep the model's fades
+    d = expert.blend(d.with_columns(pl.col("raw").alias("pre_expert")), "raw", expert.WEEKLY_W, ecr_wk,
+                     eligible=(pl.col("play") >= 0.85) & (pl.col("status") != "backup"))
+    # Consensus / Edge are per game before play chance; shown for every QB/RB/WR/TE with a consensus rank
+    d = d.with_columns((pl.col("raw") - pl.col("pre_expert")).alias("expert_adj"), (pl.col("raw") * pl.col("play")).alias("wk"))
     # replacement = last starter in the league (flex filled by the best leftover RB/WR/TE)
     L = cfg[lg]
     n, ros_ = L["teams"], L["roster"]
@@ -222,11 +238,16 @@ for lg in ("burbs", "cbs"):
         pl.when(pl.col("position") == "DEF").then(pl.col("opp_imp")).otherwise(pl.col("imp")).round(1).alias("Team Implied Pts"),
         pl.col("vegas_adj").round(2).alias("Vegas Adj"),
         pl.col("absence_adj").round(2).alias("Teammate Out Adj"),
+        pl.col("expert_adj").round(2).alias("Expert Adj"),
+        *expert.edge_cols("pre_expert"),
         pl.col("role_flag").fill_null("").alias("Role"),
         r1(f"ppg_{lg}_sofar").alias("PPG So Far"), r1("l3").alias("Last 3 PPG"), pl.col("n").alias("Games Played"),
         r1("por").alias("Pts Over Repl"), pl.col("news").fill_null("").alias("Injury News"),
         pl.concat_str([pl.when(pl.col("rookie")).then(pl.lit("Rookie. ")).otherwise(pl.lit("")), pl.col("depth_note").fill_null("")]).str.strip_chars(". ").alias("Note"),
         pl.col("player_id").alias("nflverse ID"))
+    from ffmodel.qbctx import qb_context
+    df = df.join(qb_context(season, thru, f"fpts_{lg}"), on="nflverse ID", how="left")
+    df = df.select([c for c in df.columns if c not in ("QB Context", "nflverse ID")] + ["QB Context", "nflverse ID"])
     # keep the sheets readable: players who could plausibly start
     df = df.filter((pl.col("Wk Proj") >= 1.0) | (pl.col("Pos Rk") <= 40))
     wb = Workbook()
@@ -254,7 +275,7 @@ for lg in ("burbs", "cbs"):
     for line in [
         f"{'THE BURBS' if lg == 'burbs' else 'CBS'}: week {week} rankings, {season}, using games through week {thru}.",
         f"On bye: {', '.join(byes) if byes else 'none'}.",
-        "Wk Proj = Base PPG (rest-of-season talent/role, schedule removed) + Matchup Adj + Vegas Adj, times Play Chance.",
+        "Wk Proj = (Base PPG (rest-of-season talent/role, schedule removed) + Matchup Adj + Vegas Adj + Teammate Out Adj + Expert Adj) x Play Chance.",
         "Matchup: this opponent's points allowed to the position this season vs what those players usually score.",
         "Vegas: team implied points this week vs its usual this season. Weights fitted on 2021-2025 weeks 5-17:",
         "  matchup x1.0 QB, x0.45 RB, x0.35 WR, x0.55 TE, x0.5 DEF; Vegas +0.075/pt RB and TE, +0.13/pt K, -0.25/pt of opponent's total for DEF.",
@@ -276,6 +297,7 @@ for lg in ("burbs", "cbs"):
     fr = freshness.checks(season, week)
     freshness.add_sheet(path, fr)
     # snapshot for the accuracy scorecard (scripts/scorecard.py); frozen once Sunday's games have kicked off
+    # expert_adj is per game before play chance: model-only projection = proj - expert_adj x play/100
     import datetime as _dt
     snap = DATA / "tracking" / f"weekly_{season}_wk{week}_{lg}.csv"
     snap.parent.mkdir(exist_ok=True)
@@ -285,6 +307,6 @@ for lg in ("burbs", "cbs"):
         df.select([pl.col(k).alias(v) for k, v in {"Pos": "pos", "Player": "player", "Team": "team", "Wk Proj": "proj",
                    "Status": "status", "Play Chance": "play", "Base PPG": "base", "PPG So Far": "sofar", "Last 3 PPG": "last3",
                    "Matchup Adj": "match", "Vegas Adj": "vegas", "Teammate Out Adj": "mate", "Injury News": "news",
-                   "nflverse ID": "player_id"}.items()]).write_csv(snap)
+                   "Expert Adj": "expert_adj", "Consensus": "consensus", "nflverse ID": "player_id"}.items()]).write_csv(snap)
     print(path, df.height, "byes:", byes)
     print("DATA CHECK:", freshness.summary(fr))

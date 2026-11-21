@@ -52,7 +52,13 @@ SCHED = {9: [(ME, "Who Are You People"), (MC, "Bring the Ruckus"), (GV, "BKs Bal
 # progress, so they are not used)
 WK_OVERRIDE = {}
 if lg != "burbs":
-    SCHED = {}  # no schedule pasted for this league: opponents are drawn at random each week
+    import csv as _csv  # CBS weeks 11-14 pasted by Scott 18 Nov (data/input/cbs_schedule_2026.csv)
+    SCHED = {}
+    for _r in _csv.DictReader(open(DATA / "input" / "cbs_schedule_2026.csv")):
+        SCHED.setdefault(int(_r["week"]), []).append((_r["team_a"], _r["team_b"]))
+    for _w, _l in SCHED.items():  # the sim expects our own game first, written (ME, opponent)
+        _l.sort(key=lambda x: ME not in x)
+        _l[0] = (ME, _l[0][1] if _l[0][0] == ME else _l[0][0])
 # optional scenario for this week, e.g. FORCE="Gin and Jews:W,Gaza Vybz:L"
 import os
 FORCE = dict(x.rsplit(":", 1) for x in os.environ.get("FORCE", "").split(",") if x)
@@ -62,6 +68,9 @@ last_reg = cfg["regular_season_weeks"][1]
 WEEKS = list(range(week + 1, 18))
 
 roster = pd.read_csv(rpath).fillna("")
+if lg == "burbs":  # confirmed moves since the last pasted rosters (data/input/burbs_my_moves.csv)
+    from ffmodel import ledger
+    roster = ledger.apply(roster)
 # WK_ROSTER: rosters as they stood for this week's games (when testing a trade that starts next week)
 roster_wk = pd.read_csv(os.environ["WK_ROSTER"]).fillna("") if os.environ.get("WK_ROSTER") else roster
 st = pd.read_csv(spath)
@@ -309,3 +318,5 @@ print(depth.to_string(index=False))
 w9 = mywin.get(week, np.ones(N, bool))
 print(f"playoffs if win wk{week} {(rank[w9, mi] <= n_po).mean():.0%}, if loss {(rank[~w9, mi] <= n_po).mean():.0%}")
 print("waiver", waiver)
+print(f"title if win wk{week} {champ[w9, mi].mean():.1%}, if loss {champ[~w9, mi].mean():.1%}; "
+      f"bye if win {(rank[w9, mi] <= 2).mean():.0%}, if loss {(rank[~w9, mi] <= 2).mean():.0%}")

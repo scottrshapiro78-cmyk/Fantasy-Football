@@ -296,6 +296,10 @@ def project(season: int, thru: int, league: str, fitp: dict | None = None) -> pl
     d = d.with_columns((pl.col(col) + ss * (pl.col("sos_left_new") - pl.col("sos_left"))).alias(col),
                        (ss * pl.col("sos_left_new")).alias("sched_adj"),
                        pl.col("sos_left_new").alias("sos_left")).drop("sos_left_new")
+    # not on any NFL roster this season and no games played (released / unsigned, e.g. Tyreek Hill 2026): his
+    # preseason team is stale, so drop him instead of showing a projection for a team he isn't on (Nov 18 2026)
+    d = d.with_columns(pl.when(pl.col("roster_team").is_null() & (pl.col("n").fill_null(0) == 0) & (pl.col("position") != "DEF"))
+                         .then(pl.lit("gone")).otherwise(pl.col("status")).alias("status"))
     d = d.with_columns(pl.when((pl.col("status") == "active") & (pl.col("n") == 0) & (pl.col("position") != "DEF"))
                          .then(pl.lit("no_games")).otherwise(pl.col("status")).alias("status"))
     manual = DATA / "input" / f"status_{season}.csv"  # news the data doesn't have yet: Player, Status
@@ -508,7 +512,9 @@ def apply_news(d: pl.DataFrame, season: int, thru: int) -> pl.DataFrame:
     live = sleeper_injuries()
     if live is not None:  # live feed first; a pasted report (with return dates) overrides it below
         d = d.join(live, on="player_id", how="left").with_columns(
-            pl.when(pl.col("sl_status").is_in(["IR", "PUP", "Sus", "NFI"])).then(pl.lit("out_long"))
+            # a player on no NFL roster stays gone whatever Sleeper lists (Tyreek Hill, Nov 18 2026)
+            pl.when(pl.col("status") == "gone").then(pl.lit("gone"))
+              .when(pl.col("sl_status").is_in(["IR", "PUP", "Sus", "NFI"])).then(pl.lit("out_long"))
               .when(pl.col("sl_status").is_in(["Out", "Doubtful"])).then(pl.lit("out_week"))
               .when(pl.col("sl_status") == "Questionable").then(pl.lit("active"))
               .otherwise(pl.col("status")).alias("status"),
@@ -563,6 +569,10 @@ def apply_news(d: pl.DataFrame, season: int, thru: int) -> pl.DataFrame:
     short = pl.col("Status").is_in(list(sev)) & (pl.col("ret") <= pl.col("next_game") + pl.duration(days=2))
     use_off = pl.col("o_status").is_not_null() & (pl.col("Status").is_null() | (short & (o_sev >= t_sev)))
     drop_note = short & pl.col("o_status").is_null() & pl.col("team").is_in(final_teams) & (t_sev < 3)
+    # a short-term note whose return date is before this week's game belongs to a game already played: expired
+    #   (a week-10 "Questionable, Nov 15" tag otherwise kept docking that player in week 11 until Friday's report)
+    expired = short & (pl.col("ret") < pl.col("next_game") - pl.duration(days=3)) & pl.col("o_status").is_null()
+    drop_note = drop_note | expired
     o_ret = pl.when(pl.col("o_status") == "Questionable").then(pl.col("next_game")).otherwise(pl.col("next_game") + pl.duration(days=2))
     o_note = pl.concat_str([pl.col("o_inj").fill_null("").str.to_lowercase(), pl.lit(", official report"),
                             pl.when(pl.col("o_prac").fill_null("").str.starts_with("Did Not")).then(pl.lit(", DNP last practice"))
