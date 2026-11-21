@@ -71,6 +71,7 @@ last3 = (wks.sort("week").group_by("player_id")
             .agg(*[pl.col(f"fpts_{lg}").tail(3).mean().alias(f"l3_{lg}") for lg in ("burbs", "cbs")]))
 
 GUIDE.update({
+    "QB Context": "Fact check, not used in Wk Proj. Who started his team's latest game at QB, how many games this player has played with that QB and his PPG in them, vs his games with other QBs. 'new QB, small sample' = 2 or fewer games with this QB: do not read a trend into it.",
     "Wk Proj": "Projected fantasy points this week, after matchup, Vegas line and the chance he plays. Rank and start/sit on this.",
     "Opp": "This week's opponent ('@' = away).",
     "Kickoff": "Game day and time (ET).",
@@ -244,6 +245,9 @@ for lg in ("burbs", "cbs"):
         r1("por").alias("Pts Over Repl"), pl.col("news").fill_null("").alias("Injury News"),
         pl.concat_str([pl.when(pl.col("rookie")).then(pl.lit("Rookie. ")).otherwise(pl.lit("")), pl.col("depth_note").fill_null("")]).str.strip_chars(". ").alias("Note"),
         pl.col("player_id").alias("nflverse ID"))
+    from ffmodel.qbctx import qb_context
+    df = df.join(qb_context(season, thru, f"fpts_{lg}"), on="nflverse ID", how="left")
+    df = df.select([c for c in df.columns if c not in ("QB Context", "nflverse ID")] + ["QB Context", "nflverse ID"])
     # keep the sheets readable: players who could plausibly start
     df = df.filter((pl.col("Wk Proj") >= 1.0) | (pl.col("Pos Rk") <= 40))
     wb = Workbook()

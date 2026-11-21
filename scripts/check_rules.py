@@ -144,6 +144,28 @@ def check_ghosts(week):
     return out
 
 
+def check_qb_context(week):
+    """Rule 12: the weekly file carries the QB Context fact column."""
+    f = DATA / "output" / f"weekly_2026_wk{week}_burbs.xlsx"
+    if f.exists() and "QB Context" not in pd.read_excel(f, sheet_name="Overall", nrows=1).columns:
+        return [f"{f.name} has no QB Context column (rule 12)"]
+    return []
+
+
+def facts(name, season=2026):
+    """Rule 12: game-by-game log (QB who started each game, points, targets/carries) to check before stating a player fact."""
+    import polars as pl
+    w = pl.read_parquet(DATA / "processed" / "player_weeks.parquet").filter(pl.col("season") == season)
+    qb = (w.filter(pl.col("position") == "QB").sort("attempts", descending=True, nulls_last=True)
+            .group_by("team", "week").agg(pl.col("player_display_name").first().alias("starting_qb")))
+    me = w.filter(pl.col("player_display_name").str.to_lowercase().str.contains(name.lower()))
+    print(me.join(qb, on=["team", "week"], how="left").select("player_display_name", "team", "week", "starting_qb", "targets", "carries",
+          "fpts_burbs", "fpts_cbs").sort("player_display_name", "week").to_pandas().to_string(index=False))
+
+
+if __name__ == "__main__" and len(sys.argv) > 2 and sys.argv[1] == "facts":
+    facts(sys.argv[2]); sys.exit(0)
+
 if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "plan":
     # python scripts/check_rules.py plan <week> "Add1,Add2" "Drop1,Drop2"
     wk = int(sys.argv[2]); adds = [x for x in sys.argv[3].split(",") if x]; drops = [x for x in sys.argv[4].split(",") if x]
@@ -155,7 +177,7 @@ if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "plan":
 
 if __name__ == "__main__":
     wk = int(sys.argv[1]) if len(sys.argv) > 1 else 11
-    problems = check_trades(wk) + check_scott_news(wk) + check_stale(wk) + check_ghosts(wk)
+    problems = check_trades(wk) + check_scott_news(wk) + check_stale(wk) + check_ghosts(wk) + check_qb_context(wk)
     for p in problems:
         print("RULE VIOLATION:", p)
     print("rules ok" if not problems else f"{len(problems)} rule violation(s)")
