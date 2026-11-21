@@ -318,3 +318,5 @@ print(depth.to_string(index=False))
 w9 = mywin.get(week, np.ones(N, bool))
 print(f"playoffs if win wk{week} {(rank[w9, mi] <= n_po).mean():.0%}, if loss {(rank[~w9, mi] <= n_po).mean():.0%}")
 print("waiver", waiver)
+print(f"title if win wk{week} {champ[w9, mi].mean():.1%}, if loss {champ[~w9, mi].mean():.1%}; "
+      f"bye if win {(rank[w9, mi] <= 2).mean():.0%}, if loss {(rank[~w9, mi] <= 2).mean():.0%}")
