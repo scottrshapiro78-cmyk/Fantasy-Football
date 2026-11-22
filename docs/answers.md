@@ -7,19 +7,19 @@ When a later answer corrects or sharpens one, EDIT the entry in place (keep a on
 Model-wide study results (schedule strength, tough defenses, refits, techniques tried) live in docs/findings.md and docs/technique_backlog.md; trade/lineup answers below go stale when rosters change: rerun those, don't reuse the numbers.
 
 ## Injuries and availability
-- **Will a player on the injury report play? (status, practice, history, team record)** Nov 21, 2018-2025, 4,237 player-weeks.
-  Played rate: Out/Doubtful ~0%; Q+DNP 50%; Q+Limited 72%; Q+Full 87%; not listed+DNP 85%; not listed+Lim/Full 97-98%.
-  Q players: missed a game in prior 8 wks 63% vs 76%; hamstring 55%, quad 62%, shoulder 65%, ankle 73%, knee 75%, groin 84%.
-  Team record: no effect in-season (70/73/72/66% worst->best). Q+Lim, listed 4+ of last 8 wks, never missed: 88% (n=65).
-  Logistic with history+team: 7% lower Brier than status table, well calibrated. NOT wired into Play Chance (needs rule 5 test).
-  -> scripts/study_play_given_status.py
+- **Will a player on the injury report play? (status, practice, history, team record)** Nov 21, 2009-2025 (injury reports start 2009), 9,056 player-weeks.
+  Played rate: Out/Doubtful 0-2%; Q+DNP 44%; Q+Limited 75%; Q+Full 88%; not listed+DNP 85%; not listed+Lim/Full 97-98%.
+  Q players: missed a game in prior 8 wks 60-65% vs 77%; hamstring 58%, calf 62%, quad 64%, ankle 72%, knee 75%, groin 79%, back 92%.
+  Team record: no effect in-season (73/72/73/68% worst->best). Q+Lim, listed 4+ of last 8 wks, never missed: 88% (n=144).
+  Logistic with history+team: 8% lower Brier than status table (0.0605 vs 0.0656), well calibrated. NOT wired into Play Chance (needs rule 5 test).
+  (was: 2018-2025 only, n=4,237; same conclusions.) -> scripts/study_play_given_status.py
 - **Do teams out of contention sit stars with nagging injuries? (weeks 14-17)** Nov 19 (other thread, branch claude/project-thread-mxt536).
   Share of games missed: healthy+alive 6%, healthy+dead 11%, nagged+alive 12%, nagged+dead 18%; week 18 nagged+dead 34%.
   Effects add, ~1 pt/wk for an 18-PPG star: not adopted. -> scripts/study_shutdowns.py (that branch)
-- **Questionable TE/WR who plays: full snaps or decoy?** Nov 21, 2018-2025, starters (50%+ snaps), vs own last-4.
-  TE ankle (n=27): snaps 101% of norm, 22% lose 20%+ snaps (healthy 17%), -0.7 targets, -2.5 pts on 9.2 (~-25%).
-  TE Q+Limited ankle (n=20): snaps 95%, 30% big drop, -2.5 pts. WR ankle (n=81): snaps 100%, -0.8 tgt, -2.6 pts on 12.9.
-  Non-leg injuries cost less (-1.2 TE, -1.7 WR). -> scripts/study_q_ankle_snaps.py
+- **Questionable TE/WR who plays: full snaps or decoy?** Nov 21, 2012-2025 (snap counts start 2012), starters (50%+ snaps), vs own last-4.
+  TE ankle (n=64): snaps 98% of norm, 25% lose 20%+ snaps (healthy 17%), -0.7 targets, -2.0 pts on 9.4 (~-20%).
+  TE Q+Limited ankle (n=45): snaps 93%, 31% big drop, -1.9 pts. WR ankle (n=132): snaps 101%, -0.6 tgt, -1.7 pts on 12.4.
+  Not a decoy; modestly less productive. (was: 2018-2025, TE ankle n=27, -2.5 pts.) -> scripts/study_q_ankle_snaps.py
 - **Player-specific in-season injury odds (tag, returning, age, workload)** -> scripts/study_injury_conditional.py (see technique_backlog.md)
 
 ## QB changes

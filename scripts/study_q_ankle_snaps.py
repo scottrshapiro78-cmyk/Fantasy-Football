@@ -7,7 +7,7 @@ import numpy as np, pandas as pd, polars as pl
 from ffmodel import data
 from ffmodel.config import DATA
 
-SS = list(range(2018, 2026))
+SS = list(range(2012, 2026))   # snap counts start 2012 (rule 14)
 ids = data.player_ids().select("gsis_id", "pfr_id").drop_nulls().to_pandas()
 sn = data.snap_counts(SS).filter(pl.col("game_type") == "REG").select("season", "week", "pfr_player_id", "offense_pct").to_pandas()
 sn = sn.merge(ids, left_on="pfr_player_id", right_on="pfr_id").rename(columns={"gsis_id": "player_id"})

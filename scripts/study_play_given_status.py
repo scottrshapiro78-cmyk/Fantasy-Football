@@ -19,7 +19,7 @@ from ffmodel import data
 from ffmodel.config import DATA
 
 WK = int(sys.argv[1]) if len(sys.argv) > 1 else 11
-SS = list(range(2018, 2027))
+SS = list(range(2009, 2027))   # injury reports start 2009 (rule 14: longest data the inputs allow)
 POS = ["QB", "RB", "WR", "TE"]
 pw = pl.read_parquet(DATA / "processed" / "player_weeks.parquet").filter(pl.col("season").is_in(SS), pl.col("position").is_in(POS)).to_pandas()
 pw["touch"] = np.where(pw.position == "RB", pw.carries.fillna(0) + pw.targets.fillna(0), pw.targets.fillna(0) + pw.attempts.fillna(0) * 0.3)
@@ -82,7 +82,7 @@ hist_m = ~cur & rel.played.notna()
 print(f"{hist_m.sum()} historical player-weeks on the report ({rel[hist_m].played.mean():.0%} played)")
 # A: plain status table
 tab = rel[hist_m].groupby(["gs", "pr"]).played.agg(["mean", "size"]).round(2).reset_index()
-print("\nA. Played rate by game status x last practice (2018-2025)\n", tab.to_string(index=False))
+print("\nA. Played rate by game status x last practice (all seasons loaded)\n", tab.to_string(index=False))
 # B: LOSO
 P = pd.Series(np.nan, index=rel.index); Pb = P.copy()
 for s in sorted(rel[hist_m].season.unique()):
