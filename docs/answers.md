@@ -25,7 +25,10 @@ Model-wide study results (schedule strength, tough defenses, refits, techniques 
 ## QB changes
 - **Does a new QB lift his TE/WRs? (Brissett/Andrews)** Nov 18: 359 QB changes since 2021, no reliable TE lift; rejected (technique_backlog.md).
   Nov 21 fact check: Andrews with Lamar/Brissett 5 g 11.0 PPG; with Huntley/Fagnano 5 g 4.0 PPG. The drag is bad backups,
-  not a Brissett boost. QB Context column in the weekly file shows this for every RB/WR/TE. -> scripts/check_rules.py facts "<player>"
+  not a Brissett boost.
+  Nov 21 QB-QUALITY test (Scott's design: restate past stats to an average QB, re-apply the expected QB), 2,729 RB/WR/TE seasons 2015-2025,
+  QB ratings from 2006+: no gain (-0.2% to +0.1%; even the oracle with the actual future QBs: -0.1%). The model's usage/role terms already carry it. REJECTED.
+  -> scripts/study_qb_quality.py.  QB Context column in the weekly file shows this for every RB/WR/TE. -> scripts/check_rules.py facts "<player>"
 
 ## Experts and projections
 - **Expert consensus blend** (FantasyPros ECR, split weights): rule 11, technique_backlog.md. Model above consensus by 2+:

@@ -117,3 +117,10 @@ Caveats: weekly base is the simplified replication, not build_weekly itself; ROS
   model LOWER -> 50-60% (slump fades 76%, below-hype breakouts 65%; role-up + model higher only 33%).
   Split blend (expert weight by direction, LOSO) vs same-weight blend: ROS RB -3.9% vs -2.8%, WR -2.8% vs -1.7%, TE -3.3% vs -2.8%;
   weekly RB -3.9% vs -2.9%, WR -3.8% vs -3.5%, TE -3.2% vs -0.1%; QB no gain (experts better both ways). ADOPTED Nov 19 (Scott), with an Edge column.
+
+## QB QUALITY adjustment (tested Nov 21, scripts/study_qb_quality.py) - REJECTED
+Pre-registered (rule 14). QB quality = career passing fantasy pts/attempt to date (2006+ and 2012+ ratings; sanity: Lamar +24%, Mahomes +17%,
+Brissett -14%, Huntley -27% vs league). Model's own week-11 ROS projections 2015-2025, RB/WR/TE, 2,729 player-seasons (~19% had a QB change).
+V1 current QB vs this season's QBs: -0.2% / -0.1% (worse), 2-3 of 10 seasons better. V2 + last season's QBs: 0.0% / +0.1%, 2025 holdout -0.6%.
+V3 ORACLE (QBs he actually had after the cut): -0.1% / -0.1%. Even perfect knowledge of future QB quality does not cut the miss:
+the model's role and recent-usage terms already absorb it (targets/xFP move with the QB). On QB-changed players only: 3.36 -> 3.36-3.45.
