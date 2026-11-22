@@ -83,6 +83,13 @@ def my_roster(week):
     return list(base[base.Team == ledger.ME].Player)
 
 
+def my_ir(week):
+    """Players of Scott's in an IR slot (ledger action "ir"): on the team, but not counted against the 15 spots."""
+    from ffmodel import ledger
+    base = ledger.apply(pd.read_csv(DATA / "input" / f"burbs_rosters_2026wk{week}.csv").fillna(""))
+    return set(base[(base.Team == ledger.ME) & (base.Slot == "IR")].Player)
+
+
 def check_plan(roster, adds, drops, pos, league="burbs"):
     """roster: list of player names; pos: {name: position}. Returns a list of violations."""
     slots = load_leagues()[league]["roster"]
@@ -109,8 +116,11 @@ def plan_lineup_check(adds, drops, week, horizon=2):
     slots = load_leagues()["burbs"]["roster"]
     bad = [f"cannot drop keep-list player {p}" for p in drops if p in keep_list()]
     cap = sum(v for k, v in slots.items() if k != "IR")
-    if len(cur) > cap:
-        bad.append(f"roster {len(cur)} > {cap} spots")
+    ir = my_ir(week)
+    if len([p for p in cur if p not in ir]) > cap:
+        bad.append(f"roster {len([p for p in cur if p not in ir])} > {cap} spots (IR slot not counted)")
+    if len(ir) > slots.get("IR", 0):
+        bad.append(f"{len(ir)} players in IR slots, league allows {slots.get('IR', 0)}")
     for w in range(week, week + horizon):
         playing = set(sch.filter(pl.col("week") == w)["home_team"].to_list() + sch.filter(pl.col("week") == w)["away_team"].to_list())
         ok = {}

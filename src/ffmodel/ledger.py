@@ -1,6 +1,6 @@
 """Burbs roster ledger: the latest pasted rosters file plus confirmed moves since then.
 
-data/input/burbs_my_moves.csv: action,Player,Pos[,Team]  (Team defaults to Scott's "Gin and Jews").
+data/input/burbs_my_moves.csv: action (add / drop / ir),Player,Pos[,Team]  (Team defaults to Scott's "Gin and Jews").
 Every script that reads Burbs rosters (check_rules, trade_finder, playoff_sim) goes through apply(), so a
 confirmed move is entered once and used everywhere. A newer pasted rosters file replaces the ledger: clear it then.
 """
@@ -33,4 +33,6 @@ def apply(roster: pd.DataFrame) -> pd.DataFrame:
             row = {c: "" for c in r.columns}
             row.update({"Team": m.Team, "Slot": "BN", "Player": m.Player})
             r = pd.concat([r, pd.DataFrame([row])], ignore_index=True)
+        elif m.action == "ir":   # moved to an IR slot: stays on the team, frees a bench spot
+            r.loc[(r.Team == m.Team) & (r.Player == m.Player), "Slot"] = "IR"
     return r.reset_index(drop=True)
