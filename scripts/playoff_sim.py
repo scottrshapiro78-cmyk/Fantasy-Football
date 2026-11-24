@@ -44,7 +44,8 @@ BA = "The Broken Ankles"
 SCHED = {9: [(ME, "Who Are You People"), (MC, "Bring the Ruckus"), (GV, "BKs Ballers"), (BA, "Daddy Fat Sax")],
          10: [(ME, "BKs Ballers"), (MC, "TY Dolla $ign"), (GV, BA), ("Daddy Fat Sax", "Degenerates")],
          11: [(ME, BA), (MC, "Degenerates"), (GV, "Daddy Fat Sax"), ("BKs Ballers", "🙏")],
-         12: [(ME, GV), (MC, "Daddy Fat Sax"), (BA, "🙏"), ("BKs Ballers", "Bring the Ruckus")],
+         12: [(ME, GV), (MC, "Daddy Fat Sax"), (BA, "🙏"), ("BKs Ballers", "Bring the Ruckus"), ("TY Dolla $ign", "Who Are You People"),
+             ("Degenerates", "More Than A Thielen")],
          13: [(ME, "Daddy Fat Sax"), (MC, "More Than A Thielen"), (GV, "🙏"), (BA, "Bring the Ruckus"), ("BKs Ballers", "TY Dolla $ign")],
          14: [(ME, "🙏"), (MC, "Who Are You People"), (GV, "Bring the Ruckus"), (BA, "TY Dolla $ign"), ("BKs Ballers", "Degenerates"),
              ("Daddy Fat Sax", "More Than A Thielen")]}
