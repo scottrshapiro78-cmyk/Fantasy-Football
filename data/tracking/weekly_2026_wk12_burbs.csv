@@ -263,7 +263,7 @@ QB,J.J. McCarthy,NYG,13.1,"",100,12.9,13.0,12.9,0.2,0.0,0.0,"",0.0,,00-0039923
 WR,Jahan Dotson,ATL,5.7,"",100,6.1,7.3,8.1,-0.4,-0.0,0.0,"",0.0,,00-0037741
 TE,Gunnar Helm,TEN,5.1,"",100,5.3,5.2,8.1,-0.22,-0.06,0.0,"",0.0,,00-0040584
 DEF,New Orleans Saints,NO,3.5,"",100,6.1,4.4,5.3,-1.18,-1.45,0.0,"",0.0,,NO
-TE,James Mitchell,DAL,5.0,"",100,3.7,6.0,6.0,-0.25,0.06,1.5,"",0.0,,00-0037282
+TE,James Mitchell,DAL,5.0,"",100,3.7,6.0,6.0,-0.25,0.06,1.49,"",0.0,,00-0037282
 WR,Tez Johnson,TB,5.6,"",100,5.6,5.4,4.5,0.03,0.0,0.0,"",0.0,,00-0040237
 WR,Roman Wilson,PIT,5.6,"",100,5.7,8.7,7.9,-0.1,-0.0,0.0,"",0.0,,00-0039739
 WR,Kayshon Boutte,HOU,5.5,Questionable,75,7.4,7.5,13.5,-0.09,0.0,0.0,"Questionable, est. return Nov 29 (Boutte's hip injury he suffered in Thursday night's win over the Colts doesn't appear to be serious, Aaron Wilson of KPRC 2 Houston reports. (ESPN))",0.0,,00-0038608
@@ -452,8 +452,9 @@ WR,Chris Blair,ATL,1.1,"",100,1.4,0.9,1.2,-0.4,-0.0,0.0,"",0.0,,00-0036463
 WR,Dareke Young,LV,1.0,Questionable,75,1.3,2.1,0.7,-0.0,-0.0,0.0,"Questionable, est. return Nov 29 (Young (stinger) is questionable to return to Sunday's contest against Denver. (ESPN))",0.0,,00-0037093
 K,Daniel Carlson,MIA,0.3,Practice squad,5,4.9,7.4,10.3,0.0,0.14,0.0,"",0.0,,00-0034161
 QB,Kyle McCord,MIA,8.2,Fill-in starter,100,7.5,7.9,7.9,0.6,0.0,0.0,"Fill-in starter, until Malik Willis returns, est. return Dec 13",0.0,,00-0040014
-K,Tyler Loop,BAL,0.0,Injured Reserve,0,8.8,8.6,5.0,0.0,-0.36,0.0,"Injured Reserve, est. return Dec 13 (The Ravens placed Loop (groin) on injured reserve Tuesday. (ESPN))",0.0,,00-0040074
 K,Blake Grupe,LA,0.0,Out for season,0,8.6,4.0,4.0,0.0,-0.32,0.0,"Injured Reserve, est. return Feb 15 (Rams head coach Sean McVay announced Monday that Grupe will miss the remainder of the season after sustaining a torn ACL in Sunday's 18-16 loss to the (ESPN))",0.0,,00-0038905
+K,Tyler Loop,BAL,0.0,Injured Reserve,0,8.8,8.6,5.0,0.0,-0.36,0.0,"Injured Reserve, est. return Dec 13 (The Ravens placed Loop (groin) on injured reserve Tuesday. (ESPN))",0.0,,00-0040074
+RB,Kenneth Walker III,KC,0.0,Out,0,18.7,24.6,19.5,0.07,-0.21,0.0,"Out, est. return Dec 3 (Walker (groin) is slated to be out for Thursday's game against the Bills, according to NFL reporter Jordan Schultz. (ESPN))",0.0,,00-0038134
 QB,Tommy DeVito,NE,7.0,Fill-in starter,100,7.2,7.1,3.1,-0.15,-0.0,0.0,"Fill-in starter, until Drake Maye returns, est. return Dec 27",0.0,,00-0038476
 QB,Carson Beck,ARI,5.6,Questionable,75,7.0,0.4,0.4,0.42,-0.0,0.0,"Questionable, est. return Nov 29 (questionable (ESPN))",0.0,,00-0041561
 QB,Josh Johnson,ARI,2.3,Backup QB (depth chart),25,7.5,10.7,10.7,0.42,-0.0,1.36,"",0.0,,00-0026300

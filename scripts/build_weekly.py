@@ -265,7 +265,7 @@ for lg in ("burbs", "cbs"):
     _cols.insert(_cols.index("Player") + 1, "My Team")
     df = df.select(_cols + ["QB Context", "nflverse ID"])
     # keep the sheets readable: players who could plausibly start
-    df = df.filter((pl.col("Wk Proj") >= 1.0) | (pl.col("Pos Rk") <= 40))
+    df = df.filter((pl.col("Wk Proj") >= 1.0) | (pl.col("Pos Rk") <= 40) | (pl.col("My Team") != ""))  # always show Scott's players
     wb = Workbook()
 
     def sheet(ws, frame, freeze):
