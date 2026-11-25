@@ -71,6 +71,7 @@ last3 = (wks.sort("week").group_by("player_id")
             .agg(*[pl.col(f"fpts_{lg}").tail(3).mean().alias(f"l3_{lg}") for lg in ("burbs", "cbs")]))
 
 GUIDE.update({
+    "My Team": "Your roster slot (Gin and Jews) from the latest pasted rosters for this league (Burbs: plus confirmed moves). Your players' rows are highlighted yellow.",
     "QB Context": "Fact check, not used in Wk Proj. Who started his team's latest game at QB, how many games this player has played with that QB and his PPG in them, vs his games with other QBs. 'new QB, small sample' = 2 or fewer games with this QB: do not read a trend into it.",
     "Wk Proj": "Projected fantasy points this week, after matchup, Vegas line and the chance he plays. Rank and start/sit on this.",
     "Opp": "This week's opponent ('@' = away).",
@@ -245,9 +246,24 @@ for lg in ("burbs", "cbs"):
         r1("por").alias("Pts Over Repl"), pl.col("news").fill_null("").alias("Injury News"),
         pl.concat_str([pl.when(pl.col("rookie")).then(pl.lit("Rookie. ")).otherwise(pl.lit("")), pl.col("depth_note").fill_null("")]).str.strip_chars(". ").alias("Note"),
         pl.col("player_id").alias("nflverse ID"))
+    # Scott's players (Gin and Jews): latest pasted rosters for this league (+ Burbs ledger moves), marked and highlighted
+    import glob as _glob, pandas as _pd
+    _rf = sorted(_glob.glob(str(DATA / "input" / f"{lg}_rosters_2026wk*.csv")), key=lambda f: int(f.split("wk")[-1].split(".")[0]))
+    mine = {}
+    if _rf:
+        _r = _pd.read_csv(_rf[-1]).fillna("")
+        if lg == "burbs":
+            from ffmodel import ledger
+            _r = ledger.apply(_r)
+        mine = dict(_r[_r.Team == "Gin and Jews"][["Player", "Slot"]].values)
+    _nm = lambda x: "".join(ch for ch in str(x).lower() if ch.isalpha()).replace("iii", "").replace("jr", "")
+    _mk = {_nm(k): v for k, v in mine.items()}
+    df = df.with_columns(pl.col("Player").map_elements(lambda x: _mk.get(_nm(x), ""), return_dtype=pl.Utf8).alias("My Team"))
     from ffmodel.qbctx import qb_context
     df = df.join(qb_context(season, thru, f"fpts_{lg}"), on="nflverse ID", how="left")
-    df = df.select([c for c in df.columns if c not in ("QB Context", "nflverse ID")] + ["QB Context", "nflverse ID"])
+    _cols = [c for c in df.columns if c not in ("QB Context", "nflverse ID", "My Team")]
+    _cols.insert(_cols.index("Player") + 1, "My Team")
+    df = df.select(_cols + ["QB Context", "nflverse ID"])
     # keep the sheets readable: players who could plausibly start
     df = df.filter((pl.col("Wk Proj") >= 1.0) | (pl.col("Pos Rk") <= 40))
     wb = Workbook()
@@ -256,8 +272,14 @@ for lg in ("burbs", "cbs"):
         ws.append(frame.columns)
         for c in ws[1]:
             c.font, c.fill = Font(bold=True, color="FFFFFF"), PatternFill("solid", fgColor="1F3864")
+        mi = frame.columns.index("My Team") if "My Team" in frame.columns else None
+        hl = PatternFill("solid", fgColor="FFF2A8")
         for row in frame.iter_rows():
             ws.append(list(row))
+            if mi is not None and row[mi]:
+                for c in ws[ws.max_row]:
+                    c.fill = hl
+                    c.font = Font(bold=True)
         ws.freeze_panes = freeze
         for c in ws.columns:
             ws.column_dimensions[c[0].column_letter].width = max(9, min(26, max(len(str(x.value or "")) for x in c[:60]) + 2))
