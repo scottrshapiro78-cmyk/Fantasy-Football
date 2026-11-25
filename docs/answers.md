@@ -35,6 +35,10 @@ Model-wide study results (schedule strength, tough defenses, refits, techniques 
   model right 25-44%; below: 50-60% (fades 76%). Footballguys/RotoBaller side with FantasyPros on model fades 13/15, 14/14.
 - **Yahoo vs model, week 11** Nov 20: correlation 0.93 after the stale-tag fix (0.88 before); Yahoo runs ~1 pt higher;
   biggest gaps are Questionable players (model multiplies by play chance, Yahoo does not). File: inputs/expert/yahoo_weekly_2026wk11_burbs.csv
+- **Does the expert blend help, and how do the experts compare? (weekly scorecard)** Running table /mnt/project-files/ff-model/expert_scorecard.csv.
+  Week 11 (Burbs, ~170 players who played, pre-play projections): model 4.81, blend 4.75 (-1.1%); same-set FantasyPros 4.88, Footballguys 5.09,
+  RotoBaller 4.97; Yahoo 5.05 vs blend 5.07 (111 rostered). Blend helped RB (5.15 -> 4.82), hurt QB (5.15 -> 5.28), ~flat WR/TE.
+  Edge: Fades model-closer 63% (n=16), Model high 43% (n=14) - matches the backtest. One week = tiny sample. -> scripts/expert_scorecard.py <week>
 - **Why is X ranked WR20 / why does the model love Odunze?** Rank within the week depends on byes; check Consensus and
   Model - Consensus in the weekly file before explaining. A gap under 2 pts is not an Edge call.
 
