@@ -31,6 +31,10 @@ Model-wide study results (schedule strength, tough defenses, refits, techniques 
   -> scripts/study_qb_quality.py.  QB Context column in the weekly file shows this for every RB/WR/TE. -> scripts/check_rules.py facts "<player>"
 
 ## Experts and projections
+- **Why does the model make confident calls against every expert and lose? (Dak vs Lawrence wk12)** Nov 26: 2021-2026 backtest,
+  experts used only to grade. Before: model right 43-46% of disagreements. Cause for QBs: no Vegas weight, matchup x1.0 (fit 0.1),
+  base too spread out (slope 0.66). Not recent form. Fixed for QBs (QB_CAL in build_weekly): 54% at 2+ pts, 2026 71%; miss -2.3%.
+  RB/WR/TE: same fix under 2%, not adopted. -> scripts/study_consensus_misses.py, technique_backlog.md.
 - **Expert consensus blend** (FantasyPros ECR, split weights): rule 11, technique_backlog.md. Model above consensus by 2+:
   model right 25-44%; below: 50-60% (fades 76%). Footballguys/RotoBaller side with FantasyPros on model fades 13/15, 14/14.
 - **Yahoo vs model, week 11** Nov 20: correlation 0.93 after the stale-tag fix (0.88 before); Yahoo runs ~1 pt higher;
