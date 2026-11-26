@@ -39,6 +39,16 @@ LIMITED_PLAY = 0.65  # limited last practice (1,924)
 DNP_PLAY = 0.45  # did not practice (453)
 CONCUSSION_PLAY = 0.50  # questionable with a concussion, not a full practice (53 cases: 43%; full practice 74%)
 TIER_SHAPE = {"QB": (24, 5), "RB": (40, 7), "WR": (50, 8), "TE": (20, 5), "K": (16, 3), "DEF": (16, 3)}
+# Calibrated weekly QB formula (scripts/study_consensus_misses.py, Nov 26 2026). Replaces base + MATCH + VEGAS for QBs:
+#   core = c + b x base + e x matchup + v x (team implied - its season average) + l x (team implied - league average)
+#          + q if Questionable (and plays) + ret if he missed his team's last game and is back
+# Median regression on 2021-2026 weeks 5-17 (1,596 starter-weeks; leave-one-season-out miss 6.23 -> 6.09, -2.3%, better
+# in 5 of 6 seasons). Why: the old formula trusted Base PPG at full strength (fitted slope 0.66: real spread is narrower),
+# weighted the defense matchup 1.0 (fitted 0.09: the betting line already prices the defense) and ignored Vegas for QBs
+# (fitted: 0.45 per point above the team's usual + 0.21 per point above the league). When the model disagreed with the
+# FantasyPros order by 2+ points it was right 45% of the time before, 54% after (2026: 35% -> 71%). Experts are not an input.
+# RB / WR / TE tested the same way: RB -0.4%, WR -2.0%, TE 0.0%, start/sit disagreements no better: not adopted (rule 5).
+QB_CAL = {"c": 5.287, "base": 0.662, "eff": 0.09, "dimp": 0.445, "lvl": 0.21, "q": -0.791, "ret": -6.055}
 
 TEAMS = {
     "ARI": "Arizona Cardinals", "ATL": "Atlanta Falcons", "BAL": "Baltimore Ravens", "BUF": "Buffalo Bills",
@@ -60,6 +70,7 @@ games = pl.concat([side("home_team", "away_team", True, hi, ai), side("away_team
 allimp = pl.concat([sch.select("week", pl.col("home_team").alias("team"), hi.alias("imp")),
                     sch.select("week", pl.col("away_team").alias("team"), ai.alias("imp"))]).filter(pl.col("week") <= week)
 avg_imp = allimp.group_by("team").agg(pl.col("imp").mean().alias("avg_imp"))
+lg_imp = float(allimp["imp"].mean())  # league-average implied points this season, weeks <= this one
 avg_oimp = pl.concat([sch.select("week", pl.col("home_team").alias("team"), ai.alias("o")),
                       sch.select("week", pl.col("away_team").alias("team"), hi.alias("o"))]).filter(
     pl.col("week") <= week).group_by("team").agg(pl.col("o").mean().alias("avg_oimp"))
@@ -79,7 +90,7 @@ GUIDE.update({
     "Base PPG": "His rest-of-season points per game before this week's matchup: preseason projection blended with this season's results and recent role.",
     "Matchup Adj": "Points added (+) or taken away (-) by this opponent: how that defense has done this season against his position (run D for RBs, pass D for QB/WR/TE). For a team defense: how many points that offense gives up to defenses.",
     "Team Implied Pts": "Points Vegas expects his team to score this week (from the over/under and spread). For a team defense: points the opponent is expected to score.",
-    "Vegas Adj": "Points added or taken away because his team's implied total is higher or lower than its usual this season (fitted: matters for RB, TE, K and defenses; not for QB/WR once the matchup is counted).",
+    "Vegas Adj": "Points added or taken away because his team's implied total is higher or lower than its usual this season (RB, TE, K, defenses). QBs: 0.45 per point above his team's usual plus 0.21 per point above the league average (Nov 26 2026 refit; the old fit gave QBs none).",
     "Play Chance": "Chance he plays this week: 0% if Out / Doubtful / IR, 85% if Questionable (65% if he missed Wednesday practice), 55% if in the concussion protocol, low for practice-squad or players with no games yet.",
     "Teammate Out Adj": "Points added because a teammate may sit this week (weighted by the chance he sits). Backup QB / RB / TE when the starter at his position may sit, and the other WRs when the top WR may sit: his own record in games the starter missed (this season and past seasons), shrunk toward the league average (QB +8.9, RB +5.6, TE +2.0, WR +1.8). The top TE also gets +0.9 when the top WR may sit. If the starting QB may sit, his RBs / WRs / TEs lose a little for the backup (about 0.7% of their PPG per point of QB quality, 2019-2025).",
     "Last 3 PPG": "Average points in his last 3 games.",
@@ -87,6 +98,7 @@ GUIDE.update({
     "Consensus": "FantasyPros consensus for this week, as points on the model's scale (their order, the model's numbers).",
     "Model - Consensus": "Model projection (before the blend) minus consensus.",
     "Edge": "Fade = model 2+ points below consensus (historically the model was right 50-76% of the time: an edge). Model high = 2+ above (right only 25-44%: treat with suspicion).",
+    "Calibration Adj": "QBs only. The weekly QB formula fitted on 2021-2026 games: Base PPG counts at 0.66 (real weekly spread is narrower than season averages suggest) plus a constant, -0.8 if Questionable, -6 if he missed his team's last game and is returning. Matchup counts at 0.09 and Vegas at 0.45 per point above his team's usual implied total + 0.21 per point above the league average (shown in those columns). No expert input.",
     "Pts Over Repl": "Week projection minus a replacement-level starter at his position (the last starter in a 12-team league). Ranks the Overall tab across positions.",
     "Status": "Injury report status (from the latest report you pasted) or roster status.",
 })
@@ -193,7 +205,21 @@ for lg in ("burbs", "cbs"):
     bq = (pl.col("status") == "backup") & (pl.col("position") == "QB")
     d = d.with_columns(pl.when(bq).then(pl.col("lead_sit").fill_null(0.0)).otherwise(pl.col("play")).alias("play"),
                        pl.when(bq).then(qb_lift).otherwise(pl.col("absence_adj")).alias("absence_adj"))
-    d = d.with_columns((pl.col("base") + pl.col("match_adj") + pl.col("vegas_adj") + pl.col("absence_adj")).clip(0).alias("raw"))
+    # QBs (not depth-chart backups): calibrated formula (QB_CAL above). match_adj / vegas_adj are restated so the columns still add up.
+    tl = wks.group_by("team").agg(pl.col("week").max().alias("_tl"))
+    me = wks.group_by("player_id").agg(pl.col("week").max().alias("_pl"))
+    d = d.join(tl, on="team", how="left").join(me, on="player_id", how="left")
+    ret = ((pl.col("n") >= 3) & (pl.col("_pl") < pl.col("_tl"))).fill_null(False).cast(pl.Float64)
+    qq = news.str.starts_with("Questionable").cast(pl.Float64)
+    cal = (pl.col("position") == "QB") & (pl.col("status") != "backup")
+    C = QB_CAL
+    d = d.with_columns(
+        pl.when(cal).then(C["eff"] * pl.col("eff").fill_null(0)).otherwise(pl.col("match_adj")).alias("match_adj"),
+        pl.when(cal).then(C["dimp"] * (pl.col("imp") - pl.col("avg_imp")).fill_null(0) + C["lvl"] * (pl.col("imp") - lg_imp).fill_null(0))
+          .otherwise(pl.col("vegas_adj")).alias("vegas_adj"),
+        pl.when(cal).then(C["c"] + (C["base"] - 1) * pl.col("base") + C["q"] * qq + C["ret"] * ret).otherwise(0.0).alias("cal_adj"),
+    ).drop("_tl", "_pl")
+    d = d.with_columns((pl.col("base") + pl.col("cal_adj") + pl.col("match_adj") + pl.col("vegas_adj") + pl.col("absence_adj")).clip(0).alias("raw"))
     # expert consensus split blend (ffmodel.expert): defer to consensus when the model is above it, keep the model's fades
     d = expert.blend(d.with_columns(pl.col("raw").alias("pre_expert")), "raw", expert.WEEKLY_W, ecr_wk,
                      eligible=(pl.col("play") >= 0.85) & (pl.col("status") != "backup"))
@@ -238,6 +264,7 @@ for lg in ("burbs", "cbs"):
         r1("base").alias("Base PPG"), pl.col("match_adj").round(2).alias("Matchup Adj"),
         pl.when(pl.col("position") == "DEF").then(pl.col("opp_imp")).otherwise(pl.col("imp")).round(1).alias("Team Implied Pts"),
         pl.col("vegas_adj").round(2).alias("Vegas Adj"),
+        pl.col("cal_adj").round(2).alias("Calibration Adj"),
         pl.col("absence_adj").round(2).alias("Teammate Out Adj"),
         pl.col("expert_adj").round(2).alias("Expert Adj"),
         *expert.edge_cols("pre_expert"),
@@ -328,7 +355,7 @@ for lg in ("burbs", "cbs"):
     if not snap.exists() or _dt.datetime.now(_dt.timezone.utc) < lock:
         df.select([pl.col(k).alias(v) for k, v in {"Pos": "pos", "Player": "player", "Team": "team", "Wk Proj": "proj",
                    "Status": "status", "Play Chance": "play", "Base PPG": "base", "PPG So Far": "sofar", "Last 3 PPG": "last3",
-                   "Matchup Adj": "match", "Vegas Adj": "vegas", "Teammate Out Adj": "mate", "Injury News": "news",
+                   "Matchup Adj": "match", "Vegas Adj": "vegas", "Calibration Adj": "cal", "Teammate Out Adj": "mate", "Injury News": "news",
                    "Expert Adj": "expert_adj", "Consensus": "consensus", "nflverse ID": "player_id"}.items()]).write_csv(snap)
     print(path, df.height, "byes:", byes)
     print("DATA CHECK:", freshness.summary(fr))

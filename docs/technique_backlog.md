@@ -15,6 +15,7 @@ the biggest misses each week are the main source of new ideas.
 - IR with no timeline: 0.3 of value after the 4-game minimum (2021-25, n=63)
 - Injury return dates from ESPN's injury page on every run (Nov 15 2026); fill-in QBs valued only until the regular starter is due back
 - RB depth-chart moves and short fill-ins (Nov 15 2026): RBs who lost the lead job while healthy x0.85 (n=21, miss 2.24 -> 1.88); new lead backs get a note only (n=52, model already unbiased: 10.1 vs 10.0); the next RB / TE on the depth chart gets his own fill-in bump for the 1-2 games a lead is out, spread into ROS PPG
+- Weekly QB formula refit (Nov 26 2026, scripts/study_consensus_misses.py): Vegas 0.45 vs team's usual + 0.21 vs league, matchup 0.09, Base PPG x0.66, Questionable -0.8, back from a missed game -6. Miss 6.23 -> 6.09, start/sit disagreements with consensus right 45% -> 54% (2+ pts)
 - WR depth-chart moves (scripts/study_new_starter.py, 2021-25): new starters +0.75 (model ran 0.9 low, n=119); WRs dropped from the starters x0.85 (model ran 1.3 high, n=47, miss 3.16 -> 2.9)
 
 ## Tested and rejected
@@ -124,3 +125,25 @@ Brissett -14%, Huntley -27% vs league). Model's own week-11 ROS projections 2015
 V1 current QB vs this season's QBs: -0.2% / -0.1% (worse), 2-3 of 10 seasons better. V2 + last season's QBs: 0.0% / +0.1%, 2025 holdout -0.6%.
 V3 ORACLE (QBs he actually had after the cut): -0.1% / -0.1%. Even perfect knowledge of future QB quality does not cut the miss:
 the model's role and recent-usage terms already absorb it (targets/xFP move with the QB). On QB-changed players only: 3.36 -> 3.36-3.45.
+
+## Why the model loses its arguments with the experts (tested Nov 26, scripts/study_consensus_misses.py) - QB ADOPTED
+Trigger: week 12 Dak 20.6 vs Lawrence 19.1 while every source had Lawrence ahead (JAX implied 31.5 vs DAL 29, Dak 29.9 last 3).
+Data: 2021-2026 weeks 5-17 (2026 through wk11), fantasy-relevant pool per week (top QB20/RB40/WR50/TE18 by model or by
+FantasyPros), Burbs scoring, base = the production ROS formula at t-1. Leave-one-season-out median regression.
+FantasyPros used ONLY to grade: same-position pairs where the model's order and the consensus order differ, who was right.
+- Before: when the model and consensus disagreed on a pair the model was right 43% (QB), 43% (RB), 44% (WR), 46% (TE);
+  with the model's margin 2+ points, 45-49%. 2026 QBs: 35% (17 of 48).
+- Hypotheses: (1) too much recent form: NO. QBs have no last-3 term; a last-3 term gets a small POSITIVE weight (+0.13).
+  Dak's number came from his season average, not his streak. (2) Vegas ignored: YES for QBs. Fitted 0.41-0.45 per implied
+  point above the team's usual + 0.21-0.25 per point above the league average (production: 0). (3) Matchup over-weighted for
+  QBs: YES, fitted 0.09-0.17 vs production 1.0 (the line already prices the defense). (4) Shrinkage: YES, Base PPG fits at a
+  slope of 0.64-0.66 for QBs (0.74-0.88 other positions): weekly spread is narrower than the base implies.
+  (5) Pre-game injury facts: Questionable-and-plays -0.4 to -0.8, back from a missed game -5.8 (QB, n=56), -1.2 RB, -1.4 WR.
+- QB (vegas + shrink + injury tags): miss 6.23 -> 6.09 (-2.3%, 5 of 6 seasons), disagreements right 43% -> 50%, at 2+ points
+  45% -> 54%, 2026 35% -> 71%. Model alone now equals consensus on QBs (6.09 vs 6.07 on the model's scale). ADOPTED
+  (build_weekly QB_CAL, coefficients fitted on all six seasons). Week 12 rerun: Lawrence 22.4, Dak 20.9.
+- RB -0.4%, WR -2.0%, TE 0.0% with the same terms; adding fresh teammate absences RB -1.3% / WR -2.2% / TE +0.1%, and RB
+  disagreements 43% -> 46% (2+ points 47% -> 50%). Not adopted: under the 2% rule or overlaps the existing Teammate Out Adj
+  (production's fill-in bumps, which this backtest base does not include). RB/WR "model high" calls stay weak (33-39% right):
+  the experts know about role changes the box scores don't show yet; usage share last game/last 3 did not help.
+- Andrews (wk5-11): the model was BELOW consensus every week (8-9 vs TE13-17) and he scored 1.4-5.3: those fades were right.
