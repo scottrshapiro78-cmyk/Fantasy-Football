@@ -3,7 +3,8 @@
 PYTHONPATH=src python3 scripts/weekly_refresh.py [--copy-to /mnt/project-files/ff-model]
 
 Refreshes 2026 data, finds the last completed week W, builds features/dst tables, ROS (W) and weekly (W+1),
-scorecard (W), and prints a short summary plus the DATA CHECK lines. Does NOT do the web news sweep;
+scorecard (W), expert scorecard (W, Yahoo / Footballguys / RotoBaller / FantasyPros vs the model, appended to
+/mnt/project-files/ff-model/expert_scorecard.csv), and prints a short summary plus the DATA CHECK lines. Does NOT do the web news sweep;
 that stays manual and optional.
 """
 import shutil
@@ -50,6 +51,12 @@ def main():
             run("scripts/build_weekly.py", str(SEASON), str(w + 1)),
             run("scripts/scorecard.py", str(SEASON), str(w))]
     print(f"last completed week {w}; built ROS (through {w}), weekly {w + 1}, scorecard {w}")
+    # Expert scorecard: reads Scott's pasted weekly files in /mnt/project-files/ff-model/inputs/expert (never committed).
+    # Non-fatal: a missing mount or file must not block the refresh.
+    ex = subprocess.run([sys.executable, "scripts/expert_scorecard.py", str(w)], cwd=ROOT, capture_output=True, text=True,
+                        env={**__import__("os").environ, "PYTHONPATH": str(ROOT / "src")})
+    print(f"EXPERT SCORECARD wk{w}: " + ("written to expert_scorecard.csv" if ex.returncode == 0
+                                         else "FAILED - " + ex.stderr.strip()[-300:]))
     for l in logs:
         for line in l.splitlines():
             if line.startswith("DATA CHECK"):
