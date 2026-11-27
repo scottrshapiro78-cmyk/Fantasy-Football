@@ -147,3 +147,34 @@ FantasyPros used ONLY to grade: same-position pairs where the model's order and 
   (production's fill-in bumps, which this backtest base does not include). RB/WR "model high" calls stay weak (33-39% right):
   the experts know about role changes the box scores don't show yet; usage share last game/last 3 did not help.
 - Andrews (wk5-11): the model was BELOW consensus every week (8-9 vs TE13-17) and he scored 1.4-5.3: those fades were right.
+
+### Nov 27 2026: role signals for weekly RB / WR / TE (scripts/study_rb_role.py) - NOT ADOPTED
+Same test as above (leave-one-season-out 2021-2026, weeks 5-17, Burbs, graded on FantasyPros disagreements). No expert input.
+Signals, all known before kickoff: snap share last 3 / last game vs season (nflverse snap counts), carry and target share
+trends, red-zone (inside 10) and goal-line (inside 5) share from play-by-play, committee size, depth-chart rank this week
+(new lead / lost lead), own Limited practice, same-position teammates Questionable/Doubtful/Out weighted by their work share,
+1st / 2nd game back from a missed game.
+| RB variant (miss vs production 5.93) | miss | change | disagreements right | 2+ pts right | 2026 2+ pts |
+|---|---|---|---|---|---|
+| production (study version) | 5.93 | - | 43.2% | 46.6% | 41.0% |
+| Vegas + shrink + injury refit | 5.90 | -0.4% | 43.2% | 46.2% | 40.2% |
+| + snap trend | 5.88 | -0.8% | 44.1% | 45.7% | 41.4% |
+| + carry / target share trend | 5.90 | -0.5% | 43.0% | 45.5% | 38.6% |
+| + red zone / goal line | 5.92 | -0.1% | 42.7% | 44.9% | 37.0% |
+| + committee / depth chart | 5.89 | -0.5% | 43.1% | 45.4% | 39.3% |
+| + practice / teammates sitting | 5.85 | -1.3% | 45.5% | 49.0% | 48.1% |
+| + ramp-up after missed games | 5.91 | -0.3% | 43.0% | 46.3% | 40.4% |
+| all role signals | 5.86 | -1.0% | 45.3% | 49.6% | 41.6% |
+| best subset (snap last game, depth moves, teammates, xFP, 1st game back) | 5.82 | -1.7% | 46.1% | 49.7% | - |
+- RB: nothing clears 2%. Nearly all of the gain is "teammate likely sits", which production already prices through Teammate Out
+  Adj (the study's production column leaves it out). With a proxy for it in the baseline, the best subset is -1.5% and the
+  role-trend part alone is about -0.5%. Useful signs (median coefficients): +1.9 for a new lead back on the depth chart,
+  -1.1 to -1.3 for losing the lead, +5.5 per 100% jump in last-game snap share, -0.8 to -1.1 in the first game back.
+  Red-zone/goal-line share adds nothing beyond what expected points (xFP, already in Base PPG) carry.
+- WR: the refit alone is -1.9%; + snap trend -2.1% (5/6 seasons, 2025 5.79 -> 5.68), + teammates -2.2%. The role part adds
+  only about 0.2%, and 2026 calls with a 2+ point margin get worse (59% -> 49-53% right). Not adopted; revisit with 2026 final.
+- TE: -0.5% at best; all signals together +1.0% (overfit). Not adopted.
+- Why RBs stay hard: the experts' edge is information that is not in free data before kickoff (coach comments on who
+  starts, beat-writer reports on the split). The free role data mostly restates what xFP and the teammate terms already have.
+  Next candidates: scrape-free news tags from news_2026.tsv ("lead back", "workhorse", "timeshare") as a feature, once there
+  are enough tagged weeks to backtest (needs history before 2026), and FTN/participation route data (2022+) for receiving backs.
